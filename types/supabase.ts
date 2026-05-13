@@ -38,53 +38,79 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_visible: boolean
+          listing_type: Database["public"]["Enums"]["listing_type"]
           name: string
+          parent_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          is_visible?: boolean
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           name: string
+          parent_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          is_visible?: boolean
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           name?: string
+          parent_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "category_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "category"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listing: {
         Row: {
           category_id: string
-          condition: string
+          characteristics: Json
+          condition: string | null
           created_at: string
-          description: string
+          description: string | null
           id: string
-          price: number
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          price: number | null
+          status: Database["public"]["Enums"]["listing_status"]
           stock: number
           store_id: string
-          title: string
+          title: string | null
         }
         Insert: {
           category_id: string
-          condition: string
+          characteristics?: Json
+          condition?: string | null
           created_at?: string
-          description: string
+          description?: string | null
           id?: string
-          price: number
+          listing_type?: Database["public"]["Enums"]["listing_type"]
+          price?: number | null
+          status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
           store_id: string
-          title: string
+          title?: string | null
         }
         Update: {
           category_id?: string
-          condition?: string
+          characteristics?: Json
+          condition?: string | null
           created_at?: string
-          description?: string
+          description?: string | null
           id?: string
-          price?: number
+          listing_type?: Database["public"]["Enums"]["listing_type"]
+          price?: number | null
+          status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
           store_id?: string
-          title?: string
+          title?: string | null
         }
         Relationships: [
           {
@@ -99,6 +125,38 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_template: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          template: Json
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          template?: Json
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          listing_type?: Database["public"]["Enums"]["listing_type"]
+          template?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_template_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category"
             referencedColumns: ["id"]
           },
         ]
@@ -149,24 +207,30 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
+          role: string
           updated_at: string
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
+          role?: string
           updated_at?: string
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
+          role?: string
           updated_at?: string
           username?: string | null
         }
@@ -180,7 +244,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      listing_status: "draft" | "published"
+      listing_type: "product" | "service" | "property"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -310,7 +375,10 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      listing_status: ["draft", "published"],
+      listing_type: ["product", "service", "property"],
+    },
   },
 } as const
 

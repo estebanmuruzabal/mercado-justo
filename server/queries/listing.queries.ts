@@ -8,13 +8,16 @@ type CategoryRow = Database['public']['Tables']['category']['Row']
 export function mapListingRow(row: ListingRow): Listing {
   return {
     id: row.id,
-    title: row.title,
-    description: row.description,
-    price: Number(row.price),
-    stock: row.stock,
-    condition: row.condition as Listing['condition'],
+    title: row.title ?? '',
+    description: row.description ?? '',
+    price: Number(row.price ?? 0),
+    stock: row.stock ?? 0,
+    condition: (row.condition ?? 'new') as Listing['condition'],
     categoryId: row.category_id,
     storeId: row.store_id,
+    listingType: row.listing_type as any,
+    status: row.status as any,
+    characteristics: (row.characteristics ?? {}) as any,
     createdAt: row.created_at,
   }
 }
@@ -26,6 +29,7 @@ export async function fetchListingsByStore(userId: string): Promise<Listing[]> {
     .from('listing')
     .select('*')
     .eq('store_id', userId)
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
 
   if (error) {

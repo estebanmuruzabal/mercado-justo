@@ -3,7 +3,30 @@ import type { CreateListingInput, Listing } from '@/types/listing'
 import { getStoreByUserId } from '@/server/services/store.service'
 import { fetchListingsByStore, mapListingRow } from '@/server/queries/listing.queries'
 
-function buildListingPayload(data: CreateListingInput, storeId: string) {
+async function getListingTypeForCategory(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  categoryId: string
+) {
+  const { data, error } = (await supabase
+    .from('category' as never)
+    .select('listing_type' as never)
+    .eq('id', categoryId)
+    .maybeSingle()) as {
+    data: { listing_type?: string } | null
+    error: { message: string } | null
+  }
+
+  if (error) throw new Error(error.message)
+  if (!data?.listing_type) throw new Error('Invalid category.')
+  return data.listing_type
+}
+
+async function buildListingPayload(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  data: CreateListingInput,
+  storeId: string
+) {
+  const listing_type = await getListingTypeForCategory(supabase, data.categoryId)
   return {
     title: data.title.trim(),
     description: data.description.trim(),
@@ -12,6 +35,8 @@ function buildListingPayload(data: CreateListingInput, storeId: string) {
     condition: data.condition,
     category_id: data.categoryId,
     store_id: storeId,
+    status: 'published',
+    listing_type,
   }
 }
 
@@ -34,7 +59,7 @@ export async function createListing(
   const supabase = await createClient()
   const { data: insertedListing, error } = await supabase
     .from('listing')
-    .insert(buildListingPayload(data, store.id))
+    .insert(await buildListingPayload(supabase, data, store.id) as never)
     .select('*')
     .single()
 

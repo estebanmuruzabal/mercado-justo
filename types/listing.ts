@@ -1,5 +1,8 @@
 export type ListingCondition = 'new' | 'used'
 
+export type ListingStatus = 'draft' | 'published'
+export type ListingType = 'product' | 'service' | 'property'
+
 export interface CategoryOption {
   id: string
   name: string
@@ -14,6 +17,9 @@ export interface Listing {
   condition: ListingCondition
   categoryId: string
   storeId: string
+  listingType?: ListingType
+  status?: ListingStatus
+  characteristics?: Record<string, unknown>
   createdAt: string
 }
 
