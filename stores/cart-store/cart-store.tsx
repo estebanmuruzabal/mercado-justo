@@ -1,13 +1,10 @@
 'use client'
 
-import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react'
 
-import type { CartItem, CartListingType } from './cart-types'
+import type { CartItem, CartListingType, CartState } from './cart-types'
+import { loadCartStateFromLocalStorage, persistCartStateToLocalStorage } from '@/services/cart-store/storage'
 import { calcCartTotals, makeCartItemId } from './cart-types'
-
-type CartState = {
-  items: CartItem[]
-}
 
 type CartAction =
   | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'id'> }
@@ -76,8 +73,22 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 export function CartStoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] })
+  const [state, dispatch] = useReducer(cartReducer, { items: [] }, (initialState) => {
+    // Hydrate from localStorage on the client, otherwise keep default empty state.
+    return loadCartStateFromLocalStorage()
+  })
   const totals = useMemo(() => calcCartTotals(state.items), [state.items])
+
+  const hydratedRef = useRef(false)
+  useEffect(() => {
+    hydratedRef.current = true
+  }, [])
+
+  useEffect(() => {
+    if (!hydratedRef.current) return
+    if (typeof window === 'undefined') return
+    persistCartStateToLocalStorage(state)
+  }, [state])
 
   const addItem = useCallback((item: Omit<CartItem, 'id'>) => {
     dispatch({ type: 'ADD_ITEM', payload: item })
