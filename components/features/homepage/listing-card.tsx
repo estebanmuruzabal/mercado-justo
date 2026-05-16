@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Heart, Minus, Plus } from 'lucide-react'
 
 import type { Listing, ProductListing } from './listing-section'
+import { getListingTypeLabel } from '@/lib/listing'
 
 function formatMoney(amount: number) {
   return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
@@ -182,7 +183,7 @@ function ServiceListingCard({ listing, isFavorite, onToggleFavorite }: OtherCard
           </button>
 
           <div className='absolute left-4 top-4 rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white'>
-            Service
+            {getListingTypeLabel(listing.listingType)}
           </div>
         </div>
 
@@ -276,7 +277,7 @@ function ExperienceListingCard({ listing, isFavorite, onToggleFavorite }: OtherC
           </button>
 
           <div className='absolute right-4 bottom-4 rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white'>
-            Experience
+            {getListingTypeLabel(listing.listingType)}
           </div>
         </div>
 

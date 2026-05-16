@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
-import { useCartStore } from '../cart-store/cart-store'
-import type { CartListingType } from '../cart-store/cart-types'
+import { useCartStore } from '@/stores/cart-store/cart-store'
 import { getListingTypeLabel } from '@/lib/listing'
 
 function formatMoney(amount: number) {
@@ -69,7 +68,7 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
                             <div className='min-w-0'>
                               <div className='truncate text-sm font-semibold'>{item.title}</div>
                               <div className='text-xs text-muted-foreground'>
-                                {getListingTypeLabel(item.listingType as CartListingType)}
+                                {getListingTypeLabel(item.listingType)}
                               </div>
                             </div>
                             <div className='text-sm font-semibold'>{formatMoney(item.unitPrice)}</div>
@@ -136,12 +135,12 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
           <div className='p-4'>
             <Separator className='mb-3' />
             <div className='mb-4 flex items-center justify-between'>
-              <span className='text-sm text-muted-foreground'>{itemCount} items</span>
+              <span className='text-sm text-muted-foreground'>{itemCount} artículos</span>
               <span className='text-sm font-semibold'>Total: {formatMoney(totalPrice)}</span>
             </div>
 
             <Button asChild className='w-full'>
-              <Link href='/checkout'>Go to Checkout</Link>
+              <Link href='/checkout'>Ir al checkout</Link>
             </Button>
           </div>
         </div>

@@ -3,7 +3,7 @@
 import { ShoppingCart } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { useCartStore } from '@/components/features/cart-store/cart-store'
+import { useCartStore } from '@/stores/cart-store/cart-store'
 
 export function NavbarCartButton({ onOpen }: { onOpen: () => void }) {
   const { itemCount } = useCartStore()

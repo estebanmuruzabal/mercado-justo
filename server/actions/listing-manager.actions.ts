@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getStoreByUserId } from '@/server/services/store.service'
 import { getUserRoleByUserId } from '@/server/queries/user.queries'
 import { ROLES, type Role } from '@/lib/roles'
+import type { ListingType } from '@/lib/listing'
 
 type ListingAttributesPayload = Record<string, unknown>
 
@@ -20,7 +21,7 @@ function assertSellerOrAdmin(role: Role | null) {
 export type ListingManagerRow = {
   id: string
   status: 'draft' | 'published'
-  listingType: 'product' | 'service' | 'property'
+  listingType: ListingType
   categoryId: string
   title: string | null
   description: string | null
@@ -59,7 +60,7 @@ export async function getListingsManagerDataAction() {
   const mapped: ListingManagerRow[] = (rows ?? []).map((row: any) => ({
     id: row.id,
     status: row.status as 'draft' | 'published',
-    listingType: row.listing_type as 'product' | 'service' | 'property',
+    listingType: row.listing_type as ListingType,
     categoryId: row.category_id,
     title: row.title ?? null,
     description: row.description ?? null,

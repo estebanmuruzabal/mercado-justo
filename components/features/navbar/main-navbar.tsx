@@ -9,6 +9,7 @@ import { AnimatedSearchArea } from './animated-search-area'
 import { NavbarCartButton } from './navbar-cart-button'
 import { NavbarProfileMenu } from './navbar-profile-menu'
 import { CartDrawer } from '@/components/features/cart-drawer/cart-drawer'
+import { LISTING_TYPE_LABELS } from '@/lib/listing'
 
 export function MainNavbar({ email }: { email?: string }) {
   const [activeListingType, setActiveListingType] = useState<NavbarListingType>('product')
@@ -27,7 +28,7 @@ export function MainNavbar({ email }: { email?: string }) {
 
   const activeLabel = useMemo(() => {
     const tab = NAVBAR_TABS.find((t) => t.id === activeListingType)
-    return tab?.label ?? 'Products'
+    return tab?.label ?? LISTING_TYPE_LABELS.product
   }, [activeListingType])
 
   return (
