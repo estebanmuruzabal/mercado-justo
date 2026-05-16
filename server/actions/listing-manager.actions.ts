@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getStoreByUserId } from '@/server/services/store.service'
 import { getUserRoleByUserId } from '@/server/queries/user.queries'
 import { ROLES, type Role } from '@/lib/roles'
+import type { ListingType } from '@/lib/listing'
 
 type ListingAttributesPayload = Record<string, unknown>
 
@@ -20,7 +21,7 @@ function assertSellerOrAdmin(role: Role | null) {
 export type ListingManagerRow = {
   id: string
   status: 'draft' | 'published'
-  listingType: 'product' | 'service' | 'property'
+  listingType: ListingType
   categoryId: string
   title: string | null
   description: string | null
@@ -59,7 +60,7 @@ export async function getListingsManagerDataAction() {
   const mapped: ListingManagerRow[] = (rows ?? []).map((row: any) => ({
     id: row.id,
     status: row.status as 'draft' | 'published',
-    listingType: row.listing_type as 'product' | 'service' | 'property',
+    listingType: row.listing_type as ListingType,
     categoryId: row.category_id,
     title: row.title ?? null,
     description: row.description ?? null,
@@ -87,7 +88,9 @@ export async function createDraftListingAction(categoryId: string) {
     .eq('id', categoryId)
     .maybeSingle()
 
-  if (!categoryRow?.listing_type) {
+  const categoryRowTyped = categoryRow as { listing_type: ListingManagerRow['listingType'] } | null
+
+  if (!categoryRowTyped?.listing_type) {
     throw new Error('Invalid category.')
   }
 
@@ -96,7 +99,7 @@ export async function createDraftListingAction(categoryId: string) {
     .insert({
       store_id: store.id,
       category_id: categoryId,
-      listing_type: categoryRow.listing_type,
+      listing_type: categoryRowTyped.listing_type,
       status: 'draft',
       characteristics: {},
     } as never)
@@ -105,7 +108,9 @@ export async function createDraftListingAction(categoryId: string) {
 
   if (error) throw error
 
-  return { id: data.id as string }
+  const created = data as { id: string } | null
+  if (!created?.id) throw new Error('Failed to create draft listing.')
+  return { id: created.id }
 }
 
 export async function updateListingDraftAction(id: string, payload: Partial<{
@@ -128,7 +133,8 @@ export async function updateListingDraftAction(id: string, payload: Partial<{
       .select('listing_type')
       .eq('id', categoryId)
       .maybeSingle()
-    listing_typePatch = data?.listing_type
+    const dataTyped = data as { listing_type: ListingManagerRow['listingType'] } | null
+    listing_typePatch = dataTyped?.listing_type
   }
 
   const { error } = await supabase

@@ -59,20 +59,23 @@ export async function getListingTemplateForCategoryAction(
       .eq('category_id', cur)
       .maybeSingle()
 
+    const tplRowTyped = tplRow as { template: ListingTemplate } | null
+
     if (tplError) throw tplError
 
-    if (tplRow?.template) {
-      return tplRow.template as ListingTemplate
+    if (tplRowTyped?.template) {
+      return tplRowTyped.template
     }
 
-    const { data: catRow, error: catError } = await supabase
+    const { data: catRowData, error: catError } = await supabase
       .from('category')
       .select('parent_id')
       .eq('id', cur)
       .maybeSingle()
 
     if (catError) throw catError
-    cur = catRow?.parent_id ?? null
+    const catRowTyped = catRowData as { parent_id: string | null } | null
+    cur = catRowTyped?.parent_id ?? null
   }
 
   return null

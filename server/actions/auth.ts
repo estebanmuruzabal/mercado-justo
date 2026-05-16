@@ -59,9 +59,7 @@ export async function signOut() {
 
   const { error } = await supabase.auth.signOut()
 
-  if (error) {
-    return { error: error.message }
-  }
+  // Even if Supabase reports an error, we still redirect to clear the client session.
 
   revalidatePath('/', 'layout')
   redirect('/')

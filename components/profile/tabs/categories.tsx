@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   Eye,
   EyeOff,
-  Layers3,
   Loader2,
   PencilLine,
   Plus,

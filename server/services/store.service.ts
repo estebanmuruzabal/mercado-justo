@@ -1,6 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import type { CreateStoreInput, Store } from '@/types/store'
-import { getStoreByUserIdQuery, hasStoreQuery, mapStoreRow } from '@/server/queries/store.queries'
+import {
+  getStoreByUserIdQuery,
+  hasStoreQuery,
+  mapStoreRow,
+  type StoreDbClient,
+} from '@/server/queries/store.queries'
 
 function buildStorePayload(data: CreateStoreInput) {
   return {
@@ -21,7 +26,7 @@ export async function createStore(
   data: CreateStoreInput
 ): Promise<Store> {
   const supabase = await createClient()
-  const storeExists = await hasStoreQuery(supabase, userId)
+  const storeExists = await hasStoreQuery(supabase as unknown as StoreDbClient, userId)
 
   if (storeExists) {
     throw new Error('El usuario ya tiene un store activo.')
@@ -32,7 +37,7 @@ export async function createStore(
     .insert({
       id: userId,
       ...buildStorePayload(data),
-    })
+    } as never)
     .select('*')
     .single()
 
@@ -47,11 +52,11 @@ export async function getStoreByUserId(
   userId: string
 ): Promise<Store | null> {
   const supabase = await createClient()
-  return getStoreByUserIdQuery(supabase, userId)
+  return getStoreByUserIdQuery(supabase as unknown as StoreDbClient, userId)
 }
 
 export async function hasStore(userId: string): Promise<boolean> {
   const supabase = await createClient()
-  return hasStoreQuery(supabase, userId)
+  return hasStoreQuery(supabase as unknown as StoreDbClient, userId)
 }
 

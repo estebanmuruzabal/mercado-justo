@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { SearchHero } from '@/components/features/navbar/search-hero'
+import { MainNavbar } from '@/components/features/navbar/main-navbar'
 import {
   ListingSection,
   type ProductListing,
@@ -107,7 +107,7 @@ export default async function Home() {
   return (
      <main className="min-h-screen bg-background">
        
-        <SearchHero email={userEmail}/>
+        <MainNavbar email={userEmail} />
 
         <div className="space-y-14 px-6 pb-20 pt-10 md:px-10">
           <ListingSection

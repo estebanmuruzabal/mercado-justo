@@ -11,10 +11,8 @@ export const createClient = async () => {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
+        setAll: (cookiesToSet: Array<{ name: string; value: string }>) => {
+          cookiesToSet.forEach(({ name, value }) => cookieStore.set(name, value))
         },
       },
     }

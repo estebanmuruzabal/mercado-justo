@@ -1,10 +1,11 @@
 import Link from 'next/link'
 
-export default function ListingDetailPage({
+export default async function ListingDetailPage({
   params,
 }: {
-  params: { listingType: string; id: string }
+  params: Promise<{ listingType: string; id: string }>
 }) {
+  const { listingType, id } = await params
   return (
     <main className='min-h-screen bg-background px-6 py-10'>
       <div className='mx-auto max-w-3xl space-y-6'>
@@ -16,7 +17,7 @@ export default function ListingDetailPage({
 
         <div className='space-y-2'>
           <h1 className='text-3xl font-bold'>
-            {params.listingType} #{params.id}
+            {listingType} #{id}
           </h1>
           <p className='text-muted-foreground'>
             Detail page placeholder. In the next step, we’ll fetch and render the full listing data.

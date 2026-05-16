@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 
 import { ListingCard } from './listing-card'
 
-export type ListingType = 'product' | 'service' | 'property' | 'experience'
+import type { ListingType } from '@/lib/listing'
 
 type BaseListing = {
   id: string
@@ -22,7 +22,7 @@ export type ProductListing = BaseListing & {
 }
 
 export type OtherListing = BaseListing & {
-  listingType: 'service' | 'property' | 'experience'
+  listingType: Exclude<ListingType, 'product'>
   // You can extend these with more fields later.
 }
 
@@ -78,8 +78,7 @@ export function ListingSection({ title, listings }: Props) {
             onOpenOptions={() => {
               // Modal/drawer is intentionally not implemented yet.
               // This callback is where you'd open it later.
-              // eslint-disable-next-line no-console
-              console.log('Open options for listing', listing.id)
+              // Placeholder for future options modal.
             }}
           />
         ))}
