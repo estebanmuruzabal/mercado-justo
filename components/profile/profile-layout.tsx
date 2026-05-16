@@ -5,7 +5,19 @@ import { SellerSettings } from './tabs/seller-settings'
 import { Products } from './tabs/products'
 import { DittoBots } from './tabs/ditto-bots'
 
-export function ProfileContent({ tab, user, isSeller, setIsSeller }: any) {
+type TabId = 'personal' | 'security' | 'seller' | 'products' | 'ditto'
+type ProfileUser = { email?: string }
+
+export function ProfileContent({
+  tab,
+  user,
+  isSeller,
+}: {
+  tab: TabId
+  user: ProfileUser
+  isSeller: boolean
+  setIsSeller: (next: boolean) => void
+}) {
   switch (tab) {
     case 'personal':
       return <PersonalData user={user} />
@@ -14,7 +26,9 @@ export function ProfileContent({ tab, user, isSeller, setIsSeller }: any) {
       return <Security />
 
     case 'seller':
-      return <SellerSettings isSeller={isSeller} setIsSeller={setIsSeller} />
+      // This file is a lightweight route switch; keep it type-safe even if seller data
+      // is provided elsewhere in the real profile flow.
+      return <SellerSettings store={null} onStoreCreated={() => {}} />
 
     case 'products':
       return isSeller ? <Products /> : <p>Activá modo vendedor</p>

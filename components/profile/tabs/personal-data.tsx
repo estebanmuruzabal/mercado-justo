@@ -1,7 +1,9 @@
 // components/profile/tabs/personal-data.tsx
 'use client'
 
-export function PersonalData({ user }: any) {
+type ProfileUser = { email?: string }
+
+export function PersonalData({ user }: { user: ProfileUser }) {
     return (
       <div className="space-y-4">
         <h2 className="text-xl font-bold">Datos personales</h2>
