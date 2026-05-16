@@ -1,7 +1,8 @@
 export type ListingCondition = 'new' | 'used'
 
 export type ListingStatus = 'draft' | 'published'
-export type ListingType = 'product' | 'service' | 'property'
+
+export type ListingType = import('@/lib/listing').ListingType
 
 export interface CategoryOption {
   id: string

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   BadgeCheck,
   PencilLine,
@@ -12,7 +12,6 @@ import {
 import { Button } from '@/components/ui/button'
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -114,17 +113,6 @@ const EMPTY_FORM: DraftFormState = {
   characteristics: {},
   price: null,
   status: 'draft',
-}
-
-function toCategoryPath(targetId: string, byId: Map<string, CategoryRow>) {
-  const path: string[] = []
-  let cur: CategoryRow | undefined = byId.get(targetId)
-  while (cur) {
-    path.unshift(cur.id)
-    if (!cur.parent_id) break
-    cur = byId.get(cur.parent_id)
-  }
-  return path
 }
 
 function isDeepest(categoryId: string, childrenByParent: Map<string, CategoryRow[]>) {
@@ -240,15 +228,7 @@ export function Products() {
 
   useEffect(() => {
     void reloadManager()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey])
-
-  function openCreateModal() {
-    setForm({ ...EMPTY_FORM, status: 'draft' })
-    setStep(1)
-    setFormError(null)
-    setModalOpen(true)
-  }
 
   function openCreateModalForListingType(listingType: ListingType) {
     setForm({
@@ -283,7 +263,6 @@ export function Products() {
     setModalOpen(true)
   }
 
-  const selectedCategory = form.categoryId ? byId.get(form.categoryId) ?? null : null
   const template = useMemo(() => {
     if (!listingTemplate?.sections?.length) return BASE_TEMPLATE
     return {
@@ -497,7 +476,6 @@ export function Products() {
 
   function renderCharacteristicFields() {
     const sections = template.sections
-    const allFields = sections.flatMap((s) => s.fields)
 
     return (
       <div className='space-y-4'>
@@ -509,12 +487,6 @@ export function Products() {
 
             <div className='mt-3 space-y-3'>
               {section.fields.map((field) => {
-                // Base template keys map to top-level form fields
-                const isBase =
-                  field.key === 'title' ||
-                  field.key === 'description' ||
-                  field.key === 'condition' ||
-                  field.key === 'stock'
 
                 const value =
                   field.key === 'title'
@@ -527,7 +499,7 @@ export function Products() {
                           ? form.stock
                           : form.characteristics[field.key]
 
-                const onChange = (val: any) => {
+                const onChange = (val: string | number) => {
                   if (field.key === 'title') return setForm((c) => ({ ...c, title: String(val) }))
                   if (field.key === 'description')
                     return setForm((c) => ({ ...c, description: String(val) }))
