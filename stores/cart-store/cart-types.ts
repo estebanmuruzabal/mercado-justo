@@ -1,20 +1,4 @@
-import type { ListingType } from '@/lib/listing'
-
-export type CartListingType = ListingType
-
-export type CartItemId = string
-
-export type CartItem = {
-  id: CartItemId
-  listingType: CartListingType
-  listingId: string
-
-  title: string
-  image: string
-
-  quantity: number
-  unitPrice: number
-}
+import type { CartItem, CartItemId, CartState, CartPersistenceV1, ListingType } from '@/lib/listing'
 
 export function calcItemSubtotal(item: CartItem) {
   return item.quantity * item.unitPrice
@@ -26,7 +10,8 @@ export function calcCartTotals(items: CartItem[]) {
   return { itemCount, totalPrice }
 }
 
-export function makeCartItemId(listingType: CartListingType, listingId: string) {
-  return `${listingType}:${listingId}`
-}
+export type CartListingType = ListingType
+
+export { makeCartItemId } from '@/lib/listing'
+export type { CartItem, CartItemId, CartState, CartPersistenceV1 }
 

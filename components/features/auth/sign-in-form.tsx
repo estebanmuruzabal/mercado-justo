@@ -40,11 +40,15 @@ export function SignInForm() {
   const router = useRouter()
   const { toast } = useToast()
 
+  const isDev = process.env.NODE_ENV === 'development'
+  const devEmail = 'admin@admin.com'
+  const devPassword = '123456'
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: isDev ? devEmail : '',
+      password: isDev ? devPassword : '',
     },
   })
 
@@ -58,7 +62,7 @@ export function SignInForm() {
         variant: 'destructive',
       })
     } else if (result?.success) {
-      router.push('/dashboard')
+      router.push('/')
       router.refresh()
     }
   }

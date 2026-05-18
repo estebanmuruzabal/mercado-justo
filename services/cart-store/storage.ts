@@ -12,7 +12,7 @@ export function loadCartStateFromLocalStorage(): CartState {
 
     const parsed = JSON.parse(raw) as Partial<CartPersistenceV1> & { state?: CartState }
 
-    if (!parsed?.state || parsed.version !== 1) return EMPTY_CART_STATE
+    if (!parsed?.state || parsed.version !== 2) return EMPTY_CART_STATE
 
     const expired = Date.now() - (parsed.lastUpdatedAt ?? 0) > CART_TTL_MS
     if (expired) {
@@ -38,7 +38,7 @@ export function persistCartStateToLocalStorage(state: CartState): void {
   const payload: CartPersistenceV1 = {
     state,
     lastUpdatedAt: Date.now(),
-    version: 1,
+    version: 2,
   }
 
   window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(payload))

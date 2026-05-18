@@ -35,33 +35,16 @@ import {
 import {
   getListingTemplateForCategoryAction,
 } from '@/server/actions/listing-catalog.actions'
-import type { ListingType } from '@/types/listing'
+import type {
+  ListingType,
+} from '@/lib/listing'
+import type { CharacteristicMap, TemplateDef } from '@/lib/product'
 
 type CategoryRow = {
   id: string
   name: string
   parent_id: string | null
   is_visible: boolean
-}
-
-type FieldType = 'text' | 'number' | 'textarea'
-
-type FieldDef = {
-  key: string
-  label: string
-  type: FieldType
-  placeholder?: string
-  required?: boolean
-  options?: string[]
-}
-
-type TemplateSection = {
-  title: string
-  fields: FieldDef[]
-}
-
-type TemplateDef = {
-  sections: TemplateSection[]
 }
 
 // Base template always present; DB template adds extra sections/fields.
@@ -94,7 +77,7 @@ type DraftFormState = {
   stock: number
 
   // Category-specific
-  characteristics: Record<string, unknown>
+  characteristics: CharacteristicMap
 
   // Step 3
   price: number | null
@@ -113,6 +96,43 @@ const EMPTY_FORM: DraftFormState = {
   characteristics: {},
   price: null,
   status: 'draft',
+}
+
+function getCharacteristicKeysFromTemplate(template: TemplateDef) {
+  const baseKeys = new Set(['title', 'description', 'condition', 'stock'])
+  const keys = new Set<string>()
+  for (const section of template.sections) {
+    for (const field of section.fields) {
+      if (!baseKeys.has(field.key)) keys.add(field.key)
+    }
+  }
+  return keys
+}
+
+function applyTemplateToCharacteristics(params: {
+  template: TemplateDef
+  current: CharacteristicMap
+}): CharacteristicMap {
+  const { template, current } = params
+  const allowed = getCharacteristicKeysFromTemplate(template)
+
+  const next: CharacteristicMap = {}
+
+  // Preserve existing values where still allowed.
+  for (const key of Object.keys(current)) {
+    if (allowed.has(key)) next[key] = current[key]
+  }
+
+  // Apply defaultValue for missing allowed fields.
+  for (const section of template.sections) {
+    for (const field of section.fields) {
+      if (!allowed.has(field.key)) continue
+      if (next[field.key] !== undefined) continue
+      if (field.defaultValue !== undefined) next[field.key] = field.defaultValue
+    }
+  }
+
+  return next
 }
 
 function isDeepest(categoryId: string, childrenByParent: Map<string, CategoryRow[]>) {
@@ -220,6 +240,20 @@ export function Products() {
 
         const tpl = await getListingTemplateForCategoryAction(listingType, categoryId)
         setListingTemplate(tpl)
+
+        // Ensure step 2 renders the correct fields and that `characteristics`
+        // is pruned/initialized according to the new template.
+        const merged: TemplateDef = tpl?.sections?.length
+          ? { sections: [...BASE_TEMPLATE.sections, ...tpl.sections] }
+          : BASE_TEMPLATE
+
+        setForm((current) => ({
+          ...current,
+          characteristics: applyTemplateToCharacteristics({
+            template: merged,
+            current: current.characteristics,
+          }),
+        }))
       } catch {
         setListingTemplate(null)
       }
@@ -242,7 +276,7 @@ export function Products() {
   }
 
   function openEditModal(row: ListingManagerRow) {
-    const characteristics = (row.characteristics ?? {}) as Record<string, unknown>
+    const characteristics = (row.characteristics ?? {}) as CharacteristicMap
 
     setForm({
       listingId: row.id,
@@ -305,6 +339,19 @@ export function Products() {
 
       const tpl = await getListingTemplateForCategoryAction(form.listingType, form.categoryId)
       setListingTemplate(tpl)
+
+      // Apply defaults immediately so step 2 shows them without a flicker.
+      const merged: TemplateDef = tpl?.sections?.length
+        ? { sections: [...BASE_TEMPLATE.sections, ...tpl.sections] }
+        : BASE_TEMPLATE
+
+      setForm((current) => ({
+        ...current,
+        characteristics: applyTemplateToCharacteristics({
+          template: merged,
+          current: current.characteristics,
+        }),
+      }))
 
       setStep(2)
     } catch (err) {

@@ -32,11 +32,6 @@ export function NavbarProfileMenu({ email }: { email?: string }) {
 
   const items: MenuItem[] = [
     { id: 'profile', label: 'Profile', href: '/profile' },
-    { id: 'dashboard', label: 'Dashboard', href: '/dashboard' },
-    { id: 'my-listings', label: 'My Listings', onClick: () => {} },
-    { id: 'orders', label: 'Orders', onClick: () => {} },
-    { id: 'favorites', label: 'Favorites', onClick: () => {} },
-    { id: 'settings', label: 'Settings', href: '/settings' },
   ]
 
   return (
