@@ -115,7 +115,7 @@ export function ProfilePageClient({
       <div className='container mx-auto max-w-6xl px-4 py-6 md:py-10'>
         <div className='mb-6'>
           <Button variant='ghost' size='sm' className='-ml-2 gap-2 text-muted-foreground' asChild>
-            <Link href='/dashboard'>
+            <Link href='/'>
               <ArrowLeft className='size-4' />
               Volver al panel
             </Link>

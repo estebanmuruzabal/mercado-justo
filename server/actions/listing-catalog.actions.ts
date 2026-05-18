@@ -2,26 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { ListingType } from '@/types/listing'
-
-type TemplateFieldType = 'text' | 'number' | 'textarea'
-
-export type ListingTemplateField = {
-  key: string
-  label: string
-  type: TemplateFieldType
-  placeholder?: string
-  required?: boolean
-  options?: string[]
-}
-
-export type ListingTemplateSection = {
-  title: string
-  fields: ListingTemplateField[]
-}
-
-export type ListingTemplate = {
-  sections: ListingTemplateSection[]
-}
+import type { TemplateDef } from '@/lib/product'
 
 export async function getCategoriesByListingTypeAction(listingType: ListingType) {
   const supabase = await createClient()
@@ -46,7 +27,7 @@ export async function getCategoriesByListingTypeAction(listingType: ListingType)
 export async function getListingTemplateForCategoryAction(
   listingType: ListingType,
   categoryId: string
-): Promise<ListingTemplate | null> {
+): Promise<TemplateDef | null> {
   const supabase = await createClient()
 
   let cur: string | null = categoryId
@@ -59,7 +40,7 @@ export async function getListingTemplateForCategoryAction(
       .eq('category_id', cur)
       .maybeSingle()
 
-    const tplRowTyped = tplRow as { template: ListingTemplate } | null
+    const tplRowTyped = tplRow as { template: TemplateDef } | null
 
     if (tplError) throw tplError
 
