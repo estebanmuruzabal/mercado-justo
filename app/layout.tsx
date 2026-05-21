@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { CartStoreProvider } from "@/stores/cart-store/CartStoreProvider";
+import { MainNavbar } from "@/components/features/navbar/main-navbar";
+import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,17 +21,24 @@ export const metadata: Metadata = {
   description: "A modern web application with authentication",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const userEmail = user?.email
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <CartStoreProvider>{children}</CartStoreProvider>
+        <CartStoreProvider>
+          <MainNavbar email={userEmail ?? undefined} />
+          {children}
+        </CartStoreProvider>
         <Toaster />
       </body>
     </html>

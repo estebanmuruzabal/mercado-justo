@@ -97,7 +97,7 @@ export function ProductListingCard({
               }}
               className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground'
             >
-              Options
+              Ver opciones mejor
             </button>
           ) : null}
 

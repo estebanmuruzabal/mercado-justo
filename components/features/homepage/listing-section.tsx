@@ -21,6 +21,7 @@ export type ProductListing = BaseListing & {
   price: number
   priceSecondary?: string
   storeId: string
+  variantId: string
 }
 
 export type OtherListing = BaseListing & {
@@ -41,8 +42,8 @@ export function ListingSection({ title, listings }: Props) {
 
   const favoritesSet = useMemo(() => new Set(Object.keys(favorites).filter((k) => favorites[k])), [favorites])
 
-  function getQty(listingId: string) {
-    const item = items.find((i) => i.listingType === 'product' && i.listingId === listingId)
+  function getQty(variantId: string) {
+    const item = items.find((i) => i.listingType === 'product' && i.variantId === variantId)
     return item?.quantity ?? 0
   }
 
@@ -59,7 +60,7 @@ export function ListingSection({ title, listings }: Props) {
           <ListingCard
             key={listing.id}
             listing={listing}
-            quantity={listing.listingType === 'product' ? getQty(listing.id) : undefined}
+            quantity={listing.listingType === 'product' ? getQty(listing.variantId) : undefined}
             isFavorite={favoritesSet.has(listing.id)}
             onToggleFavorite={() => {
               setFavorites((current) => ({ ...current, [listing.id]: !favoritesSet.has(listing.id) }))
@@ -68,11 +69,11 @@ export function ListingSection({ title, listings }: Props) {
               if (listing.listingType !== 'product') return
               const qty = getQty(listing.id)
               if (qty > 0) {
-                setQuantity('product', listing.id, qty + 1)
+                setQuantity('product', listing.variantId, qty + 1)
               } else {
                 addItem({
                   listingType: 'product',
-                  listingId: listing.id,
+                  variantId: listing.variantId,
                   title: listing.title,
                   image: listing.image,
                   storeId: listing.storeId,
@@ -83,13 +84,13 @@ export function ListingSection({ title, listings }: Props) {
             }}
             onMinus={() => {
               if (listing.listingType !== 'product') return
-              const qty = getQty(listing.id)
-              setQuantity('product', listing.id, qty - 1)
+              const qty = getQty(listing.variantId)
+              setQuantity('product', listing.variantId, qty - 1)
             }}
             onPlus={() => {
               if (listing.listingType !== 'product') return
-              const qty = getQty(listing.id)
-              setQuantity('product', listing.id, qty + 1)
+              const qty = getQty(listing.variantId)
+              setQuantity('product', listing.variantId, qty + 1)
             }}
             onOpenOptions={() => {
               // Modal/drawer is intentionally not implemented yet.

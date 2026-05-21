@@ -84,7 +84,7 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
                                 onClick={() =>
                                   setQuantity(
                                     item.listingType,
-                                    item.listingId,
+                                    item.variantId,
                                     Math.max(0, item.quantity - 1)
                                   )
                                 }
@@ -101,7 +101,7 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
                                 size='icon'
                                 className='h-8 w-8 rounded-full'
                                 onClick={() =>
-                                  setQuantity(item.listingType, item.listingId, item.quantity + 1)
+                                  setQuantity(item.listingType, item.variantId, item.quantity + 1)
                                 }
                                 aria-label='Increase quantity'
                               >
@@ -118,7 +118,7 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
                             <button
                               type='button'
                               className='text-xs text-muted-foreground hover:text-foreground'
-                              onClick={() => removeItem(item.listingType, item.listingId)}
+                                onClick={() => removeItem(item.listingType, item.variantId)}
                             >
                               Remover
                             </button>

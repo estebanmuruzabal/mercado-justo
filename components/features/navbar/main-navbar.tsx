@@ -10,6 +10,7 @@ import { NavbarCartButton } from './navbar-cart-button'
 import { NavbarProfileMenu } from './navbar-profile-menu'
 import { CartDrawer } from '@/components/features/cart-drawer/cart-drawer'
 import { LISTING_TYPE_LABELS } from '@/lib/listing'
+import Link from 'next/link'
 
 export function MainNavbar({ email }: { email?: string }) {
   const [activeListingType, setActiveListingType] = useState<NavbarListingType>('product')
@@ -41,7 +42,9 @@ export function MainNavbar({ email }: { email?: string }) {
       <div className='mx-auto w-full max-w-7xl px-6'>
         <div className='flex items-center justify-between gap-4'>
           <div className='flex items-center gap-3'>
-            <div className='text-lg font-bold tracking-tight'>Mercado Justo</div>
+            <Link href='/' className='text-lg font-bold tracking-tight'>
+              Mercado Justo
+            </Link>
           </div>
 
           <div className='hidden flex-1 items-center justify-center lg:flex'>
