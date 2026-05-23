@@ -1,11 +1,13 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useEffect } from 'react'
 
 import { ListingCard } from './listing-card'
 
 import type { ListingType } from '@/lib/listing'
 import { useCartStore } from '@/stores/cart-store/cart-store'
+import { createClient } from '@/lib/supabase/client'
 
 type BaseListing = {
   id: string
@@ -39,6 +41,19 @@ type Props = {
 export function ListingSection({ title, listings }: Props) {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({})
   const { items, addItem, setQuantity } = useCartStore()
+  const supabase = useMemo(() => createClient(), [])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    supabase.auth.getUser().then(({ data }) => {
+      if (cancelled) return
+      setCurrentUserId(data.user?.id ?? null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [supabase])
 
   const favoritesSet = useMemo(() => new Set(Object.keys(favorites).filter((k) => favorites[k])), [favorites])
 
@@ -67,6 +82,7 @@ export function ListingSection({ title, listings }: Props) {
             }}
             onAdd={() => {
               if (listing.listingType !== 'product') return
+              if (listing.storeId && currentUserId && listing.storeId === currentUserId) return
               const qty = getQty(listing.id)
               if (qty > 0) {
                 setQuantity('product', listing.variantId, qty + 1)
@@ -84,11 +100,13 @@ export function ListingSection({ title, listings }: Props) {
             }}
             onMinus={() => {
               if (listing.listingType !== 'product') return
+              if (listing.storeId && currentUserId && listing.storeId === currentUserId) return
               const qty = getQty(listing.variantId)
               setQuantity('product', listing.variantId, qty - 1)
             }}
             onPlus={() => {
               if (listing.listingType !== 'product') return
+              if (listing.storeId && currentUserId && listing.storeId === currentUserId) return
               const qty = getQty(listing.variantId)
               setQuantity('product', listing.variantId, qty + 1)
             }}

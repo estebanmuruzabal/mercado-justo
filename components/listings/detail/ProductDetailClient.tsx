@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useCartStore } from '@/stores/cart-store/cart-store'
@@ -33,6 +34,7 @@ export function ProductDetailClient({
 }) {
   const { addItem } = useCartStore()
   const router = useRouter()
+  const supabase = useMemo(() => createClient(), [])
 
   const initialVariantId = useMemo(() => {
     return variants.find((v) => v.isDefault)?.id ?? variants[0]?.id ?? null
@@ -40,11 +42,23 @@ export function ProductDetailClient({
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(initialVariantId)
   const [quantity, setQuantity] = useState<number>(1)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   const selectedVariant = useMemo(() => {
     if (!selectedVariantId) return null
     return variants.find((v) => v.id === selectedVariantId) ?? null
   }, [variants, selectedVariantId])
+
+  useEffect(() => {
+    let cancelled = false
+    supabase.auth.getUser().then(({ data }) => {
+      if (cancelled) return
+      setCurrentUserId(data.user?.id ?? null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [supabase])
 
   // Clamp quantity when switching variants.
   // This avoids sending an invalid quantity larger than stock.
@@ -57,6 +71,7 @@ export function ProductDetailClient({
   }, [selectedVariant])
 
   const canAdd = Boolean(selectedVariant && selectedVariant.stock > 0 && selectedVariant.price > 0)
+  const isSelfSeller = currentUserId != null && currentUserId === storeId
 
   return (
     <div className='grid gap-6 lg:grid-cols-2'>
@@ -149,6 +164,12 @@ export function ProductDetailClient({
         </Card>
 
         <div className='space-y-3 rounded-xl border bg-background p-4'>
+          {isSelfSeller ? (
+            <div className='rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive'>
+              No podés comprar tus propios productos.
+            </div>
+          ) : null}
+
           <div className='flex items-center justify-between gap-3'>
             <div className='space-y-0.5'>
               <div className='text-sm font-semibold'>Cantidad</div>
@@ -162,7 +183,7 @@ export function ProductDetailClient({
                 type='button'
                 variant='outline'
                 size='icon'
-                disabled={!selectedVariant || quantity <= 1}
+                disabled={!selectedVariant || isSelfSeller || quantity <= 1}
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               >
                 −
@@ -172,7 +193,7 @@ export function ProductDetailClient({
                 type='button'
                 variant='outline'
                 size='icon'
-                disabled={!selectedVariant || (selectedVariant ? quantity >= selectedVariant.stock : true)}
+                disabled={!selectedVariant || isSelfSeller || (selectedVariant ? quantity >= selectedVariant.stock : true)}
                 onClick={() => {
                   if (!selectedVariant) return
                   setQuantity((q) => Math.min(selectedVariant.stock, q + 1))
@@ -186,9 +207,10 @@ export function ProductDetailClient({
           <div className='grid gap-2 sm:grid-cols-2'>
             <Button
               type='button'
-              disabled={!canAdd}
+              disabled={!canAdd || isSelfSeller}
               onClick={() => {
                 if (!selectedVariant) return
+                if (isSelfSeller) return
                 addItem({
                   listingType: 'product',
                   variantId: selectedVariant.id,
@@ -205,10 +227,11 @@ export function ProductDetailClient({
 
             <Button
               type='button'
-              disabled={!canAdd}
+              disabled={!canAdd || isSelfSeller}
               variant='default'
               onClick={() => {
                 if (!selectedVariant) return
+                if (isSelfSeller) return
                 addItem({
                   listingType: 'product',
                   variantId: selectedVariant.id,

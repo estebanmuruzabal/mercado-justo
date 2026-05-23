@@ -121,7 +121,7 @@ export default function CheckoutPage() {
                 try {
                   const { orderId } = await createOrderFromCartAction(cartPayload)
                   clearCart()
-                  router.push(`/profile/orders?orderId=${orderId}`)
+                  router.push(`/profile/purchase-success?orderId=${orderId}`)
                 } catch (e) {
                   setFormError(e instanceof Error ? e.message : 'No se pudo crear la orden.')
                 }

@@ -7,8 +7,10 @@ import { SellerSettings } from './tabs/seller-settings'
 import { ListingManager } from '@/components/listings/ListingManager'
 import { DittoBots } from './tabs/ditto-bots'
 import type { Store } from '@/types/store'
+import { PurchasesTab } from './tabs/purchases'
+import { SalesTab } from './tabs/sales'
 
-type TabId = 'personal' | 'security' | 'seller' | 'products' | 'ditto'
+type TabId = 'personal' | 'security' | 'seller' | 'products' | 'purchases' | 'sales' | 'ditto'
 
 export function ProfileContent({
   tab,
@@ -33,6 +35,12 @@ export function ProfileContent({
 
     case 'products':
       return store ? <ListingManager /> : <p>Activá modo vendedor</p>
+
+    case 'purchases':
+      return <PurchasesTab />
+
+    case 'sales':
+      return store ? <SalesTab storeId={store.id} /> : <p>Activá modo vendedor</p>
 
     case 'ditto':
       return <DittoBots />

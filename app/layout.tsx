@@ -5,6 +5,7 @@ import { CartStoreProvider } from "@/stores/cart-store/CartStoreProvider";
 import { MainNavbar } from "@/components/features/navbar/main-navbar";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
+import AirbnbHeader from "@/components/features/navbar/AirbnbHeader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +37,8 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <CartStoreProvider>
-          <MainNavbar email={userEmail ?? undefined} />
+          {/* <MainNavbar email={userEmail ?? undefined} /> */}
+          <AirbnbHeader />
           {children}
         </CartStoreProvider>
         <Toaster />

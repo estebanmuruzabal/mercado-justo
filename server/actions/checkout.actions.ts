@@ -29,6 +29,12 @@ export async function createOrderFromCartAction(
   }
   const sellerId = Array.from(storeIds)[0] as string
 
+  // Prevent self-purchase (seller buying their own products).
+  // `store.id` is a FK to `auth.users.id`, so comparing IDs is safe.
+  if (sellerId === userId) {
+    throw new Error('No podés comprar tus propios productos.')
+  }
+
   const subtotal = parsed.data.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
 
   // Create order.

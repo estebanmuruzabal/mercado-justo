@@ -8,6 +8,7 @@ import {
   Layers3,
   Package,
   Shield,
+  ShoppingBag,
   Store as StoreIcon,
   User,
   type LucideIcon,
@@ -28,13 +29,15 @@ import { cn } from '@/lib/utils'
 import { isSuperAdmin, type Role } from '@/lib/roles'
 import type { Store as StoreModel } from '@/types/store'
 
-type TabId = 'personal' | 'security' | 'seller' | 'products' | 'categories' | 'ditto'
+type TabId = 'personal' | 'security' | 'seller' | 'products' | 'purchases' | 'sales' | 'categories' | 'ditto'
 
 const TAB_ICONS: Record<TabId, LucideIcon> = {
   personal: User,
   security: Shield,
   seller: StoreIcon,
   products: Package,
+  purchases: ShoppingBag,
+  sales: StoreIcon,
   categories: Layers3,
   ditto: Bot,
 }
@@ -88,7 +91,9 @@ export function ProfilePageClient({
       { id: 'personal', label: 'Datos personales' },
       { id: 'security', label: 'Seguridad' },
       { id: 'seller', label: 'Modo vendedor' },
+      { id: 'purchases', label: 'Mis compras' },
       ...(isSeller ? [{ id: 'products' as const, label: 'Productos' }] : []),
+      ...(isSeller ? [{ id: 'sales' as const, label: 'Mis ventas' }] : []),
       ...(isAdmin ? [{ id: 'categories' as const, label: 'Categorías' }] : []),
       { id: 'ditto', label: 'DittoBots' },
     ]
@@ -98,6 +103,9 @@ export function ProfilePageClient({
 
   useEffect(() => {
     if (tab === 'products' && !isSeller) {
+      setTab('seller')
+    }
+    if (tab === 'sales' && !isSeller) {
       setTab('seller')
     }
   }, [isSeller, tab])
