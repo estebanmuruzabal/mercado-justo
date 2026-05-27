@@ -45,7 +45,7 @@ export function ProductListingCard({
 
   return (
     <div
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
       role='button'
       tabIndex={0}
       onClick={() => navigateToProductDetail()}
@@ -95,7 +95,7 @@ export function ProductListingCard({
                 onOpenOptions()
                 navigateToProductDetail()
               }}
-              className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground'
+              className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground cursor-pointer'
             >
               Ver opciones mejor
             </button>
@@ -108,7 +108,7 @@ export function ProductListingCard({
                 e.stopPropagation()
                 onAdd()
               }}
-              className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground'
+              className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground cursor-pointer'
             >
               + Add
             </button>
@@ -160,7 +160,7 @@ function ServiceListingCard({ listing, isFavorite, onToggleFavorite }: OtherCard
   return (
     <Link
       href={`/listing/${listing.listingType}/${listing.id}`}
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
@@ -207,7 +207,7 @@ function PropertyListingCard({ listing, isFavorite, onToggleFavorite }: OtherCar
   return (
     <Link
       href={`/listing/${listing.listingType}/${listing.id}`}
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='min-w-[280px] max-w-[280px] rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
@@ -254,7 +254,7 @@ function ExperienceListingCard({ listing, isFavorite, onToggleFavorite }: OtherC
   return (
     <Link
       href={`/listing/${listing.listingType}/${listing.id}`}
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='min-w-[280px] max-w-[280px] rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
@@ -303,7 +303,7 @@ function LinkCard({
   return (
     <Link
       href={`/listing/${listing.listingType}/${listing.id}`}
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='relative overflow-hidden rounded-3xl bg-white shadow-sm'>
         <img

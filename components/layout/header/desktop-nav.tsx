@@ -1,14 +1,16 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
+import Link from 'next/link'
 import { Menu, Search } from 'lucide-react'
 import { MercadoJustoLogo } from '@/components/features/navbar/left/AirbnbLogo'
 import { UserMenu } from '@/components/features/navbar/right/UserMenu'
 import { type TabId, TABS, type SearchPayload } from '@/components/features/navbar/right/airbnbTabs'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { tabUnderlineVariants, tabLabelVariants } from '@/lib/motion/navbar-motion'
 import { SearchBox } from '@/components/features/navbar/searchbox/search-box'
 import { useUserLocation } from '@/hooks/use-user-location'
+import { createClient } from '@/lib/supabase/client'
 
 export function DesktopNav({
   brand,
@@ -33,6 +35,42 @@ export function DesktopNav({
 }) {
   const menuRef = useRef<HTMLDivElement | null>(null)
   const { selectedCity, radiusKm } = useUserLocation()
+  const [isSeller, setIsSeller] = useState(false)
+  const [checkingSeller, setCheckingSeller] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    void (async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (!user) {
+          if (!cancelled) setIsSeller(false)
+          return
+        }
+
+        const { data: storeRow, error } = await supabase
+          .from('store')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (!cancelled) setIsSeller(Boolean(storeRow) && !error)
+      } catch {
+        if (!cancelled) setIsSeller(false)
+      } finally {
+        if (!cancelled) setCheckingSeller(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -132,12 +170,25 @@ export function DesktopNav({
 
         {/* Right side */}
         <div className='flex items-center gap-2'>
-          <a
-            href='#'
-            className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
-          >
-            Convertite en vendedor
-          </a>
+          {checkingSeller ? (
+            <span className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900'>
+              Convertite en vendedor
+            </span>
+          ) : isSeller ? (
+            <Link
+              href='/dashboard'
+              className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
+            >
+              vendor panel
+            </Link>
+          ) : (
+            <Link
+              href='/profile/seller'
+              className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
+            >
+              Convertite en vendedor
+            </Link>
+          )}
           <UserMenuTrigger avatarUrl={avatarUrl} onClick={() => setUserMenuOpen(!userMenuOpen)} />
 
           <AnimatePresence>
