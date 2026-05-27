@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { CartStoreProvider } from "@/stores/cart-store/CartStoreProvider";
-import { MainNavbar } from "@/components/features/navbar/main-navbar";
-import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
-import AirbnbHeader from "@/components/features/navbar/AirbnbHeader";
+import Header from "@/components/layout/header/header";
+import { LocationStoreProvider } from "@/lib/location-store";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,18 +26,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const userEmail = user?.email
-
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <CartStoreProvider>
-          {/* <MainNavbar email={userEmail ?? undefined} /> */}
-          <AirbnbHeader />
+          <LocationStoreProvider>
+            <Header />
+          </LocationStoreProvider>
           {children}
         </CartStoreProvider>
         <Toaster />

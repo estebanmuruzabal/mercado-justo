@@ -115,7 +115,7 @@ export default function AirbnbHeader({
           <div className="flex items-center justify-between py-4">
             {/* Brand */}
             <a href="#" className="flex items-center gap-1 text-[#FF385C]">
-              <AirbnbLogo />
+              <MercadoJustoLogo />
               {!scrolled && (
                 <span className="text-2xl font-semibold tracking-tight">{brand}</span>
               )}
@@ -207,7 +207,7 @@ export default function AirbnbHeader({
                   onClick={() => setMobileSearchOpen(true)}
                   className="flex flex-1 items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.05)]"
                 >
-                  <span className="text-[#FF385C]"><AirbnbLogo small /></span>
+                  <span className="text-[#FF385C]"><MercadoJustoLogo small /></span>
                   <span className="hidden sm:inline text-lg font-semibold text-[#FF385C]">
                     {brand}
                   </span>
@@ -650,7 +650,7 @@ function CollapsedRow({
     </div>
   );
 }
-function AirbnbLogo({ small }: { small?: boolean }) {
+function MercadoJustoLogo({ small }: { small?: boolean }) {
   const size = small ? 24 : 32;
   return (
     <svg
