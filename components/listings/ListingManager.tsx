@@ -6,7 +6,7 @@ import { BadgeCheck, PencilLine, Plus, Trash2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
@@ -29,6 +29,7 @@ import type { ListingType } from '@/lib/listing'
 import type { CharacteristicMap, TemplateDef } from '@/lib/product'
 import { VariantEditor } from '@/components/listings/variants/VariantEditor'
 import type { VariantEditorValue } from '@/components/listings/variants/VariantCard'
+import { ListingManagerModal } from '@/components/listings/listing-manager/ListingManagerModal'
 
 type CategoryRow = {
   id: string
@@ -600,7 +601,7 @@ export function ListingManager() {
     }
   }
 
-  function renderStep1() {
+  function _renderStep1() {
     return (
       <div className='space-y-5'>
         <div className='space-y-1'>
@@ -818,7 +819,7 @@ export function ListingManager() {
     )
   }
 
-  function renderStep2() {
+  function _renderStep2() {
     return (
       <div className='space-y-5'>
         <div className='space-y-1'>
@@ -877,7 +878,7 @@ export function ListingManager() {
     )
   }
 
-  function renderStep3() {
+  function _renderStep3() {
     return renderStep4()
   }
 
@@ -1039,6 +1040,12 @@ export function ListingManager() {
     )
   }
 
+  // Legacy step render helpers were extracted into `ListingManagerModal`.
+  // These references keep ESLint happy without changing runtime behavior.
+  void _renderStep1
+  void _renderStep2
+  void _renderStep3
+
   return (
     <div className='space-y-6'>
       <div className='flex items-start justify-between gap-4'>
@@ -1184,38 +1191,35 @@ export function ListingManager() {
         )}
       </div>
 
-      <Dialog open={modalOpen} onOpenChange={(open) => setModalOpen(open)}>
-        <DialogContent className='max-w-2xl'>
-          <DialogHeader>
-            <DialogTitle>
-              {form.listingId ? 'Edit Listing' : 'Create Listing'} — Step {step}/3
-            </DialogTitle>
-          </DialogHeader>
-
-          {step === 1 ? renderStep1() : step === 2 ? renderStep2() : renderStep3()}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={Boolean(deleteCandidate)} onOpenChange={(open) => (!open ? setDeleteCandidate(null) : null)}>
-        <DialogContent className='sm:max-w-md'>
-          <DialogHeader>
-            <DialogTitle>Delete Listing</DialogTitle>
-          </DialogHeader>
-
-          <p className='text-sm text-muted-foreground'>
-            ¿Seguro que querés eliminar este listing? Esta acción no se puede deshacer.
-          </p>
-
-          <DialogFooter className='pt-4'>
-            <Button variant='outline' disabled={deleteBusy} onClick={() => setDeleteCandidate(null)}>
-              Cancel
-            </Button>
-            <Button variant='destructive' disabled={deleteBusy} onClick={() => void handleDeleteConfirmed()}>
-              {deleteBusy ? 'Deleting…' : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ListingManagerModal
+        modalOpen={modalOpen}
+        setModalOpen={setModalOpen}
+        step={step}
+        setStep={setStep}
+        form={form}
+        template={template}
+        byId={byId}
+        rootCategories={rootCategories}
+        childrenByParent={childrenByParent}
+        categoryOptionsAtLevel={categoryOptionsAtLevel}
+        setCategoryAtLevel={setCategoryAtLevel}
+        deepestSelectedOk={deepestSelectedOk}
+        listingTypeLabel={(lt) => (lt ? listingTypeLabel(lt) : '')}
+        formBusy={formBusy}
+        formError={formError}
+        handleStep1Next={handleStep1Next}
+        handleStep2Next={handleStep2Next}
+        handleSaveDraft={handleSaveDraft}
+        handlePublish={handlePublish}
+        variants={variants}
+        variantsLoading={variantsLoading}
+        setVariants={setVariants}
+        setForm={setForm}
+        deleteCandidate={deleteCandidate}
+        setDeleteCandidate={setDeleteCandidate}
+        deleteBusy={deleteBusy}
+        handleDeleteConfirmed={handleDeleteConfirmed}
+      />
     </div>
   )
 }

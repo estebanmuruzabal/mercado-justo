@@ -72,7 +72,7 @@ export async function activateSellerMode(
     })
 
     revalidatePath('/profile')
-    revalidatePath('/dashboard')
+    revalidatePath('/dashboard-vendor')
 
     return {
       success: true,

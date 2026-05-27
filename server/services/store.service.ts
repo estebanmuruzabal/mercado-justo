@@ -10,6 +10,7 @@ import {
 function buildStorePayload(data: CreateStoreInput) {
   return {
     name: data.name.trim(),
+    instagram: data.instagram ?? null,
     address: data.address?.trim() || null,
     latitude: data.latitude ?? null,
     longitude: data.longitude ?? null,

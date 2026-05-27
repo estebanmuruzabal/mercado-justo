@@ -72,8 +72,8 @@ export async function createListingAction(
     }
   }
 
-  revalidatePath('/dashboard/listings')
+  revalidatePath('/dashboard-vendor/listings')
   revalidatePath('/profile')
-  redirect('/dashboard/listings')
+  redirect('/dashboard-vendor/listings')
 }
 

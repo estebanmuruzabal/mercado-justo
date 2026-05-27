@@ -13,7 +13,7 @@ export function SellerModePageClient({ initialStore }: { initialStore: Store | n
       store={initialStore}
       onStoreCreated={() => {
         // Once the store is enabled, take the user to the vendor panel.
-        router.push('/dashboard')
+        router.push('/dashboard-vendor/listings')
       }}
     />
   )

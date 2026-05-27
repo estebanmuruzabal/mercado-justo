@@ -34,6 +34,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_item: {
+        Row: {
+          created_at: string
+          id: string
+          quantity: number
+          user_id: string
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quantity: number
+          user_id: string
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          user_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_item_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "listing_variant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       category: {
         Row: {
           created_at: string
@@ -161,11 +193,151 @@ export type Database = {
           },
         ]
       }
+      listing_variant: {
+        Row: {
+          attributes_json: Json
+          created_at: string
+          id: string
+          is_default: boolean
+          listing_id: string
+          name: string
+          price: number
+          sku: string
+          stock: number
+        }
+        Insert: {
+          attributes_json?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          listing_id: string
+          name?: string
+          price: number
+          sku: string
+          stock?: number
+        }
+        Update: {
+          attributes_json?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          listing_id?: string
+          name?: string
+          price?: number
+          sku?: string
+          stock?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_variant_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listing"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          delivery_price: number
+          id: string
+          payment_status: string
+          seller_id: string
+          status: string
+          subtotal: number
+          total: number
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          delivery_price?: number
+          id?: string
+          payment_status?: string
+          seller_id: string
+          status?: string
+          subtotal?: number
+          total?: number
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          delivery_price?: number
+          id?: string
+          payment_status?: string
+          seller_id?: string
+          status?: string
+          subtotal?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_item: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          order_id: string
+          price_snapshot: number
+          quantity: number
+          title_snapshot: string
+          variant_id: string
+          variant_snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          order_id: string
+          price_snapshot: number
+          quantity: number
+          title_snapshot: string
+          variant_id: string
+          variant_snapshot?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          order_id?: string
+          price_snapshot?: number
+          quantity?: number
+          title_snapshot?: string
+          variant_id?: string
+          variant_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_item_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_item_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "listing_variant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store: {
         Row: {
           address: string | null
           created_at: string
           id: string
+          instagram: string | null
           latitude: number | null
           longitude: number | null
           mode: string
@@ -179,6 +351,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           id: string
+          instagram?: string | null
           latitude?: number | null
           longitude?: number | null
           mode?: string
@@ -192,6 +365,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           id?: string
+          instagram?: string | null
           latitude?: number | null
           longitude?: number | null
           mode?: string

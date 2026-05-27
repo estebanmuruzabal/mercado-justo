@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   Bot,
@@ -81,6 +82,7 @@ export function ProfilePageClient({
   initialStore: StoreModel | null
   initialRole: Role | null
 }) {
+  const router = useRouter()
   const [tab, setTab] = useState<TabId>('personal')
   const [store, setStore] = useState<StoreModel | null>(initialStore)
   const isSeller = Boolean(store)
@@ -139,7 +141,13 @@ export function ProfilePageClient({
                   active={tab === t.id}
                   icon={TAB_ICONS[t.id]}
                   label={t.label}
-                  onClick={() => setTab(t.id)}
+                  onClick={() => {
+                    if (t.id === 'seller') {
+                      void router.push('/dashboard-vendor/seller')
+                      return
+                    }
+                    setTab(t.id)
+                  }}
                 />
               ))}
             </div>
@@ -173,7 +181,13 @@ export function ProfilePageClient({
                       active={tab === t.id}
                       icon={TAB_ICONS[t.id]}
                       label={t.label}
-                      onClick={() => setTab(t.id)}
+                      onClick={() => {
+                        if (t.id === 'seller') {
+                          void router.push('/dashboard-vendor/seller')
+                          return
+                        }
+                        setTab(t.id)
+                      }}
                     />
                   ))}
                 </nav>

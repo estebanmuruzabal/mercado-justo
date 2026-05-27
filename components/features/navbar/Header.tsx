@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, Menu, Home, Sparkles, ConciergeBell, Package, MapPin, Navigation, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 type TabId = "productos" | "alojamientos" | "experiencias" | "servicios";
 const TABS: { id: TabId; label: string; icon: typeof Home; badge?: string }[] = [
   { id: "alojamientos", label: "Alojamientos", icon: Home },
@@ -50,12 +50,12 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-1 text-[hsl(355,80%,55%)]">
+        <Link href="/" className="flex items-center gap-1 text-[hsl(355,80%,55%)]">
           <svg viewBox="0 0 32 32" className="h-8 w-8 fill-current" aria-hidden>
             <path d="M16 1C7.7 1 1 7.7 1 16s6.7 15 15 15 15-6.7 15-15S24.3 1 16 1zm0 26c-2.4 0-4.1-1.8-4.1-4.1 0-1.3.5-2.4 1.8-4.2.7-1 2.3-3.4 2.3-3.4s1.6 2.4 2.3 3.4c1.3 1.8 1.8 2.9 1.8 4.2 0 2.3-1.7 4.1-4.1 4.1z" />
           </svg>
           <span className="text-2xl font-bold tracking-tight">airbnb</span>
-        </a>
+        </Link>
         {/* Desktop tabs — hidden when scrolled (collapsed) */}
         <nav
           className={cn(
