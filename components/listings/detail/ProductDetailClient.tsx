@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useCartStore } from '@/stores/cart-store/cart-store'
+import { ListingDetailLocation } from '@/components/marketplace/detail/ListingDetailLocation'
 
 export type ProductVariantDetail = {
   id: string
@@ -24,12 +25,16 @@ export function ProductDetailClient({
   storeName,
   productTitle,
   productImage,
+  latitude,
+  longitude,
   variants,
 }: {
   storeId: string
   storeName?: string
   productTitle: string
   productImage: string
+  latitude: number | null
+  longitude: number | null
   variants: ProductVariantDetail[]
 }) {
   const { addItem } = useCartStore()
@@ -74,7 +79,8 @@ export function ProductDetailClient({
   const isSelfSeller = currentUserId != null && currentUserId === storeId
 
   return (
-    <div className='grid gap-6 lg:grid-cols-2'>
+    <div className='space-y-6'>
+      <div className='grid gap-6 lg:grid-cols-2'>
       <div className='space-y-4'>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -249,6 +255,13 @@ export function ProductDetailClient({
           </div>
         </div>
       </div>
+      </div>
+
+      <ListingDetailLocation
+        latitude={latitude}
+        longitude={longitude}
+        title={productTitle}
+      />
     </div>
   )
 }

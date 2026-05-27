@@ -3,13 +3,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { Menu, Search } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { MercadoJustoLogo } from '@/components/features/navbar/left/AirbnbLogo'
 import { UserMenu } from '@/components/features/navbar/right/UserMenu'
 import { type TabId, TABS, type SearchPayload } from '@/components/features/navbar/right/airbnbTabs'
+import { MarketplaceFiltersBar } from '@/components/marketplace/filters/MarketplaceFiltersBar'
 import { useEffect, useRef, useState } from 'react'
 import { tabUnderlineVariants, tabLabelVariants } from '@/lib/motion/navbar-motion'
-import { SearchBox } from '@/components/features/navbar/searchbox/search-box'
-import { useUserLocation } from '@/hooks/use-user-location'
+import { useMarketplaceFiltersStore } from '@/stores/useMarketplaceFiltersStore'
 import { createClient } from '@/lib/supabase/client'
 
 export function DesktopNav({
@@ -34,7 +35,9 @@ export function DesktopNav({
   onMenuAction?: (action: string) => void
 }) {
   const menuRef = useRef<HTMLDivElement | null>(null)
-  const { selectedCity, radiusKm } = useUserLocation()
+  const pathname = usePathname()
+  const isBrowsePage = pathname === '/'
+  const radiusKm = useMarketplaceFiltersStore((s) => s.radiusKm)
   const [isSeller, setIsSeller] = useState(false)
   const [checkingSeller, setCheckingSeller] = useState(true)
 
@@ -137,13 +140,19 @@ export function DesktopNav({
         ) : null}
 
         {/* Collapsed pill */}
-        {scrolled ? (
+        {scrolled && isBrowsePage ? (
+          <div className='flex-1 flex justify-center px-4'>
+            <MarketplaceFiltersBar layout='collapsed' />
+          </div>
+        ) : null}
+
+        {scrolled && !isBrowsePage ? (
           <button
             type='button'
             onClick={() =>
               onSearch({
                 tab: activeTab,
-                place: selectedCity ?? '',
+                place: '',
                 dates: `${radiusKm} km`,
                 guests: '',
               })
@@ -151,12 +160,10 @@ export function DesktopNav({
             className='flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-2 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow'
           >
             <span className='px-4 text-sm font-medium text-neutral-900 flex items-center gap-2'>
-              <span aria-hidden='true'>📍</span> Tu ciudad
+              <span aria-hidden='true'>📍</span> Buscar
             </span>
             <span className='h-5 w-px bg-neutral-200' />
             <span className='px-4 text-sm font-medium text-neutral-900'>Radio {radiusKm} km</span>
-            <span className='h-5 w-px bg-neutral-200' />
-            <span className='px-4 text-sm text-neutral-500'>Elegí un radio</span>
             <motion.span
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
@@ -211,10 +218,16 @@ export function DesktopNav({
         </div>
       </div>
 
-      {/* Expanded search bar */}
+      {/* Expanded filter bar */}
       {!scrolled ? (
         <div className='pb-5'>
-          <SearchBox layout='desktop' tab={activeTab} onSearch={onSearch} />
+          {isBrowsePage ? (
+            <MarketplaceFiltersBar layout='desktop' />
+          ) : (
+            <div className='text-center text-sm text-neutral-500'>
+              Búsqueda disponible en el inicio
+            </div>
+          )}
         </div>
       ) : null}
     </div>

@@ -2,11 +2,12 @@
 
 import { AnimatePresence } from 'framer-motion'
 import { Menu, Search, User } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import { TABS, type TabId, type SearchPayload } from '@/components/features/navbar/right/airbnbTabs'
 import { MercadoJustoLogo } from '@/components/features/navbar/left/AirbnbLogo'
+import { MarketplaceFiltersModal } from '@/components/marketplace/filters/MarketplaceFiltersModal'
 import { NavItem } from './nav-item'
-import { SearchModalMobile } from '@/components/features/navbar/searchbox/search-modal-mobile'
 
 export function MobileNav({
   brand,
@@ -17,7 +18,6 @@ export function MobileNav({
   onOpenMobileMenu,
   onOpenMobileSearch,
   mobileSearchOpen,
-  onSearch,
   onMobileSearchClose,
 }: {
   brand: string
@@ -31,6 +31,9 @@ export function MobileNav({
   onMobileSearchClose: () => void
   onSearch: (payload: SearchPayload) => void
 }) {
+  const pathname = usePathname()
+  const isBrowsePage = pathname === '/'
+
   useEffect(() => {
     if (!mobileSearchOpen) return
     // No manual focus needed: CitySelector focuses its own input.
@@ -51,7 +54,9 @@ export function MobileNav({
             </span>
             <span className='hidden sm:inline text-lg font-semibold text-[#FF385C]'>{brand}</span>
             <Search className='h-4 w-4 text-neutral-900 ml-2' />
-            <span className='text-sm font-semibold text-neutral-900'>Empezá tu búsqueda</span>
+            <span className='text-sm font-semibold text-neutral-900'>
+              {isBrowsePage ? 'Filtros y búsqueda' : 'Empezá tu búsqueda'}
+            </span>
             <span className='ml-auto flex items-center gap-2'>
               <Avatar avatarUrl={avatarUrl} />
             </span>
@@ -74,7 +79,9 @@ export function MobileNav({
             className='flex w-full items-center justify-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.05)]'
           >
             <Search className='h-4 w-4 text-neutral-900' />
-            <span className='text-sm font-semibold text-neutral-900'>Empezá tu búsqueda</span>
+            <span className='text-sm font-semibold text-neutral-900'>
+              {isBrowsePage ? 'Filtros y búsqueda' : 'Empezá tu búsqueda'}
+            </span>
           </button>
         </>
       )}
@@ -102,18 +109,10 @@ export function MobileNav({
         )}
       </div>
 
-      {/* Mobile Search Modal */}
+      {/* Mobile Filters Modal */}
       <AnimatePresence>
-        {mobileSearchOpen ? (
-          <SearchModalMobile
-            activeTab={activeTab}
-            onSelectTab={onSelectTab}
-            onClose={onMobileSearchClose}
-            onSearch={(payload) => {
-              onSearch(payload)
-              onMobileSearchClose()
-            }}
-          />
+        {mobileSearchOpen && isBrowsePage ? (
+          <MarketplaceFiltersModal open={mobileSearchOpen} onClose={onMobileSearchClose} />
         ) : null}
       </AnimatePresence>
     </div>

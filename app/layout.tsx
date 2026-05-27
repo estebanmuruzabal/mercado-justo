@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { CartStoreProvider } from "@/stores/cart-store/CartStoreProvider";
 import "./globals.css";
 import Header from "@/components/layout/header/header";
-import { LocationStoreProvider } from "@/lib/location-store";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +31,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <CartStoreProvider>
-          <LocationStoreProvider>
             <Header />
-          </LocationStoreProvider>
           {children}
         </CartStoreProvider>
         <Toaster />

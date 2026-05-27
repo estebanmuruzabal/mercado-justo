@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
-import { createClient } from '@/lib/supabase/server'
 import { ProductDetailClient } from '@/components/listings/detail/ProductDetailClient'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function ListingDetailPage({
   params,
@@ -33,7 +33,7 @@ export default async function ListingDetailPage({
 
   const { data: listingRow, error: listingError } = await supabase
     .from('listing')
-    .select('id,title,store_id,status,characteristics,store(name)')
+    .select('id,title,store_id,status,characteristics,latitude,longitude,store(name)')
     .eq('id', id)
     .eq('listing_type', listingType)
     .eq('status', 'published')
@@ -63,6 +63,8 @@ export default async function ListingDetailPage({
     id: string
     title: string | null
     store_id: string
+    latitude: number | null
+    longitude: number | null
     store?: { name: string | null } | null
   }
 
@@ -127,6 +129,8 @@ export default async function ListingDetailPage({
           storeName={storeName ?? undefined}
           productTitle={productTitle}
           productImage={productImage}
+          latitude={listingTyped.latitude === null ? null : Number(listingTyped.latitude)}
+          longitude={listingTyped.longitude === null ? null : Number(listingTyped.longitude)}
           variants={variants}
         />
       </div>

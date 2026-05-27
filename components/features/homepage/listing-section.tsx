@@ -1,3 +1,4 @@
+/** @deprecated Use `@/components/marketplace/feed/MarketplaceFeed` instead. */
 'use client'
 
 import { useMemo, useState } from 'react'

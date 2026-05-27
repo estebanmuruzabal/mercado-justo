@@ -1,3 +1,4 @@
+/** @deprecated Use `@/components/marketplace/feed/MarketplaceFeedCard` instead. */
 'use client'
 
 import Link from 'next/link'
