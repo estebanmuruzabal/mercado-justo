@@ -30,6 +30,8 @@ export type ListingManagerRow = {
   stock: number | null
   condition: 'new' | 'used' | null
   characteristics: ListingAttributesPayload
+  latitude: number | null
+  longitude: number | null
   createdAt: string
 }
 
@@ -95,6 +97,8 @@ export async function getListingsManagerDataAction() {
     stock: row.stock ?? null,
     condition: row.condition ?? null,
     characteristics: row.characteristics ?? {},
+    latitude: row.latitude === null ? null : Number(row.latitude),
+    longitude: row.longitude === null ? null : Number(row.longitude),
     createdAt: row.created_at,
   }))
 
@@ -103,6 +107,10 @@ export async function getListingsManagerDataAction() {
     published: mapped
       .filter((l) => l.status === 'published')
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
+    sellerLocation: {
+      latitude: store.latitude,
+      longitude: store.longitude,
+    },
   }
 }
 
@@ -129,6 +137,12 @@ export async function createDraftListingAction(categoryId: string) {
       listing_type: categoryRowTyped.listing_type,
       status: 'draft',
       characteristics: {},
+      ...(categoryRowTyped.listing_type === 'product'
+        ? {
+            latitude: store.latitude,
+            longitude: store.longitude,
+          }
+        : {}),
     } as never)
     .select('*')
     .single()
@@ -148,6 +162,8 @@ export async function updateListingDraftAction(id: string, payload: Partial<{
   stock: number
   condition: 'new' | 'used'
   characteristics: ListingAttributesPayload
+  latitude: number | null
+  longitude: number | null
 }>) {
   const { supabase } = await getSellerContext()
 

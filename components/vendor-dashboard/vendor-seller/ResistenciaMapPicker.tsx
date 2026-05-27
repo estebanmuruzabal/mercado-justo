@@ -4,7 +4,6 @@ import { useEffect, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useMapEvents } from 'react-leaflet'
 import type { LatLngExpression } from 'leaflet'
-import L from 'leaflet'
 
 import { Button } from '@/components/ui/button'
 
@@ -76,29 +75,20 @@ export function ResistenciaMapPicker({
   }, [value])
 
   useEffect(() => {
-    // Leaflet's default icon URLs are relative to the current route in some setups,
-    // which can lead to 404s like `/dashboard-vendor/marker-icon.png`.
-    // Force them to use the bundled asset URLs.
-    const leaflet = L as unknown as {
-      Icon?: {
-        Default?: {
-          mergeOptions: (o: unknown) => void
-          prototype?: Record<string, unknown>
-        }
-      }
-    }
-    if (leaflet.Icon?.Default?.prototype) {
-      // Prevent Leaflet from trying to compute relative URLs.
-      const proto = leaflet.Icon.Default.prototype as { _getIconUrl?: unknown } | undefined
-      if (proto && '_getIconUrl' in proto) {
-        delete proto._getIconUrl
-      }
-    }
-    leaflet.Icon?.Default?.mergeOptions({
-      iconRetinaUrl: markerIcon2x.src ?? markerIcon2x,
-      iconUrl: markerIcon.src ?? markerIcon,
-      shadowUrl: markerShadow.src ?? markerShadow,
-    })
+    // Leaflet references `window` during import/initialization in some builds,
+    // so we only load it in the browser.
+    void (async () => {
+      const mod = await import('leaflet')
+      const L = ((mod as { default?: unknown }).default ?? mod) as typeof import('leaflet')
+
+      // Leaflet's default icon URLs are relative to the current route in some setups,
+      // which can lead to 404s like `/dashboard-vendor/marker-icon.png`.
+      L.Icon?.Default?.mergeOptions({
+        iconRetinaUrl: markerIcon2x.src ?? markerIcon2x,
+        iconUrl: markerIcon.src ?? markerIcon,
+        shadowUrl: markerShadow.src ?? markerShadow,
+      })
+    })()
   }, [])
 
   async function getCurrentLocation() {

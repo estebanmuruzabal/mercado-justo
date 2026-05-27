@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 import { ListingModalCharacteristicFields } from './ListingModalCharacteristicFields'
+import { ListingLocationPicker } from '@/components/vendor/location/listing-location-picker'
 
 export function ListingModalStep2({
   template,
@@ -22,6 +23,7 @@ export function ListingModalStep2({
   setVariants,
   formBusy,
   formError,
+  sellerLocation,
   onBack,
   onNext,
 }: {
@@ -33,6 +35,7 @@ export function ListingModalStep2({
   setVariants: Dispatch<SetStateAction<VariantEditorValue[]>>
   formBusy: boolean
   formError: string | null
+  sellerLocation: { latitude: number | null; longitude: number | null } | null
   onBack: () => void
   onNext: () => void
 }) {
@@ -42,6 +45,15 @@ export function ListingModalStep2({
         <Label>Step 2 — Basic Information</Label>
         <p className='text-sm text-muted-foreground'>Completá la info básica y elegí si este producto tiene variantes.</p>
       </div>
+
+      {form.listingType === 'product' ? (
+        <ListingLocationPicker
+          value={{ latitude: form.latitude, longitude: form.longitude }}
+          sellerLocation={sellerLocation}
+          disabled={formBusy}
+          onChange={(next) => setForm((c) => ({ ...c, latitude: next.latitude, longitude: next.longitude }))}
+        />
+      ) : null}
 
       <ListingModalCharacteristicFields
         template={template}

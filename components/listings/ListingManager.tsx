@@ -66,6 +66,8 @@ type DraftFormState = {
   description: string
   condition: 'new' | 'used'
   stock: number
+  latitude: number | null
+  longitude: number | null
 
   // Category-specific
   characteristics: CharacteristicMap
@@ -91,6 +93,8 @@ const EMPTY_FORM: DraftFormState = {
   description: '',
   condition: 'new',
   stock: 0,
+  latitude: null,
+  longitude: null,
   characteristics: {},
   enableVariants: false,
   simplePrice: null,
@@ -155,6 +159,7 @@ export function ListingManager() {
   const [managerError, setManagerError] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<ListingManagerRow[]>([])
   const [published, setPublished] = useState<ListingManagerRow[]>([])
+  const [sellerLocation, setSellerLocation] = useState<{ latitude: number | null; longitude: number | null } | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -194,6 +199,7 @@ export function ListingManager() {
       const data = await getListingsManagerDataAction()
       setDrafts(data.drafts)
       setPublished(data.published)
+      setSellerLocation(data.sellerLocation)
     } catch (err) {
       setManagerError(err instanceof Error ? err.message : 'No se pudieron cargar tus listings.')
     } finally {
@@ -328,11 +334,29 @@ export function ListingManager() {
     void reloadManager()
   }, [refreshKey])
 
+  useEffect(() => {
+    // If seller coordinates were not loaded yet when opening the create modal,
+    // fill them in without overwriting user edits.
+    if (!modalOpen) return
+    if (form.listingType !== 'product') return
+    if (form.latitude != null || form.longitude != null) return
+    if (!sellerLocation) return
+    if (sellerLocation.latitude == null || sellerLocation.longitude == null) return
+
+    setForm((c) => ({
+      ...c,
+      latitude: sellerLocation.latitude,
+      longitude: sellerLocation.longitude,
+    }))
+  }, [modalOpen, form.listingType, form.latitude, form.longitude, sellerLocation])
+
   function openCreateModalForListingType(listingType: ListingType) {
     setForm({
       ...EMPTY_FORM,
       status: 'draft',
       listingType,
+      latitude: listingType === 'product' ? sellerLocation?.latitude ?? null : null,
+      longitude: listingType === 'product' ? sellerLocation?.longitude ?? null : null,
     })
     setStep(1)
     setFormError(null)
@@ -351,6 +375,8 @@ export function ListingManager() {
       description: (row.description ?? '') as string,
       condition: (row.condition ?? 'new') as 'new' | 'used',
       stock: (row.stock ?? 0) as number,
+      latitude: row.latitude ?? null,
+      longitude: row.longitude ?? null,
       characteristics,
       // Legacy price is treated as simple mode price by default.
       // If the listing has variants, the UI will let the seller enable variants.
@@ -443,6 +469,9 @@ export function ListingManager() {
         // Legacy: in simple mode, price lives on `listing.price`.
         price: form.enableVariants ? undefined : form.simplePrice ?? undefined,
         characteristics: form.characteristics,
+        ...(form.listingType === 'product'
+          ? { latitude: form.latitude, longitude: form.longitude }
+          : {}),
       })
 
       setStep(3)
@@ -495,6 +524,9 @@ export function ListingManager() {
         stock: form.enableVariants ? 0 : form.stock,
         price: form.enableVariants ? undefined : form.simplePrice ?? undefined,
         characteristics: form.characteristics,
+        ...(form.listingType === 'product'
+          ? { latitude: form.latitude, longitude: form.longitude }
+          : {}),
       })
 
       if (form.enableVariants) {
@@ -559,6 +591,9 @@ export function ListingManager() {
         stock: form.enableVariants ? 0 : form.stock,
         price: form.enableVariants ? undefined : form.simplePrice ?? undefined,
         characteristics: form.characteristics,
+        ...(form.listingType === 'product'
+          ? { latitude: form.latitude, longitude: form.longitude }
+          : {}),
       })
 
       if (form.enableVariants) {
@@ -1211,6 +1246,7 @@ export function ListingManager() {
         handleStep2Next={handleStep2Next}
         handleSaveDraft={handleSaveDraft}
         handlePublish={handlePublish}
+        sellerLocation={sellerLocation}
         variants={variants}
         variantsLoading={variantsLoading}
         setVariants={setVariants}

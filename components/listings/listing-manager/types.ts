@@ -14,6 +14,8 @@ export type DraftFormState = {
   description: string
   condition: 'new' | 'used'
   stock: number
+  latitude: number | null
+  longitude: number | null
 
   // Category-specific
   characteristics: CharacteristicMap

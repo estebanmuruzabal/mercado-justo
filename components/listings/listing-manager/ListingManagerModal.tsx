@@ -35,6 +35,7 @@ export function ListingManagerModal({
   handleStep2Next,
   handleSaveDraft,
   handlePublish,
+  sellerLocation,
   variants,
   variantsLoading,
   setVariants,
@@ -63,6 +64,7 @@ export function ListingManagerModal({
   handleStep2Next: () => Promise<void> | void
   handleSaveDraft: () => Promise<void> | void
   handlePublish: () => Promise<void> | void
+  sellerLocation: { latitude: number | null; longitude: number | null } | null
   variants: VariantEditorValue[]
   variantsLoading: boolean
   setVariants: Dispatch<SetStateAction<VariantEditorValue[]>>
@@ -101,6 +103,7 @@ export function ListingManagerModal({
               template={template}
               form={form}
               setForm={setForm}
+              sellerLocation={sellerLocation}
               variants={variants}
               variantsLoading={variantsLoading}
               setVariants={setVariants}

@@ -109,7 +109,9 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          latitude: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
+          longitude: number | null
           price: number | null
           status: Database["public"]["Enums"]["listing_status"]
           stock: number
@@ -123,7 +125,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
+          longitude?: number | null
           price?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
@@ -137,7 +141,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
+          longitude?: number | null
           price?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
