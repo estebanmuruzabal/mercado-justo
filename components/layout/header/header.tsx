@@ -7,6 +7,7 @@ import { DesktopNav } from './desktop-nav'
 import { MobileNav } from './mobile-nav'
 import { MobileDrawer } from './mobile-drawer'
 import { springSoft } from '@/lib/motion/transitions'
+import { LocationSelectorTrigger } from '@/components/location/location-selector-trigger'
 
 export interface HeaderProps {
   onSearch?: (payload: SearchPayload) => void
@@ -116,6 +117,15 @@ export default function Header({
           onMobileSearchClose={() => setMobileSearchOpen(false)}
           onSearch={handleSearch}
         />
+      </div>
+
+      {/* Sticky subheader for Delivery/Pickup location */}
+      <div
+        className='border-b border-neutral-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70'
+      >
+        <div className='mx-auto max-w-[1760px] px-4 sm:px-6 lg:px-10 py-2'>
+          <LocationSelectorTrigger />
+        </div>
       </div>
 
       <MobileDrawer

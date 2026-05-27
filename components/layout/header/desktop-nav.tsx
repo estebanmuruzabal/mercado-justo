@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
-import { Menu, Search } from 'lucide-react'
+import { Menu, Search, ShoppingCart } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { MercadoJustoLogo } from '@/components/features/navbar/left/AirbnbLogo'
 import { UserMenu } from '@/components/features/navbar/right/UserMenu'
@@ -12,6 +12,8 @@ import { useEffect, useRef, useState } from 'react'
 import { tabUnderlineVariants, tabLabelVariants } from '@/lib/motion/navbar-motion'
 import { useMarketplaceFiltersStore } from '@/stores/useMarketplaceFiltersStore'
 import { createClient } from '@/lib/supabase/client'
+import { CartDrawer } from '@/components/features/cart-drawer/cart-drawer'
+import { useCartStore } from '@/stores/cart-store/cart-store'
 
 export function DesktopNav({
   brand,
@@ -40,6 +42,8 @@ export function DesktopNav({
   const radiusKm = useMarketplaceFiltersStore((s) => s.radiusKm)
   const [isSeller, setIsSeller] = useState(false)
   const [checkingSeller, setCheckingSeller] = useState(true)
+  const [cartOpen, setCartOpen] = useState(false)
+  const { itemCount } = useCartStore()
 
   useEffect(() => {
     let cancelled = false
@@ -88,7 +92,7 @@ export function DesktopNav({
 
   return (
     <div className='hidden lg:block'>
-      <div className='flex items-center justify-between py-4'>
+      <div className='flex items-center justify-between py-3'>
         {/* Brand */}
         <Link href='/' className='flex items-center gap-1 text-[#FF385C]'>
           <MercadoJustoLogo />
@@ -196,7 +200,12 @@ export function DesktopNav({
               Convertite en vendedor
             </Link>
           )}
-          <UserMenuTrigger avatarUrl={avatarUrl} onClick={() => setUserMenuOpen(!userMenuOpen)} />
+          <UserMenuTrigger
+            avatarUrl={avatarUrl}
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            itemCount={itemCount}
+            onOpenCart={() => setCartOpen(true)}
+          />
 
           <AnimatePresence>
             {userMenuOpen ? (
@@ -215,6 +224,8 @@ export function DesktopNav({
               </motion.div>
             ) : null}
           </AnimatePresence>
+
+          {cartOpen ? <CartDrawer onClose={() => setCartOpen(false)} /> : null}
         </div>
       </div>
 
@@ -234,7 +245,17 @@ export function DesktopNav({
   )
 }
 
-function UserMenuTrigger({ avatarUrl, onClick }: { avatarUrl?: string; onClick: () => void }) {
+function UserMenuTrigger({
+  avatarUrl,
+  onClick,
+  itemCount,
+  onOpenCart,
+}: {
+  avatarUrl?: string
+  onClick: () => void
+  itemCount: number
+  onOpenCart: () => void
+}) {
   return (
     <button
       type='button'
@@ -242,6 +263,29 @@ function UserMenuTrigger({ avatarUrl, onClick }: { avatarUrl?: string; onClick: 
       className='flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-2 py-1.5 hover:shadow-md transition-shadow'
       aria-label='Menú de usuario'
     >
+      <span
+        role='button'
+        tabIndex={0}
+        aria-label='Abrir carrito'
+        onClick={(e) => {
+          e.stopPropagation()
+          onOpenCart()
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return
+          e.preventDefault()
+          e.stopPropagation()
+          onOpenCart()
+        }}
+        className='relative flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer'
+      >
+        <ShoppingCart className='h-4 w-4 text-neutral-900' aria-hidden='true' />
+        {itemCount > 0 ? (
+          <span className='absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF385C] px-1 text-xs font-bold text-white'>
+            {itemCount > 99 ? '99+' : itemCount}
+          </span>
+        ) : null}
+      </span>
       <Avatar avatarUrl={avatarUrl} />
       <span className='flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100'>
         <Menu className='h-4 w-4 text-neutral-900' aria-hidden='true' />

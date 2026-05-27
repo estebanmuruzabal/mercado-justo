@@ -184,7 +184,11 @@ export function ListingLocationPicker({
 
       {showMap ? (
         <ResistenciaMapPicker
-          value={hasCoords ? value : null}
+          value={
+            hasCoords && value.latitude != null && value.longitude != null
+              ? { latitude: value.latitude, longitude: value.longitude }
+              : null
+          }
           onChange={(p) => onChange({ latitude: p.latitude, longitude: p.longitude })}
         />
       ) : null}

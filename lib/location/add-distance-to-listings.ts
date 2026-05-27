@@ -34,8 +34,8 @@ export function addDistanceToListings<T extends WithCoords>(
 
   return listings.map((listing) => {
     const listingCoords = {
-      latitude: listing.latitude,
-      longitude: listing.longitude,
+      latitude: listing.latitude ?? undefined,
+      longitude: listing.longitude ?? undefined,
     }
 
     if (!isFiniteLatLng(listingCoords)) {

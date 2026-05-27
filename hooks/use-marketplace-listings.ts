@@ -44,7 +44,7 @@ function applyFilters(
 
   if (isFiniteLatLng(userCoords)) {
     result = result.filter((l) => {
-      const coords = { latitude: l.latitude, longitude: l.longitude }
+      const coords = { latitude: l.latitude ?? undefined, longitude: l.longitude ?? undefined }
       if (!isFiniteLatLng(coords)) return false
       return haversineDistanceKm(userCoords, coords) <= filters.radiusKm
     })
@@ -127,7 +127,7 @@ export function useMapListings(listings: MarketplaceListingWithDistance[]) {
   return useMemo(
     () =>
       listings.filter((l) =>
-        isFiniteLatLng({ latitude: l.latitude, longitude: l.longitude }),
+        isFiniteLatLng({ latitude: l.latitude ?? undefined, longitude: l.longitude ?? undefined }),
       ),
     [listings],
   )

@@ -40,7 +40,7 @@ export function MobileNav({
   }, [mobileSearchOpen])
 
   return (
-    <div className='lg:hidden py-3'>
+    <div className='lg:hidden py-2'>
       {!scrolled ? (
         <div className='flex items-center gap-2'>
           <button

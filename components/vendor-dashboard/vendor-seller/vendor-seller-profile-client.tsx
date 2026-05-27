@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
+import type { UseFormSetValue } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useRouter } from 'next/navigation'
@@ -85,7 +86,7 @@ export function VendorSellerProfileClient({ initialStore }: { initialStore: Stor
   const { geocoding } = useSellerGeocoding({
     address: watchAddress ?? '',
     coordMode,
-    setValue: form.setValue,
+    setValue: form.setValue as unknown as UseFormSetValue<{ latitude: string; longitude: string }>,
     toast,
   })
 

@@ -28,7 +28,8 @@ export function MarketplaceFiltersModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-            className='fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-white shadow-xl'
+            // Leave room for the sticky header subheader.
+            className='fixed inset-x-0 bottom-0 z-50 max-h-[calc(90vh-72px)] overflow-y-auto rounded-t-3xl bg-white shadow-xl'
           >
             <div className='sticky top-0 flex items-center justify-between border-b border-neutral-100 bg-white px-4 py-3'>
               <h2 className='text-base font-semibold'>Filtros</h2>

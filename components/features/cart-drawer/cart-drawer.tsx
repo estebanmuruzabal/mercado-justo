@@ -1,12 +1,14 @@
 'use client'
 
-import { Minus, Plus, ShoppingCart } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { Minus, Plus, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { useCartStore } from '@/stores/cart-store/cart-store'
 import { getListingTypeLabel } from '@/lib/listing'
+import { createClient } from '@/lib/supabase/client'
 
 function formatMoney(amount: number) {
   return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
@@ -14,6 +16,64 @@ function formatMoney(amount: number) {
 
 export function CartDrawer({ onClose }: { onClose: () => void }) {
   const { items, itemCount, totalPrice, setQuantity, removeItem } = useCartStore()
+
+  const storeIds = useMemo(() => {
+    const unique = new Set<string>()
+    for (const item of items) unique.add(item.storeId)
+    return Array.from(unique)
+  }, [items])
+
+  const [storeNames, setStoreNames] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (storeIds.length === 0) {
+      setStoreNames({})
+      return
+    }
+
+    let cancelled = false
+    ;(async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('store')
+        .select('id, name')
+        .in('id', storeIds)
+
+      if (cancelled) return
+      if (error) {
+        setStoreNames({})
+        return
+      }
+
+      const next: Record<string, string> = {}
+      for (const row of data ?? []) {
+        next[String(row.id)] = typeof row.name === 'string' ? row.name : 'Vendedor'
+      }
+      setStoreNames(next)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [storeIds])
+
+  const groupedByStore = useMemo(() => {
+    const by: Record<string, typeof items> = {}
+    const order: string[] = []
+
+    for (const item of items) {
+      if (!by[item.storeId]) {
+        by[item.storeId] = []
+        order.push(item.storeId)
+      }
+      by[item.storeId].push(item)
+    }
+
+    return order.map((storeId) => ({
+      storeId,
+      items: by[storeId] ?? [],
+    }))
+  }, [items])
 
   return (
     <Sheet
@@ -54,79 +114,104 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
             ) : (
               <div className='h-full overflow-y-auto'>
                 <div className='space-y-3 p-4'>
-                  {items.map((item) => (
-                    <div key={item.id} className='rounded-2xl border bg-background p-3'>
-                      <div className='flex gap-3'>
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className='h-14 w-14 rounded-xl object-cover'
-                        />
+                  {groupedByStore.map(({ storeId, items }, idx) => {
+                    const storeName = storeNames[storeId] ?? 'Vendedor'
+                    return (
+                      <div key={storeId}>
+                        <div className='flex items-center justify-between'>
+                          <h3 className='text-sm font-semibold text-neutral-900'>
+                            Productos de{' '}
+                            <Link
+                              href={`/seller/${storeId}`}
+                              className='text-[#FF385C] transition-colors hover:opacity-80 hover:underline'
+                            >
+                              {storeName}
+                            </Link>
+                          </h3>
+                        </div>
 
-                        <div className='min-w-0 flex-1'>
-                          <div className='flex items-center justify-between gap-2'>
-                            <div className='min-w-0'>
-                              <div className='truncate text-sm font-semibold'>{item.title}</div>
-                              <div className='text-xs text-muted-foreground'>
-                                {getListingTypeLabel(item.listingType)}
+                        <div className='mt-3 space-y-3'>
+                          {items.map((item) => (
+                            <div key={item.id} className='rounded-2xl border bg-background p-3'>
+                              <div className='flex gap-3'>
+                                <img
+                                  src={item.image}
+                                  alt={item.title}
+                                  className='h-14 w-14 rounded-xl object-cover'
+                                />
+
+                                <div className='min-w-0 flex-1'>
+                                  <div className='flex items-center justify-between gap-2'>
+                                    <div className='min-w-0'>
+                                      <div className='truncate text-sm font-semibold'>{item.title}</div>
+                                      <div className='text-xs text-muted-foreground'>
+                                        {getListingTypeLabel(item.listingType)}
+                                      </div>
+                                    </div>
+                                    <div className='text-sm font-semibold'>{formatMoney(item.unitPrice)}</div>
+                                  </div>
+
+                                  <div className='mt-3 flex items-center justify-between gap-3'>
+                                    <div className='flex items-center gap-2 rounded-full border bg-white/0 px-2 py-1'>
+                                      <Button
+                                        type='button'
+                                        variant='ghost'
+                                        size='icon'
+                                        className='h-8 w-8 rounded-full'
+                                        onClick={() =>
+                                          setQuantity(
+                                            item.listingType,
+                                            item.variantId,
+                                            Math.max(0, item.quantity - 1),
+                                          )
+                                        }
+                                        aria-label='Decrease quantity'
+                                      >
+                                        <Minus className='size-4' />
+                                      </Button>
+
+                                      <span className='w-6 text-center text-sm font-medium'>{item.quantity}</span>
+
+                                      <Button
+                                        type='button'
+                                        variant='ghost'
+                                        size='icon'
+                                        className='h-8 w-8 rounded-full'
+                                        onClick={() =>
+                                          setQuantity(item.listingType, item.variantId, item.quantity + 1)
+                                        }
+                                        aria-label='Increase quantity'
+                                      >
+                                        <Plus className='size-4' />
+                                      </Button>
+                                    </div>
+
+                                    <div className='text-sm font-semibold'>
+                                      {formatMoney(item.unitPrice * item.quantity)}
+                                    </div>
+                                  </div>
+
+                                  <div className='mt-2 flex justify-end'>
+                                    <button
+                                      type='button'
+                                      className='text-xs text-muted-foreground hover:text-foreground'
+                                      onClick={() => removeItem(item.listingType, item.variantId)}
+                                    >
+                                      Remover
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                            <div className='text-sm font-semibold'>{formatMoney(item.unitPrice)}</div>
-                          </div>
-
-                          <div className='mt-3 flex items-center justify-between gap-3'>
-                            <div className='flex items-center gap-2 rounded-full border bg-white/0 px-2 py-1'>
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='icon'
-                                className='h-8 w-8 rounded-full'
-                                onClick={() =>
-                                  setQuantity(
-                                    item.listingType,
-                                    item.variantId,
-                                    Math.max(0, item.quantity - 1)
-                                  )
-                                }
-                                aria-label='Decrease quantity'
-                              >
-                                <Minus className='size-4' />
-                              </Button>
-
-                              <span className='w-6 text-center text-sm font-medium'>{item.quantity}</span>
-
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='icon'
-                                className='h-8 w-8 rounded-full'
-                                onClick={() =>
-                                  setQuantity(item.listingType, item.variantId, item.quantity + 1)
-                                }
-                                aria-label='Increase quantity'
-                              >
-                                <Plus className='size-4' />
-                              </Button>
-                            </div>
-
-                            <div className='text-sm font-semibold'>
-                              {formatMoney(item.unitPrice * item.quantity)}
-                            </div>
-                          </div>
-
-                          <div className='mt-2 flex justify-end'>
-                            <button
-                              type='button'
-                              className='text-xs text-muted-foreground hover:text-foreground'
-                                onClick={() => removeItem(item.listingType, item.variantId)}
-                            >
-                              Remover
-                            </button>
-                          </div>
+                          ))}
                         </div>
+
+                        {idx < groupedByStore.length - 1 ? (
+                          <Separator className='my-4' />
+                        ) : null}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}

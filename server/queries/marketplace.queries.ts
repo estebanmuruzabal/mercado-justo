@@ -90,7 +90,8 @@ export async function fetchMarketplaceCategories() {
 
   if (error) throw error
 
-  return (data ?? []).map((row) => ({
+  const rows = (data ?? []) as Array<{ id: string; name: string; listing_type: string }>
+  return rows.map((row) => ({
     id: row.id,
     name: row.name,
     listingType: row.listing_type as ListingType,
