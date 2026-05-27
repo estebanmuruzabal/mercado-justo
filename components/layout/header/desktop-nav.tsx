@@ -44,6 +44,11 @@ export function DesktopNav({
   const [checkingSeller, setCheckingSeller] = useState(true)
   const [cartOpen, setCartOpen] = useState(false)
   const { itemCount } = useCartStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -205,6 +210,7 @@ export function DesktopNav({
             onClick={() => setUserMenuOpen(!userMenuOpen)}
             itemCount={itemCount}
             onOpenCart={() => setCartOpen(true)}
+            showBadge={mounted}
           />
 
           <AnimatePresence>
@@ -250,11 +256,13 @@ function UserMenuTrigger({
   onClick,
   itemCount,
   onOpenCart,
+  showBadge,
 }: {
   avatarUrl?: string
   onClick: () => void
   itemCount: number
   onOpenCart: () => void
+  showBadge: boolean
 }) {
   return (
     <button
@@ -280,7 +288,7 @@ function UserMenuTrigger({
         className='relative flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer'
       >
         <ShoppingCart className='h-4 w-4 text-neutral-900' aria-hidden='true' />
-        {itemCount > 0 ? (
+        {showBadge && itemCount > 0 ? (
           <span className='absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF385C] px-1 text-xs font-bold text-white'>
             {itemCount > 99 ? '99+' : itemCount}
           </span>

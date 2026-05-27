@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useMapListings, useMarketplaceListings } from '@/hooks/use-marketplace-listings'
 import type { ListingType } from '@/lib/listing'
 import { useMarketplaceViewStore } from '@/stores/useMarketplaceViewStore'
-import { useUserCoordinates } from '@/stores/useUserLocationStore'
 import type { MarketplaceListing } from '@/types/marketplace'
 import { useEffect, useState } from 'react'
 
@@ -15,6 +14,7 @@ import { MarketplaceFeed } from './feed/MarketplaceFeed'
 import { MarketplaceHybridLayout } from './hybrid/MarketplaceHybridLayout'
 import { MarketplaceMap } from './map/MarketplaceMap'
 import { LocationPrompt } from './search/LocationPrompt'
+import { useUserCoordinates } from '@/stores/useUserLocationStore'
 
 type CategoryOption = {
   id: string

@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Separator } from '@/components/ui/separator'
 import { useCartStore } from '@/stores/cart-store/cart-store'
 import { getListingTypeLabel } from '@/lib/listing'
+import { hasSupabasePublicConfig } from '@/lib/supabase/config'
 import { createClient } from '@/lib/supabase/client'
 
 function formatMoney(amount: number) {
@@ -33,23 +34,35 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
 
     let cancelled = false
     ;(async () => {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('store')
-        .select('id, name')
-        .in('id', storeIds)
+      try {
+        // En caso de que env vars no estén disponibles en el runtime del cliente,
+        // evitamos que esto rompa el render del cart.
+        if (!hasSupabasePublicConfig()) {
+          return
+        }
 
-      if (cancelled) return
-      if (error) {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('store')
+          .select('id, name')
+          .in('id', storeIds)
+
+        if (cancelled) return
+        if (error) {
+          setStoreNames({})
+          return
+        }
+
+        const next: Record<string, string> = {}
+        const rows = (data ?? []) as Array<{ id: string; name: string | null }>
+        for (const row of rows) {
+          next[String(row.id)] = typeof row.name === 'string' && row.name ? row.name : 'Vendedor'
+        }
+        setStoreNames(next)
+      } catch {
+        if (cancelled) return
         setStoreNames({})
-        return
       }
-
-      const next: Record<string, string> = {}
-      for (const row of data ?? []) {
-        next[String(row.id)] = typeof row.name === 'string' ? row.name : 'Vendedor'
-      }
-      setStoreNames(next)
     })()
 
     return () => {
