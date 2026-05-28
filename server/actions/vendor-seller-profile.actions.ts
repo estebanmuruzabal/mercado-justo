@@ -3,6 +3,13 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 
+import {
+  BECOME_VENDOR_PATH,
+  PROFILE_PATH,
+  VENDOR_DASHBOARD_PATH,
+  VENDOR_LISTINGS_PATH,
+  VENDOR_SELLER_PATH,
+} from '@/lib/routes'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { ROLES } from '@/lib/roles'
@@ -95,7 +102,8 @@ export async function updateSellerProfileAction(input: z.input<typeof updateSell
       if (error) throw error
     }
 
-    revalidatePath('/dashboard-vendor/seller')
+    revalidatePath(BECOME_VENDOR_PATH)
+    revalidatePath(VENDOR_SELLER_PATH)
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'No se pudo guardar.' }
@@ -118,7 +126,8 @@ export async function deleteSellerModeAction(): Promise<DeleteSellerModeResult> 
     const store = await getStoreByUserId(user.id)
     if (!store) {
       // Already not a seller; treat as success.
-      revalidatePath('/dashboard-vendor/seller')
+      revalidatePath(BECOME_VENDOR_PATH)
+      revalidatePath(VENDOR_SELLER_PATH)
       return { success: true }
     }
 
@@ -138,9 +147,11 @@ export async function deleteSellerModeAction(): Promise<DeleteSellerModeResult> 
     const { error: storeError } = await service.from('store').delete().eq('id', user.id)
     if (storeError) throw storeError
 
-    revalidatePath('/dashboard-vendor')
-    revalidatePath('/dashboard-vendor/seller')
-    revalidatePath('/dashboard-vendor/listings')
+    revalidatePath(BECOME_VENDOR_PATH)
+    revalidatePath(VENDOR_DASHBOARD_PATH)
+    revalidatePath(VENDOR_SELLER_PATH)
+    revalidatePath(VENDOR_LISTINGS_PATH)
+    revalidatePath(PROFILE_PATH)
 
     return { success: true }
   } catch (err) {

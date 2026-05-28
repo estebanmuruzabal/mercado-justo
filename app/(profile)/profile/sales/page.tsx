@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { PROFILE_PATH } from '@/lib/routes'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -50,7 +51,7 @@ export default async function SalesPage() {
             <CardTitle>Activá tu tienda</CardTitle>
           </CardHeader>
           <CardContent className='text-sm text-muted-foreground'>
-            <Link href='/profile'>Ir a tu perfil</Link>
+            <Link href={PROFILE_PATH}>Ir a tu perfil</Link>
           </CardContent>
         </Card>
       </div>

@@ -6,6 +6,13 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { Bell, Package, ShoppingBag, Store, Tags } from 'lucide-react'
 
+import {
+  VENDOR_CATEGORIES_PATH,
+  VENDOR_LISTINGS_PATH,
+  VENDOR_NOTIFICATIONS_PATH,
+  VENDOR_SALES_PATH,
+  VENDOR_SELLER_PATH,
+} from '@/lib/routes'
 import { cn } from '@/lib/utils'
 
 type NavItem = {
@@ -15,11 +22,11 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard-vendor/seller', label: 'Modo vendedor', icon: Store },
-  { href: '/dashboard-vendor/listings', label: 'Mis Listings', icon: Package },
-  { href: '/dashboard-vendor/ventas', label: 'Ventas', icon: ShoppingBag },
-  { href: '/dashboard-vendor/categorias', label: 'Categorías', icon: Tags },
-  { href: '/dashboard-vendor/notifications', label: 'Notificaciones', icon: Bell },
+  { href: VENDOR_SELLER_PATH, label: 'Modo vendedor', icon: Store },
+  { href: VENDOR_LISTINGS_PATH, label: 'Mis Listings', icon: Package },
+  { href: VENDOR_SALES_PATH, label: 'Ventas', icon: ShoppingBag },
+  { href: VENDOR_CATEGORIES_PATH, label: 'Categorías', icon: Tags },
+  { href: VENDOR_NOTIFICATIONS_PATH, label: 'Notificaciones', icon: Bell },
 ]
 
 export function VendorSidebar() {

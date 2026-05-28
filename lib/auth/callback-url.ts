@@ -1,6 +1,6 @@
-import { CHECKOUT_PATH } from './checkout-constants'
+import { CHECKOUT_PATH } from '@/lib/routes'
 
-export { CHECKOUT_PATH } from './checkout-constants'
+export { CHECKOUT_PATH }
 
 export function normalizeAuthCallbackUrl(
   callbackUrl?: string | null,

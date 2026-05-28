@@ -1,3 +1,10 @@
+import {
+  PROFILE_NOTIFICATIONS_PATH,
+  PROFILE_SALES_PATH,
+  VENDOR_LISTINGS_PATH,
+  VENDOR_SALES_PATH,
+} from '@/lib/routes'
+
 import type { Notification } from './types'
 
 /** Dev/test fixtures only — production uses Supabase `notification` + Realtime. */
@@ -14,7 +21,7 @@ export const VENDOR_NOTIFICATIONS_MOCK: Notification[] = [
     body: 'Pedido #1042 · Pago pendiente de confirmación',
     createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
     readState: 'unread',
-    href: '/dashboard-vendor/ventas',
+    href: VENDOR_SALES_PATH,
   },
   {
     id: 'vn-2',
@@ -26,7 +33,7 @@ export const VENDOR_NOTIFICATIONS_MOCK: Notification[] = [
     body: 'María G. compró 2 productos de tu tienda',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     readState: 'unread',
-    href: '/dashboard-vendor/ventas',
+    href: VENDOR_SALES_PATH,
   },
   {
     id: 'vn-3',
@@ -38,7 +45,7 @@ export const VENDOR_NOTIFICATIONS_MOCK: Notification[] = [
     body: '“Huevos orgánicos docena” ya está visible en el marketplace',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
     readState: 'read',
-    href: '/dashboard-vendor/listings',
+    href: VENDOR_LISTINGS_PATH,
   },
 ]
 
@@ -53,7 +60,7 @@ export const BUYER_NOTIFICATIONS_MOCK: Notification[] = [
     body: 'El vendedor preparó tu compra. Llega hoy entre 18:00 y 20:00',
     createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
     readState: 'unread',
-    href: '/profile/sales',
+    href: PROFILE_SALES_PATH,
   },
   {
     id: 'bn-2',
@@ -65,6 +72,6 @@ export const BUYER_NOTIFICATIONS_MOCK: Notification[] = [
     body: 'Válido hasta el domingo en productos seleccionados',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
     readState: 'unread',
-    href: '/profile/notifications',
+    href: PROFILE_NOTIFICATIONS_PATH,
   },
 ]

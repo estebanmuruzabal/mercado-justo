@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { VendorBreadcrumbs } from '@/components/vendor-dashboard/VendorBreadcrumbs'
 import { NotificationsPageClient } from '@/components/notifications/notifications-page-client'
+import { BECOME_VENDOR_PATH, SIGN_IN_PATH } from '@/lib/routes'
 import { getStoreByUserId } from '@/server/services/store.service'
 
 export default async function VendorNotificationsPage() {
@@ -12,7 +13,7 @@ export default async function VendorNotificationsPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect('/signin')
+  if (!user) redirect(SIGN_IN_PATH)
 
   const store = await getStoreByUserId(user.id)
 
@@ -29,8 +30,8 @@ export default async function VendorNotificationsPage() {
                 Necesitás una tienda activa para recibir notificaciones de ventas.
               </p>
             </div>
-            <Link href='/dashboard-vendor/seller' className='text-sm text-muted-foreground hover:text-foreground'>
-              ← Volver al modo vendedor
+            <Link href={BECOME_VENDOR_PATH} className='text-sm text-muted-foreground hover:text-foreground'>
+              ← Activar modo vendedor
             </Link>
           </div>
         ) : (

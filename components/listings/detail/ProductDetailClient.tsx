@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+import { CHECKOUT_PATH } from '@/lib/routes'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -247,7 +248,7 @@ export function ProductDetailClient({
                   quantity,
                   unitPrice: selectedVariant.price,
                 })
-                router.push('/checkout')
+                router.push(CHECKOUT_PATH)
               }}
             >
               Comprar ahora

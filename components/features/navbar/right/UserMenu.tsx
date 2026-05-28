@@ -17,6 +17,17 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { signOutClient } from '@/lib/auth/sign-out-client'
+import {
+  BECOME_VENDOR_PATH,
+  PROFILE_PATH,
+  VENDOR_CATEGORIES_PATH,
+  VENDOR_LISTINGS_PATH,
+  VENDOR_SALES_PATH,
+  VENDOR_SELLER_PATH,
+  HOME_PATH,
+  signInPathWithCallback,
+  signUpPathWithCallback,
+} from '@/lib/routes'
 import { signOut } from '@/server/actions/auth'
 
 function NavItem({
@@ -99,7 +110,7 @@ export function UserMenu({
   }, [supabase])
 
   useEffect(() => {
-    router.prefetch('/profile')
+    router.prefetch(PROFILE_PATH)
   }, [router])
 
   async function handleAction(action: string) {
@@ -114,48 +125,48 @@ export function UserMenu({
     }
 
     if (actionKey === 'signin') {
-      router.push(`/signin?callbackUrl=${encodeURIComponent(pathname)}`)
+      router.push(signInPathWithCallback(pathname))
       return
     }
 
     if (actionKey === 'signup') {
-      router.push(`/signup?callbackUrl=${encodeURIComponent(pathname)}`)
+      router.push(signUpPathWithCallback(pathname))
       return
     }
 
     if (actionKey === 'perfil' || actionKey === 'configuracion' || actionKey === 'invitar' || actionKey === 'coanfitrion') {
-      router.push('/profile')
+      router.push(PROFILE_PATH)
       return
     }
 
     if (actionKey === 'anfitrion') {
-      router.push('/dashboard-vendor/seller')
+      router.push(BECOME_VENDOR_PATH)
       return
     }
 
     if (actionKey === 'vendor_listings') {
-      router.push('/dashboard-vendor/listings')
+      router.push(VENDOR_LISTINGS_PATH)
       return
     }
 
     if (actionKey === 'vendor_sales') {
-      router.push('/dashboard-vendor/ventas')
+      router.push(VENDOR_SALES_PATH)
       return
     }
 
     if (actionKey === 'vendor_categories') {
-      router.push('/dashboard-vendor/categorias')
+      router.push(VENDOR_CATEGORIES_PATH)
       return
     }
 
     if (actionKey === 'vendor_seller') {
-      router.push('/dashboard-vendor/seller')
+      router.push(VENDOR_SELLER_PATH)
       return
     }
 
     // Fallbacks for actions not yet wired in this app:
     if (actionKey === 'favoritos' || actionKey === 'viajes' || actionKey === 'mensajes' || actionKey === 'notificaciones' || actionKey === 'idiomas' || actionKey === 'ayuda') {
-      router.push('/')
+      router.push(HOME_PATH)
       return
     }
 
@@ -164,18 +175,18 @@ export function UserMenu({
 
   function isActiveItem(itemId: string) {
     if (itemId === 'signin' || itemId === 'signup') return false
-    if (itemId === 'perfil' || itemId === 'configuracion') return pathname === '/profile'
-    if (itemId === 'anfitrion') return pathname === '/dashboard-vendor/seller'
+    if (itemId === 'perfil' || itemId === 'configuracion') return pathname === PROFILE_PATH
+    if (itemId === 'anfitrion') return pathname === BECOME_VENDOR_PATH
 
-    if (itemId === 'vendor_listings') return pathname.startsWith('/dashboard-vendor/listings')
-    if (itemId === 'vendor_sales') return pathname.startsWith('/dashboard-vendor/ventas')
-    if (itemId === 'vendor_categories') return pathname.startsWith('/dashboard-vendor/categorias')
-    if (itemId === 'vendor_seller') return pathname.startsWith('/dashboard-vendor/seller')
+    if (itemId === 'vendor_listings') return pathname.startsWith(VENDOR_LISTINGS_PATH)
+    if (itemId === 'vendor_sales') return pathname.startsWith(VENDOR_SALES_PATH)
+    if (itemId === 'vendor_categories') return pathname.startsWith(VENDOR_CATEGORIES_PATH)
+    if (itemId === 'vendor_seller') return pathname.startsWith(VENDOR_SELLER_PATH)
 
-    if (itemId === 'ayuda') return pathname === '/'
+    if (itemId === 'ayuda') return pathname === HOME_PATH
 
     if (itemId === 'logout') return false
-    if (itemId === 'invitar' || itemId === 'coanfitrion') return pathname === '/profile'
+    if (itemId === 'invitar' || itemId === 'coanfitrion') return pathname === PROFILE_PATH
     return false
   }
 
@@ -230,7 +241,7 @@ export function UserMenu({
       {/* Optional direct link for accessibility */}
       {isAuthenticated ? (
         <div className='px-5 pb-2 text-xs text-muted-foreground'>
-          <Link href='/profile' prefetch>
+          <Link href={PROFILE_PATH} prefetch>
             Ir al perfil
           </Link>
         </div>

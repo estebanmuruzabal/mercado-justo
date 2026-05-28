@@ -12,6 +12,7 @@ import { useEffect, useRef } from 'react'
 import { tabUnderlineVariants, tabLabelVariants } from '@/lib/motion/navbar-motion'
 import { useMarketplaceFiltersStore } from '@/stores/useMarketplaceFiltersStore'
 import { useHeaderSession } from '@/hooks/auth/use-header-session'
+import { BECOME_VENDOR_PATH, VENDOR_LISTINGS_PATH } from '@/lib/routes'
 import { useUnreadNotifications } from '@/hooks/notifications/use-unread-notifications'
 import { CartButton } from './cart-button'
 import { NotificationButton } from './notification-button'
@@ -169,24 +170,24 @@ export function DesktopNav({
         <div className='relative flex items-center gap-2' data-header-actions>
           {isLoading ? null : !isAuthenticated ? (
             <Link
-              href='/dashboard-vendor/seller'
+              href={BECOME_VENDOR_PATH}
               className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
             >
-              Convertite en vendedor
+              Become a seller
             </Link>
           ) : isSeller ? (
             <Link
-              href='/dashboard-vendor/listings'
+              href={VENDOR_LISTINGS_PATH}
               className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
             >
               vendor panel
             </Link>
           ) : (
             <Link
-              href='/dashboard-vendor/seller'
+              href={BECOME_VENDOR_PATH}
               className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
             >
-              Convertite en vendedor
+              Become a seller
             </Link>
           )}
 

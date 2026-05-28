@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import {
   PROFILE_NOTIFICATIONS_PATH,
   VENDOR_NOTIFICATIONS_PATH,
-} from '@/lib/notifications/routes'
+} from '@/lib/routes'
 
 export async function markNotificationReadAction(notificationId: string) {
   const supabase = await createClient()

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 import { ResistenciaMapPicker } from '@/components/vendor-dashboard/vendor-seller/ResistenciaMapPicker'
+import { VENDOR_SELLER_PATH } from '@/lib/routes'
 import { useListingLocation } from './use-listing-location'
 
 export type ListingLatLng = { latitude: number | null; longitude: number | null }
@@ -106,8 +107,8 @@ export function ListingLocationPicker({
 
         {!sellerHasCoords ? (
           <div className='text-sm'>
-            <Link href='/dashboard-vendor/seller' className='text-primary hover:underline'>
-              Ir a /dashboard-vendor/seller
+            <Link href={VENDOR_SELLER_PATH} className='text-primary hover:underline'>
+              Configurá la ubicación de tu negocio
             </Link>
           </div>
         ) : null}

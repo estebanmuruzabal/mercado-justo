@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
+import { PROFILE_PATH, VENDOR_LISTINGS_PATH } from '@/lib/routes'
 import { createClient } from '@/lib/supabase/server'
 import { createListing } from '@/server/services/listing.service'
 import type { ListingCondition } from '@/types/listing'
@@ -72,8 +73,8 @@ export async function createListingAction(
     }
   }
 
-  revalidatePath('/dashboard-vendor/listings')
-  revalidatePath('/profile')
-  redirect('/dashboard-vendor/listings')
+  revalidatePath(VENDOR_LISTINGS_PATH)
+  revalidatePath(PROFILE_PATH)
+  redirect(VENDOR_LISTINGS_PATH)
 }
 

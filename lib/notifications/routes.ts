@@ -1,6 +1,8 @@
-export const VENDOR_NOTIFICATIONS_PATH = '/dashboard-vendor/notifications'
-export const PROFILE_NOTIFICATIONS_PATH = '/profile/notifications'
-
-export function getAllNotificationsPath(isSeller: boolean) {
-  return isSeller ? VENDOR_NOTIFICATIONS_PATH : PROFILE_NOTIFICATIONS_PATH
-}
+/**
+ * @deprecated Import from `@/lib/routes` instead.
+ */
+export {
+  PROFILE_NOTIFICATIONS_PATH,
+  VENDOR_NOTIFICATIONS_PATH,
+  allNotificationsPath as getAllNotificationsPath,
+} from '@/lib/routes'

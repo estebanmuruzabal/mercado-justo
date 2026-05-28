@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Bell } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { getAllNotificationsPath } from '@/lib/notifications/routes'
+import { allNotificationsPath } from '@/lib/routes'
 import { useNotificationsList } from '@/hooks/notifications/use-unread-notifications'
 import { NotificationCard } from '@/components/notifications/notification-card'
 import { useNotificationsRealtime } from '@/hooks/notifications/use-notifications-realtime'
@@ -22,7 +22,7 @@ export function NotificationsPanel({
   const audience = isSeller ? 'vendor' : 'buyer'
   const items = useNotificationsList(audience, PREVIEW_LIMIT)
   const { markAsRead, isLoading } = useNotificationsRealtime()
-  const allNotificationsHref = getAllNotificationsPath(isSeller)
+  const allNotificationsHref = allNotificationsPath(isSeller)
 
   return (
     <div className='w-[min(100vw-2rem,20rem)] overflow-hidden rounded-2xl bg-white py-2 shadow-[0_4px_20px_rgba(0,0,0,0.12)] sm:w-80'>

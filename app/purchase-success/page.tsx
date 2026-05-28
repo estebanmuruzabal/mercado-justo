@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getCheckoutSignInUrl } from '@/lib/auth/checkout'
+import { PROFILE_PATH } from '@/lib/routes'
 
 function formatMoney(amount: number) {
   return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
@@ -136,7 +137,7 @@ export default async function PurchaseSuccessPage({
             </div>
 
             <Link
-              href='/profile'
+              href={PROFILE_PATH}
               className='inline-block text-sm font-medium text-[#FF385C] hover:underline'
             >
               Ver mis compras en el perfil
