@@ -243,6 +243,45 @@ export type Database = {
           },
         ]
       }
+      notification: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          href: string | null
+          id: string
+          metadata: Json
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          audience: string
+          body: string
+          created_at?: string
+          href?: string | null
+          id?: string
+          metadata?: Json
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          href?: string | null
+          id?: string
+          metadata?: Json
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order: {
         Row: {
           buyer_id: string

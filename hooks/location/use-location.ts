@@ -60,6 +60,13 @@ export function useLocation() {
     setStep('mode')
   }, [onboardingSeen])
 
+  /** Opens the "Elegí cómo querés recibir" dialog (skips onboarding popover). */
+  const openReceiveModeChoice = useCallback(() => {
+    setShowOnboardingPopover(false)
+    setIsOpen(true)
+    setStep('mode')
+  }, [])
+
   const onUnderstood = useCallback(() => {
     markOnboardingSeen()
     setShowOnboardingPopover(false)
@@ -204,6 +211,7 @@ export function useLocation() {
     geoError,
 
     open,
+    openReceiveModeChoice,
     close,
     onUnderstood,
     chooseMode,

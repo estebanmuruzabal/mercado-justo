@@ -1,5 +1,6 @@
 'use client'
 
+import { useRequireReceiveMode } from '@/hooks/location/use-require-receive-mode'
 import type { ListingType } from '@/lib/listing'
 import { useMarketplaceFiltersStore } from '@/stores/useMarketplaceFiltersStore'
 
@@ -19,6 +20,7 @@ export function CategoryFilter({
   const selected = useMarketplaceFiltersStore((s) => s.category)
   const toggleCategory = useMarketplaceFiltersStore((s) => s.toggleCategory)
   const listingTypes = useMarketplaceFiltersStore((s) => s.listingType)
+  const { guardReceiveMode } = useRequireReceiveMode()
 
   const filteredCategories =
     listingTypes.length > 0
@@ -37,7 +39,7 @@ export function CategoryFilter({
             <button
               key={cat.id}
               type='button'
-              onClick={() => toggleCategory(cat.id)}
+              onClick={() => guardReceiveMode(() => toggleCategory(cat.id))}
               className={
                 active
                   ? 'rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-white'

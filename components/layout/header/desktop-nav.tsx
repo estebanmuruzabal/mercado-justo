@@ -2,109 +2,92 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
-import { Menu, Search, ShoppingCart } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { MercadoJustoLogo } from '@/components/features/navbar/left/AirbnbLogo'
 import { UserMenu } from '@/components/features/navbar/right/UserMenu'
 import { type TabId, TABS, type SearchPayload } from '@/components/features/navbar/right/airbnbTabs'
 import { MarketplaceFiltersBar } from '@/components/marketplace/filters/MarketplaceFiltersBar'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { tabUnderlineVariants, tabLabelVariants } from '@/lib/motion/navbar-motion'
 import { useMarketplaceFiltersStore } from '@/stores/useMarketplaceFiltersStore'
-import { createClient } from '@/lib/supabase/client'
-import { CartDrawer } from '@/components/features/cart-drawer/cart-drawer'
-import { useCartStore } from '@/stores/cart-store/cart-store'
+import { useHeaderSession } from '@/hooks/auth/use-header-session'
+import { useUnreadNotifications } from '@/hooks/notifications/use-unread-notifications'
+import { CartButton } from './cart-button'
+import { NotificationButton } from './notification-button'
+import { MenuButton } from './menu-button'
+import { NotificationsPanel } from './notifications-panel'
 
 export function DesktopNav({
   brand,
-  avatarUrl,
   scrolled,
   activeTab,
   onSelectTab,
   onSearch,
   userMenuOpen,
   setUserMenuOpen,
+  notificationsOpen,
+  setNotificationsOpen,
   onMenuAction,
+  cartItemCount,
+  showCartBadge,
+  onOpenCart,
 }: {
   brand: string
-  avatarUrl?: string
   scrolled: boolean
   activeTab: TabId
   onSelectTab: (tab: TabId) => void
   onSearch: (payload: SearchPayload) => void
   userMenuOpen: boolean
   setUserMenuOpen: (v: boolean) => void
+  notificationsOpen: boolean
+  setNotificationsOpen: (v: boolean) => void
   onMenuAction?: (action: string) => void
+  cartItemCount: number
+  showCartBadge: boolean
+  onOpenCart: () => void
 }) {
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const notificationsRef = useRef<HTMLDivElement | null>(null)
   const pathname = usePathname()
   const isBrowsePage = pathname === '/'
   const radiusKm = useMarketplaceFiltersStore((s) => s.radiusKm)
-  const [isSeller, setIsSeller] = useState(false)
-  const [checkingSeller, setCheckingSeller] = useState(true)
-  const [cartOpen, setCartOpen] = useState(false)
-  const { itemCount } = useCartStore()
-  const [mounted, setMounted] = useState(false)
+  const { isAuthenticated, isSeller, isLoading } = useHeaderSession()
+  const notificationAudience = isSeller ? 'vendor' : 'buyer'
+  const { unreadCount, bellPulseToken } = useUnreadNotifications(notificationAudience)
+  const displayUnread = isAuthenticated ? unreadCount : 0
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-
-    void (async () => {
-      try {
-        const supabase = createClient()
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (!user) {
-          if (!cancelled) setIsSeller(false)
-          return
-        }
-
-        const { data: storeRow, error } = await supabase
-          .from('store')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle()
-
-        if (!cancelled) setIsSeller(Boolean(storeRow) && !error)
-      } catch {
-        if (!cancelled) setIsSeller(false)
-      } finally {
-        if (!cancelled) setCheckingSeller(false)
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!userMenuOpen) return
+    if (!userMenuOpen && !notificationsOpen) return
     const onDocMouseDown = (e: MouseEvent) => {
-      if (!menuRef.current) return
       const target = e.target as Node
-      if (!menuRef.current.contains(target)) setUserMenuOpen(false)
+      if ((target as Element).closest('[data-header-actions]')) return
+      if (menuRef.current?.contains(target) || notificationsRef.current?.contains(target)) return
+      setUserMenuOpen(false)
+      setNotificationsOpen(false)
     }
     document.addEventListener('mousedown', onDocMouseDown)
     return () => document.removeEventListener('mousedown', onDocMouseDown)
-  }, [userMenuOpen, setUserMenuOpen])
+  }, [userMenuOpen, notificationsOpen, setUserMenuOpen, setNotificationsOpen])
+
+  const toggleMenu = () => {
+    setNotificationsOpen(false)
+    setUserMenuOpen(!userMenuOpen)
+  }
+
+  const toggleNotifications = () => {
+    setUserMenuOpen(false)
+    setNotificationsOpen(!notificationsOpen)
+  }
 
   return (
     <div className='hidden lg:block'>
       <div className='flex items-center justify-between py-3'>
-        {/* Brand */}
         <Link href='/' className='flex items-center gap-1 text-[#FF385C]'>
           <MercadoJustoLogo />
           {!scrolled ? <span className='text-2xl font-semibold tracking-tight'>{brand}</span> : null}
         </Link>
 
-        {/* Tabs (centered, hidden when scrolled) */}
         {!scrolled ? (
           <nav className='flex items-center gap-2'>
             {TABS.map((t) => (
@@ -148,7 +131,6 @@ export function DesktopNav({
           </nav>
         ) : null}
 
-        {/* Collapsed pill */}
         {scrolled && isBrowsePage ? (
           <div className='flex-1 flex justify-center px-4'>
             <MarketplaceFiltersBar layout='collapsed' />
@@ -184,12 +166,14 @@ export function DesktopNav({
           </button>
         ) : null}
 
-        {/* Right side */}
-        <div className='flex items-center gap-2'>
-          {checkingSeller ? (
-            <span className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900'>
+        <div className='relative flex items-center gap-2' data-header-actions>
+          {isLoading ? null : !isAuthenticated ? (
+            <Link
+              href='/dashboard-vendor/seller'
+              className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
+            >
               Convertite en vendedor
-            </span>
+            </Link>
           ) : isSeller ? (
             <Link
               href='/dashboard-vendor/listings'
@@ -205,13 +189,35 @@ export function DesktopNav({
               Convertite en vendedor
             </Link>
           )}
-          <UserMenuTrigger
-            avatarUrl={avatarUrl}
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-            itemCount={itemCount}
-            onOpenCart={() => setCartOpen(true)}
-            showBadge={mounted}
-          />
+
+          <CartButton itemCount={cartItemCount} showBadge={showCartBadge} onClick={onOpenCart} />
+
+          {isAuthenticated ? (
+            <NotificationButton
+              unreadCount={displayUnread}
+              showBadge={showCartBadge}
+              isActive={notificationsOpen}
+              bellPulseToken={bellPulseToken}
+              onClick={toggleNotifications}
+            />
+          ) : null}
+
+          <MenuButton isActive={userMenuOpen} onClick={toggleMenu} />
+
+          <AnimatePresence>
+            {notificationsOpen && isAuthenticated ? (
+              <motion.div
+                ref={notificationsRef}
+                initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
+                className='absolute right-0 top-full z-50 mt-2'
+              >
+                <NotificationsPanel isSeller={isSeller} onClose={() => setNotificationsOpen(false)} />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
           <AnimatePresence>
             {userMenuOpen ? (
@@ -221,7 +227,7 @@ export function DesktopNav({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 4, scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
-                className='absolute right-6 top-16 z-50'
+                className='absolute right-0 top-full z-50 mt-2'
               >
                 <UserMenu
                   onClose={() => setUserMenuOpen(false)}
@@ -230,12 +236,9 @@ export function DesktopNav({
               </motion.div>
             ) : null}
           </AnimatePresence>
-
-          {cartOpen ? <CartDrawer onClose={() => setCartOpen(false)} /> : null}
         </div>
       </div>
 
-      {/* Expanded filter bar */}
       {!scrolled ? (
         <div className='pb-5'>
           {isBrowsePage ? (
@@ -250,67 +253,3 @@ export function DesktopNav({
     </div>
   )
 }
-
-function UserMenuTrigger({
-  avatarUrl,
-  onClick,
-  itemCount,
-  onOpenCart,
-  showBadge,
-}: {
-  avatarUrl?: string
-  onClick: () => void
-  itemCount: number
-  onOpenCart: () => void
-  showBadge: boolean
-}) {
-  return (
-    <button
-      type='button'
-      onClick={onClick}
-      className='flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-2 py-1.5 hover:shadow-md transition-shadow'
-      aria-label='Menú de usuario'
-    >
-      <span
-        role='button'
-        tabIndex={0}
-        aria-label='Abrir carrito'
-        onClick={(e) => {
-          e.stopPropagation()
-          onOpenCart()
-        }}
-        onKeyDown={(e) => {
-          if (e.key !== 'Enter' && e.key !== ' ') return
-          e.preventDefault()
-          e.stopPropagation()
-          onOpenCart()
-        }}
-        className='relative flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer'
-      >
-        <ShoppingCart className='h-4 w-4 text-neutral-900' aria-hidden='true' />
-        {showBadge && itemCount > 0 ? (
-          <span className='absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF385C] px-1 text-xs font-bold text-white'>
-            {itemCount > 99 ? '99+' : itemCount}
-          </span>
-        ) : null}
-      </span>
-      <Avatar avatarUrl={avatarUrl} />
-      <span className='flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100'>
-        <Menu className='h-4 w-4 text-neutral-900' aria-hidden='true' />
-      </span>
-    </button>
-  )
-}
-
-function Avatar({ avatarUrl }: { avatarUrl?: string }) {
-  return (
-    <span className='block h-8 w-8 overflow-hidden rounded-full bg-neutral-200'>
-      {avatarUrl ? (
-        <img src={avatarUrl} alt='Perfil' className='h-full w-full object-cover' />
-      ) : (
-        <span className='flex h-full w-full items-center justify-center text-neutral-500'>👤</span>
-      )}
-    </span>
-  )
-}
-

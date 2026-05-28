@@ -16,6 +16,8 @@ import {
 
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { signOutClient } from '@/lib/auth/sign-out-client'
+import { signOut } from '@/server/actions/auth'
 
 function NavItem({
   icon: Icon,
@@ -53,7 +55,9 @@ export function UserMenu({
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSeller, setIsSeller] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const [checkingSeller, setCheckingSeller] = useState(true)
 
   useEffect(() => {
@@ -66,10 +70,13 @@ export function UserMenu({
         } = await supabase.auth.getUser()
 
         if (!user) {
+          if (!cancelled) setIsAuthenticated(false)
           if (!cancelled) setIsSeller(false)
+          if (!cancelled) setCheckingSeller(false)
           return
         }
 
+        if (!cancelled) setIsAuthenticated(true)
         const { data: storeRow } = await supabase
           .from('store')
           .select('id')
@@ -78,8 +85,10 @@ export function UserMenu({
 
         if (!cancelled) setIsSeller(Boolean(storeRow))
       } catch {
+        if (!cancelled) setIsAuthenticated(false)
         if (!cancelled) setIsSeller(false)
       } finally {
+        if (!cancelled) setCheckingAuth(false)
         if (!cancelled) setCheckingSeller(false)
       }
     })()
@@ -89,14 +98,28 @@ export function UserMenu({
     }
   }, [supabase])
 
+  useEffect(() => {
+    router.prefetch('/profile')
+  }, [router])
+
   async function handleAction(action: string) {
     const actionKey = action.trim().toLowerCase()
     onClose()
     onAction?.(action)
 
     if (actionKey === 'logout') {
-      await supabase.auth.signOut()
-      router.push('/signin')
+      await signOutClient()
+      await signOut()
+      return
+    }
+
+    if (actionKey === 'signin') {
+      router.push(`/signin?callbackUrl=${encodeURIComponent(pathname)}`)
+      return
+    }
+
+    if (actionKey === 'signup') {
+      router.push(`/signup?callbackUrl=${encodeURIComponent(pathname)}`)
       return
     }
 
@@ -140,6 +163,7 @@ export function UserMenu({
   }
 
   function isActiveItem(itemId: string) {
+    if (itemId === 'signin' || itemId === 'signup') return false
     if (itemId === 'perfil' || itemId === 'configuracion') return pathname === '/profile'
     if (itemId === 'anfitrion') return pathname === '/dashboard-vendor/seller'
 
@@ -155,37 +179,38 @@ export function UserMenu({
     return false
   }
 
-  const items: Array<
-    | { id: string; label: string; icon: LucideIcon }
-    | { divider: true }
-  > = checkingSeller
+  const guestItems: Array<{ id: string; label: string; icon: LucideIcon } | { divider: true }> = [
+    { id: 'signin', label: 'Ingresar a tu cuenta', icon: User },
+    { id: 'signup', label: 'Crear cuenta', icon: User },
+    { divider: true },
+    { id: 'ayuda', label: 'Centro de ayuda', icon: HelpCircle },
+  ]
+
+  const authenticatedItems: Array<{ id: string; label: string; icon: LucideIcon } | { divider: true }> = [
+    { id: 'perfil', label: 'Perfil', icon: User },
+    { divider: true },
+    { id: 'configuracion', label: 'Configuración de la cuenta', icon: Settings },
+    { id: 'ayuda', label: 'Centro de ayuda', icon: HelpCircle },
+  ]
+
+  const sellerItems: Array<{ id: string; label: string; icon: LucideIcon } | { divider: true }> = isSeller
+    ? [
+        { divider: true },
+        { id: 'vendor_listings', label: 'Mis Listings', icon: Package },
+        { id: 'vendor_sales', label: 'Ventas', icon: ShoppingBag },
+        { id: 'vendor_categories', label: 'Categorías', icon: Tags },
+        { id: 'vendor_seller', label: 'Modo vendedor', icon: Store },
+      ]
+    : [
+        { divider: true },
+        { id: 'anfitrion', label: 'Convertite en vendedor', icon: User },
+      ]
+
+  const items: Array<{ id: string; label: string; icon: LucideIcon } | { divider: true }> = checkingAuth
     ? []
-    : isSeller
-      ? [
-          { id: 'perfil', label: 'Perfil', icon: User },
-          { divider: true },
-          { id: 'configuracion', label: 'Configuración de la cuenta', icon: Settings },
-          { id: 'ayuda', label: 'Centro de ayuda', icon: HelpCircle },
-          { divider: true },
-          { id: 'vendor_listings', label: 'Mis Listings', icon: Package },
-          { id: 'vendor_sales', label: 'Ventas', icon: ShoppingBag },
-          { id: 'vendor_categories', label: 'Categorías', icon: Tags },
-          { id: 'vendor_seller', label: 'Modo vendedor', icon: Store },
-          { divider: true },
-          { id: 'logout', label: 'Cerrar sesión', icon: User },
-        ]
-      : [
-          { id: 'perfil', label: 'Perfil', icon: User },
-          { divider: true },
-          { id: 'configuracion', label: 'Configuración de la cuenta', icon: Settings },
-          { id: 'ayuda', label: 'Centro de ayuda', icon: HelpCircle },
-          { divider: true },
-          { id: 'anfitrion', label: 'Convertite en vendedor', icon: User },
-          { id: 'invitar', label: 'Invitá a un anfitrión', icon: User },
-          { id: 'coanfitrion', label: 'Encontrá un coanfitrión', icon: User },
-          { divider: true },
-          { id: 'logout', label: 'Cerrar sesión', icon: User },
-        ]
+    : isAuthenticated
+      ? [...authenticatedItems, ...(!checkingSeller ? sellerItems : []), { divider: true }, { id: 'logout', label: 'Cerrar sesión', icon: User }]
+      : guestItems
 
   return (
     <div className='w-72 overflow-hidden rounded-2xl bg-white py-2 shadow-[0_4px_20px_rgba(0,0,0,0.12)]'>
@@ -203,9 +228,13 @@ export function UserMenu({
         )
       )}
       {/* Optional direct link for accessibility */}
-      <div className='px-5 pb-2 text-xs text-muted-foreground'>
-        <Link href='/profile'>Ir al perfil</Link>
-      </div>
+      {isAuthenticated ? (
+        <div className='px-5 pb-2 text-xs text-muted-foreground'>
+          <Link href='/profile' prefetch>
+            Ir al perfil
+          </Link>
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -1,8 +1,16 @@
 import Link from 'next/link'
 import { SignUpForm } from '@/components/features/auth/sign-up-form'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { normalizeCheckoutCallbackUrl } from '@/lib/auth/checkout'
 
-export default function SignUpPage() {
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ callbackUrl?: string }>
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const callbackUrl = normalizeCheckoutCallbackUrl(resolvedSearchParams?.callbackUrl)
+
   return (
     <div className="container flex items-center justify-center min-h-screen py-8">
       <Card className="w-full max-w-md">
@@ -13,12 +21,12 @@ export default function SignUpPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SignUpForm />
+          <SignUpForm callbackUrl={callbackUrl} redirectFallback={callbackUrl} />
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/signin" className="text-primary hover:underline">
+            <Link href={`/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`} className="text-primary hover:underline">
               Sign in
             </Link>
           </div>

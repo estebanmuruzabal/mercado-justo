@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabaseAnonKey, getSupabaseUrl, hasSupabasePublicConfig } from './config'
 import { sanitizeSupabaseAuthCookies } from './sanitize-auth-cookies'
@@ -9,7 +9,6 @@ export async function updateSession(request: NextRequest) {
   })
 
   if (!hasSupabasePublicConfig()) {
-    // Si falta configuración, no rompemos el render de rutas públicas.
     return supabaseResponse
   }
 
@@ -25,26 +24,19 @@ export async function updateSession(request: NextRequest) {
           }
           return sanitized
         },
-        setAll(
-          cookiesToSet: Array<{
-            name: string
-            value: string
-            options?: unknown
-          }>,
-        ) {
-          cookiesToSet.forEach(({ name, value }) => {
-            request.cookies.set(name, value)
-            supabaseResponse = NextResponse.next({ request })
-            supabaseResponse.cookies.set(name, value)
-          })
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          )
         },
       },
     })
 
-    // This will refresh session if expired - required for Server Components
     await supabase.auth.getUser()
   } catch {
-    // Para usuarios guest / cookies corruptas: no queremos que un fallo de sesión rompa la app.
+    // Guest / corrupt cookies: do not break public routes.
   }
 
   return supabaseResponse

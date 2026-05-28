@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { CartStoreProvider } from "@/stores/cart-store/CartStoreProvider";
+import { NotificationRealtimeProvider } from "@/components/notifications/notification-realtime-provider";
+import { AuthSessionProvider } from "@/components/auth/auth-session-provider";
+import { LocationProvider } from "@/components/location/location-provider";
 import "./globals.css";
 import Header from "@/components/layout/header/header";
 
@@ -31,8 +34,14 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <CartStoreProvider>
-            <Header />
-          {children}
+          <NotificationRealtimeProvider>
+            <AuthSessionProvider>
+            <LocationProvider>
+              <Header />
+              {children}
+            </LocationProvider>
+            </AuthSessionProvider>
+          </NotificationRealtimeProvider>
         </CartStoreProvider>
         <Toaster />
       </body>

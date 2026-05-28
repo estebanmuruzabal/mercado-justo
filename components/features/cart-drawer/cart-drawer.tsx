@@ -4,12 +4,15 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { useCartStore } from '@/stores/cart-store/cart-store'
 import { getListingTypeLabel } from '@/lib/listing'
 import { hasSupabasePublicConfig } from '@/lib/supabase/config'
 import { createClient } from '@/lib/supabase/client'
+import { useCheckoutGuard } from '@/hooks/auth/use-checkout-guard'
+import { CheckoutAuthPanel } from '@/components/features/auth/checkout-auth-panel'
 
 function formatMoney(amount: number) {
   return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
@@ -17,6 +20,15 @@ function formatMoney(amount: number) {
 
 export function CartDrawer({ onClose }: { onClose: () => void }) {
   const { items, itemCount, totalPrice, setQuantity, removeItem } = useCartStore()
+  const {
+    authPromptOpen,
+    setAuthPromptOpen,
+    authView,
+    setAuthView,
+    goToCheckout,
+    resetAuthPrompt,
+    isCheckingAuth,
+  } = useCheckoutGuard()
 
   const storeIds = useMemo(() => {
     const unique = new Set<string>()
@@ -89,30 +101,31 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
   }, [items])
 
   return (
-    <Sheet
-      open={true}
-      onOpenChange={(open) => {
-        if (!open) onClose()
-      }}
-    >
-      <SheetContent side='right' className='w-full sm:max-w-md p-0'>
-        <div className='flex h-full flex-col'>
-          <SheetHeader className='p-4'>
-            <div className='flex items-center justify-between gap-3'>
-              <SheetTitle className='flex items-center gap-2'>
-                <ShoppingCart className='size-4' />
-                Tu carrito
-              </SheetTitle>
-              <button
-                type='button'
-                onClick={onClose}
-                className='rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground'
-                aria-label='Close cart'
-              >
-                ✕
-              </button>
-            </div>
-          </SheetHeader>
+    <>
+      <Sheet
+        open={true}
+        onOpenChange={(open) => {
+          if (!open) onClose()
+        }}
+      >
+        <SheetContent side='right' className='w-full sm:max-w-md p-0'>
+          <div className='flex h-full flex-col'>
+            <SheetHeader className='p-4'>
+              <div className='flex items-center justify-between gap-3'>
+                <SheetTitle className='flex items-center gap-2'>
+                  <ShoppingCart className='size-4' />
+                  Tu carrito
+                </SheetTitle>
+                <button
+                  type='button'
+                  onClick={onClose}
+                  className='rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  aria-label='Close cart'
+                >
+                  ✕
+                </button>
+              </div>
+            </SheetHeader>
 
           <Separator />
 
@@ -237,12 +250,64 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
               <span className='text-sm font-semibold'>Total: {formatMoney(totalPrice)}</span>
             </div>
 
-            <Button asChild className='w-full'>
-              <Link href='/checkout'>Ir al checkout</Link>
+            <Button
+              type='button'
+              className='w-full'
+              disabled={items.length === 0 || isCheckingAuth}
+              onClick={() => {
+                const wentToCheckout = goToCheckout()
+                if (wentToCheckout) onClose()
+              }}
+            >
+              {isCheckingAuth ? 'Verificando acceso...' : 'Ir al checkout'}
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+        </SheetContent>
+      </Sheet>
+
+      <Dialog
+        open={authPromptOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setAuthPromptOpen(true)
+            return
+          }
+          resetAuthPrompt()
+        }}
+      >
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle>
+              {authView === 'signup'
+                ? 'Creá tu cuenta'
+                : authView === 'signin'
+                  ? 'Iniciá sesión'
+                  : 'Continuá con tu compra'}
+            </DialogTitle>
+            <DialogDescription>
+              Tu carrito, dirección y forma de entrega se mantienen. Al terminar vas directo al checkout.
+            </DialogDescription>
+          </DialogHeader>
+
+          <CheckoutAuthPanel
+            view={authView}
+            onViewChange={setAuthView}
+            onAuthenticated={() => {
+              resetAuthPrompt()
+              onClose()
+            }}
+          />
+
+          {authView === 'prompt' ? (
+            <DialogFooter>
+              <Button type='button' variant='ghost' className='w-full' onClick={resetAuthPrompt}>
+                Seguir explorando
+              </Button>
+            </DialogFooter>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

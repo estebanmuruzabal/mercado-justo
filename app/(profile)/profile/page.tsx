@@ -13,9 +13,10 @@ export default async function ProfilePage() {
     redirect('/signin')
   }
 
-  const store = await getStoreByUserId(user.id)
-  const role = await getUserRoleByUserId(user.id)
-  console.log(role)
+  const [store, role] = await Promise.all([
+    getStoreByUserId(user.id),
+    getUserRoleByUserId(user.id),
+  ])
   return (
     <ProfilePageClient
       userEmail={user?.email ?? ''}

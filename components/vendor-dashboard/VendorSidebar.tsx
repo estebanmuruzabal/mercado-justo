@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { useState } from 'react'
-import { Package, ShoppingBag, Store, Tags } from 'lucide-react'
+import { Bell, Package, ShoppingBag, Store, Tags } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard-vendor/listings', label: 'Mis Listings', icon: Package },
   { href: '/dashboard-vendor/ventas', label: 'Ventas', icon: ShoppingBag },
   { href: '/dashboard-vendor/categorias', label: 'Categorías', icon: Tags },
+  { href: '/dashboard-vendor/notifications', label: 'Notificaciones', icon: Bell },
 ]
 
 export function VendorSidebar() {

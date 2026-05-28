@@ -1,5 +1,6 @@
 'use client'
 
+import { useRequireReceiveMode } from '@/hooks/location/use-require-receive-mode'
 import { LISTING_TYPE_LABELS, LISTING_TYPES, type ListingType } from '@/lib/listing'
 import { useMarketplaceFiltersStore } from '@/stores/useMarketplaceFiltersStore'
 
@@ -8,6 +9,7 @@ const DB_TYPES: ListingType[] = LISTING_TYPES.filter((t) => t !== 'experience')
 export function ListingTypeFilter({ compact = false }: { compact?: boolean }) {
   const selected = useMarketplaceFiltersStore((s) => s.listingType)
   const toggleListingType = useMarketplaceFiltersStore((s) => s.toggleListingType)
+  const { guardReceiveMode } = useRequireReceiveMode()
 
   return (
     <div className={compact ? 'min-w-0' : 'w-full'}>
@@ -19,7 +21,7 @@ export function ListingTypeFilter({ compact = false }: { compact?: boolean }) {
             <button
               key={type}
               type='button'
-              onClick={() => toggleListingType(type)}
+              onClick={() => guardReceiveMode(() => toggleListingType(type))}
               className={
                 active
                   ? 'rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white'

@@ -19,6 +19,10 @@ function isSupabaseAuthCookieName(name: string): boolean {
   )
 }
 
+export function getSupabaseAuthCookieNames(cookies: CookieLike[]): string[] {
+  return cookies.filter((cookie) => isSupabaseAuthCookieName(cookie.name)).map((cookie) => cookie.name)
+}
+
 function isChunkCookieName(name: string): boolean {
   return CHUNK_SUFFIX_REGEX.test(name)
 }
