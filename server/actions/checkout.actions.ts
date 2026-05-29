@@ -1,7 +1,9 @@
 'use server'
 
+import { after } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { notifyVendorNewOrder } from '@/server/services/telegram-notifications.service'
 
 const cartItemSchema = z.object({
   variantId: z.string().min(1),
@@ -101,6 +103,9 @@ export async function createOrderFromCartAction(
 
   const { error: itemsError } = await supabase.from('order_item').insert(orderItemsPayload as never[])
   if (itemsError) throw itemsError
+
+  // Non-blocking: notify the seller via Telegram once the response is sent.
+  after(() => notifyVendorNewOrder(orderId))
 
   return { orderId }
 }

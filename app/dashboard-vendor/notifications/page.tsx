@@ -4,8 +4,11 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { VendorBreadcrumbs } from '@/components/vendor-dashboard/VendorBreadcrumbs'
 import { NotificationsPageClient } from '@/components/notifications/notifications-page-client'
+import { TelegramNotificationsCard } from '@/components/vendor-dashboard/telegram/telegram-notifications-card'
 import { BECOME_VENDOR_PATH, SIGN_IN_PATH } from '@/lib/routes'
 import { getStoreByUserId } from '@/server/services/store.service'
+import { getVendorTelegramSettings } from '@/server/queries/telegram.queries'
+import { isTelegramConfigured } from '@/lib/telegram/config'
 
 export default async function VendorNotificationsPage() {
   const supabase = await createClient()
@@ -16,6 +19,7 @@ export default async function VendorNotificationsPage() {
   if (!user) redirect(SIGN_IN_PATH)
 
   const store = await getStoreByUserId(user.id)
+  const telegramSettings = store ? await getVendorTelegramSettings(supabase, user.id) : null
 
   return (
     <main className='min-h-screen px-6 py-10'>
@@ -35,11 +39,19 @@ export default async function VendorNotificationsPage() {
             </Link>
           </div>
         ) : (
-          <NotificationsPageClient
-            audience='vendor'
-            title='Notificaciones'
-            description='Ventas, pedidos, listings y novedades de tu tienda.'
-          />
+          <>
+            {telegramSettings && (
+              <TelegramNotificationsCard
+                initialSettings={telegramSettings}
+                configured={isTelegramConfigured()}
+              />
+            )}
+            <NotificationsPageClient
+              audience='vendor'
+              title='Notificaciones'
+              description='Ventas, pedidos, listings y novedades de tu tienda.'
+            />
+          </>
         )}
       </div>
     </main>

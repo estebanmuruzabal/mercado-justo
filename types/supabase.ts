@@ -555,6 +555,62 @@ export type Database = {
           },
         ]
       }
+      vendor_telegram: {
+        Row: {
+          chat_id: string | null
+          connected_at: string | null
+          created_at: string
+          enabled: boolean
+          link_token: string | null
+          link_token_expires_at: string | null
+          notify_low_stock: boolean
+          notify_new_followers: boolean
+          notify_new_orders: boolean
+          notify_new_reviews: boolean
+          store_id: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          chat_id?: string | null
+          connected_at?: string | null
+          created_at?: string
+          enabled?: boolean
+          link_token?: string | null
+          link_token_expires_at?: string | null
+          notify_low_stock?: boolean
+          notify_new_followers?: boolean
+          notify_new_orders?: boolean
+          notify_new_reviews?: boolean
+          store_id: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          chat_id?: string | null
+          connected_at?: string | null
+          created_at?: string
+          enabled?: boolean
+          link_token?: string | null
+          link_token_expires_at?: string | null
+          notify_low_stock?: boolean
+          notify_new_followers?: boolean
+          notify_new_orders?: boolean
+          notify_new_reviews?: boolean
+          store_id?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_telegram_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
