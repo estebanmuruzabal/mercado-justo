@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
+import { PROFILE_PATH, VENDOR_DASHBOARD_PATH } from '@/lib/routes'
 import { createClient } from '@/lib/supabase/server'
 import { createStore, getStoreByUserId } from '@/server/services/store.service'
 import type { StoreActionResult, StoreMode } from '@/types/store'
@@ -71,8 +72,8 @@ export async function activateSellerMode(
       mode: parsed.data.mode as StoreMode,
     })
 
-    revalidatePath('/profile')
-    revalidatePath('/dashboard')
+    revalidatePath(PROFILE_PATH)
+    revalidatePath(VENDOR_DASHBOARD_PATH)
 
     return {
       success: true,

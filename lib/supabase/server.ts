@@ -1,20 +1,31 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/supabase'
+import { getSupabaseAnonKey, getSupabaseUrl } from './config'
+import { sanitizeSupabaseAuthCookies } from './sanitize-auth-cookies'
 
 export const createClient = async () => {
   const cookieStore = await cookies()
-  
+
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabaseUrl(),
+    getSupabaseAnonKey(),
     {
       cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet: Array<{ name: string; value: string }>) => {
-          cookiesToSet.forEach(({ name, value }) => cookieStore.set(name, value))
+        getAll() {
+          const { sanitized } = sanitizeSupabaseAuthCookies(cookieStore.getAll())
+          return sanitized
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            )
+          } catch {
+            // Server Component: no cookie writes — middleware refreshes the session.
+          }
         },
       },
-    }
+    },
   )
 }

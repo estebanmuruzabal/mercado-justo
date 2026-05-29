@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -17,28 +17,31 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/ui/password-input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { useFormStatus } from 'react-dom'
+import { getPostAuthRedirectPath } from '@/lib/auth/callback-url'
+import { useAuthNavigation } from '@/hooks/auth/use-auth-navigation'
 
 const formSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 })
 
 type FormData = z.infer<typeof formSchema>
 
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'Signing in...' : 'Sign In'}
-    </Button>
-  )
-}
-
-export function SignInForm() {
-  const router = useRouter()
+export function SignInForm({
+  callbackUrl,
+  redirectFallback = '/',
+  onSuccess,
+  compact = false,
+}: {
+  callbackUrl?: string
+  redirectFallback?: string
+  onSuccess?: () => void
+  compact?: boolean
+}) {
   const { toast } = useToast()
+  const { completeAuth } = useAuthNavigation()
+  const redirectTo = getPostAuthRedirectPath(callbackUrl, redirectFallback)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const isDev = process.env.NODE_ENV === 'development'
   const devEmail = 'admin@admin.com'
@@ -53,35 +56,42 @@ export function SignInForm() {
   })
 
   async function onSubmit(data: FormData) {
-    const result = await signIn(data)
-    
-    if (result?.error) {
-      toast({
-        title: 'Error',
-        description: result.error,
-        variant: 'destructive',
+    setIsSubmitting(true)
+    try {
+      const result = await signIn({
+        ...data,
+        callbackUrl: redirectTo,
       })
-    } else if (result?.success) {
-      router.push('/')
-      router.refresh()
+
+      const outcome = await completeAuth(result)
+      if (outcome.error) {
+        toast({
+          title: 'Error',
+          description: outcome.error,
+          variant: 'destructive',
+        })
+        return
+      }
+
+      if (outcome.ok) {
+        onSuccess?.()
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className={compact ? 'space-y-3' : 'space-y-4'}>
         <FormField
           control={form.control}
-          name="email"
+          name='email'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  {...field}
-                />
+                <Input type='email' placeholder='vos@email.com' autoComplete='email' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,21 +99,20 @@ export function SignInForm() {
         />
         <FormField
           control={form.control}
-          name="password"
+          name='password'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Contraseña</FormLabel>
               <FormControl>
-                <PasswordInput
-                  placeholder="••••••••"
-                  {...field}
-                />
+                <PasswordInput placeholder='••••••••' autoComplete='current-password' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <SubmitButton />
+        <Button type='submit' className='w-full' disabled={isSubmitting}>
+          {isSubmitting ? 'Entrando...' : 'Iniciar sesión'}
+        </Button>
       </form>
     </Form>
   )

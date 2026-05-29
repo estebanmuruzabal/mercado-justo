@@ -1,9 +1,11 @@
+/** @deprecated Use `@/components/marketplace/feed/MarketplaceFeedCard` instead. */
 'use client'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Heart, Minus, Plus } from 'lucide-react'
 
+import { ListingCardImage } from '@/components/ui/listing-card-image'
 import type { Listing, ProductListing } from './listing-section'
 import { getListingTypeLabel } from '@/lib/listing'
 
@@ -45,7 +47,7 @@ export function ProductListingCard({
 
   return (
     <div
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
       role='button'
       tabIndex={0}
       onClick={() => navigateToProductDetail()}
@@ -54,12 +56,11 @@ export function ProductListingCard({
       }}
     >
       <div className='relative overflow-hidden rounded-3xl bg-white shadow-sm'>
-        <img
+        <ListingCardImage
           src={listing.image}
           alt={listing.title}
-          className='h-[260px] w-full object-cover transition duration-300 hover:scale-105'
+          heightClass='h-[260px]'
           onClick={(e) => {
-            // Clicking the image navigates as required, but avoid any side effects from nested button handlers.
             e.stopPropagation()
             navigateToProductDetail()
           }}
@@ -95,9 +96,9 @@ export function ProductListingCard({
                 onOpenOptions()
                 navigateToProductDetail()
               }}
-              className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground'
+              className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground cursor-pointer'
             >
-              Options
+              Ver opciones mejor
             </button>
           ) : null}
 
@@ -108,7 +109,7 @@ export function ProductListingCard({
                 e.stopPropagation()
                 onAdd()
               }}
-              className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground'
+              className='rounded-full border bg-white/95 px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground cursor-pointer'
             >
               + Add
             </button>
@@ -160,15 +161,11 @@ function ServiceListingCard({ listing, isFavorite, onToggleFavorite }: OtherCard
   return (
     <Link
       href={`/listing/${listing.listingType}/${listing.id}`}
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
-          <img
-            src={listing.image}
-            alt={listing.title}
-            className='h-[220px] w-full object-cover transition duration-300 hover:scale-105'
-          />
+          <ListingCardImage src={listing.image} alt={listing.title} heightClass='h-[220px]' />
 
           <button
             type='button'
@@ -207,15 +204,11 @@ function PropertyListingCard({ listing, isFavorite, onToggleFavorite }: OtherCar
   return (
     <Link
       href={`/listing/${listing.listingType}/${listing.id}`}
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='min-w-[280px] max-w-[280px] rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
-          <img
-            src={listing.image}
-            alt={listing.title}
-            className='h-[260px] w-full object-cover transition duration-300 hover:scale-105'
-          />
+          <ListingCardImage src={listing.image} alt={listing.title} heightClass='h-[260px]' />
 
           <button
             type='button'
@@ -254,15 +247,11 @@ function ExperienceListingCard({ listing, isFavorite, onToggleFavorite }: OtherC
   return (
     <Link
       href={`/listing/${listing.listingType}/${listing.id}`}
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='min-w-[280px] max-w-[280px] rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
-          <img
-            src={listing.image}
-            alt={listing.title}
-            className='h-[240px] w-full object-cover transition duration-300 hover:scale-105'
-          />
+          <ListingCardImage src={listing.image} alt={listing.title} heightClass='h-[240px]' />
 
           <button
             type='button'
@@ -303,14 +292,10 @@ function LinkCard({
   return (
     <Link
       href={`/listing/${listing.listingType}/${listing.id}`}
-      className='min-w-[280px] max-w-[280px]'
+      className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='relative overflow-hidden rounded-3xl bg-white shadow-sm'>
-        <img
-          src={listing.image}
-          alt={listing.title}
-          className='h-[260px] w-full object-cover transition duration-300 hover:scale-105'
-        />
+        <ListingCardImage src={listing.image} alt={listing.title} heightClass='h-[260px]' />
 
         <button
           type='button'

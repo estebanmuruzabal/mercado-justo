@@ -1,13 +1,16 @@
 'use client'
 
 import Link from 'next/link'
+import { BECOME_VENDOR_PATH, VENDOR_SELLER_PATH } from '@/lib/routes'
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   Bot,
   Layers3,
   Package,
   Shield,
+  ShoppingBag,
   Store as StoreIcon,
   User,
   type LucideIcon,
@@ -28,13 +31,15 @@ import { cn } from '@/lib/utils'
 import { isSuperAdmin, type Role } from '@/lib/roles'
 import type { Store as StoreModel } from '@/types/store'
 
-type TabId = 'personal' | 'security' | 'seller' | 'products' | 'categories' | 'ditto'
+type TabId = 'personal' | 'security' | 'seller' | 'products' | 'purchases' | 'sales' | 'categories' | 'ditto'
 
 const TAB_ICONS: Record<TabId, LucideIcon> = {
   personal: User,
   security: Shield,
   seller: StoreIcon,
   products: Package,
+  purchases: ShoppingBag,
+  sales: StoreIcon,
   categories: Layers3,
   ditto: Bot,
 }
@@ -78,6 +83,7 @@ export function ProfilePageClient({
   initialStore: StoreModel | null
   initialRole: Role | null
 }) {
+  const router = useRouter()
   const [tab, setTab] = useState<TabId>('personal')
   const [store, setStore] = useState<StoreModel | null>(initialStore)
   const isSeller = Boolean(store)
@@ -88,7 +94,9 @@ export function ProfilePageClient({
       { id: 'personal', label: 'Datos personales' },
       { id: 'security', label: 'Seguridad' },
       { id: 'seller', label: 'Modo vendedor' },
+      { id: 'purchases', label: 'Mis compras' },
       ...(isSeller ? [{ id: 'products' as const, label: 'Productos' }] : []),
+      ...(isSeller ? [{ id: 'sales' as const, label: 'Mis ventas' }] : []),
       ...(isAdmin ? [{ id: 'categories' as const, label: 'Categorías' }] : []),
       { id: 'ditto', label: 'DittoBots' },
     ]
@@ -98,6 +106,9 @@ export function ProfilePageClient({
 
   useEffect(() => {
     if (tab === 'products' && !isSeller) {
+      setTab('seller')
+    }
+    if (tab === 'sales' && !isSeller) {
       setTab('seller')
     }
   }, [isSeller, tab])
@@ -131,7 +142,13 @@ export function ProfilePageClient({
                   active={tab === t.id}
                   icon={TAB_ICONS[t.id]}
                   label={t.label}
-                  onClick={() => setTab(t.id)}
+                  onClick={() => {
+                    if (t.id === 'seller') {
+                      void router.push(isSeller ? VENDOR_SELLER_PATH : BECOME_VENDOR_PATH)
+                      return
+                    }
+                    setTab(t.id)
+                  }}
                 />
               ))}
             </div>
@@ -165,7 +182,13 @@ export function ProfilePageClient({
                       active={tab === t.id}
                       icon={TAB_ICONS[t.id]}
                       label={t.label}
-                      onClick={() => setTab(t.id)}
+                      onClick={() => {
+                        if (t.id === 'seller') {
+                          void router.push(isSeller ? VENDOR_SELLER_PATH : BECOME_VENDOR_PATH)
+                          return
+                        }
+                        setTab(t.id)
+                      }}
                     />
                   ))}
                 </nav>

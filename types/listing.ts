@@ -18,6 +18,8 @@ export interface Listing {
   condition: ListingCondition
   categoryId: string
   storeId: string
+  latitude: number | null
+  longitude: number | null
   listingType?: ListingType
   status?: ListingStatus
   characteristics?: Record<string, unknown>

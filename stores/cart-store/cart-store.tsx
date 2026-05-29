@@ -8,8 +8,8 @@ import { calcCartTotals, makeCartItemId } from './cart-types'
 
 type CartAction =
   | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'id'> }
-  | { type: 'REMOVE_ITEM'; payload: { listingType: CartListingType; listingId: string } }
-  | { type: 'SET_QUANTITY'; payload: { listingType: CartListingType; listingId: string; quantity: number } }
+  | { type: 'REMOVE_ITEM'; payload: { listingType: CartListingType; variantId: string } }
+  | { type: 'SET_QUANTITY'; payload: { listingType: CartListingType; variantId: string; quantity: number } }
   | { type: 'CLEAR_CART' }
 
 const CartStoreContext = createContext<{
@@ -17,21 +17,23 @@ const CartStoreContext = createContext<{
   itemCount: number
   totalPrice: number
   addItem: (item: Omit<CartItem, 'id'>) => void
-  removeItem: (listingType: CartListingType, listingId: string) => void
-  setQuantity: (listingType: CartListingType, listingId: string, quantity: number) => void
+  removeItem: (listingType: CartListingType, variantId: string) => void
+  setQuantity: (listingType: CartListingType, variantId: string, quantity: number) => void
   clearCart: () => void
 } | null>(null)
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const nextId = makeCartItemId(action.payload.listingType, action.payload.listingId)
+      const nextId = makeCartItemId(action.payload.listingType, action.payload.variantId)
       const existing = state.items.find((i) => i.id === nextId)
 
       if (existing) {
         return {
           ...state,
-          items: state.items.map((i) => (i.id === nextId ? { ...i, quantity: i.quantity + 1 } : i)),
+          items: state.items.map((i) =>
+            i.id === nextId ? { ...i, quantity: i.quantity + action.payload.quantity } : i
+          ),
         }
       }
 
@@ -48,12 +50,12 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
 
     case 'REMOVE_ITEM': {
-      const id = makeCartItemId(action.payload.listingType, action.payload.listingId)
+      const id = makeCartItemId(action.payload.listingType, action.payload.variantId)
       return { ...state, items: state.items.filter((i) => i.id !== id) }
     }
 
     case 'SET_QUANTITY': {
-      const id = makeCartItemId(action.payload.listingType, action.payload.listingId)
+      const id = makeCartItemId(action.payload.listingType, action.payload.variantId)
       if (action.payload.quantity <= 0) {
         return { ...state, items: state.items.filter((i) => i.id !== id) }
       }
@@ -94,13 +96,13 @@ export function CartStoreProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'ADD_ITEM', payload: item })
   }, [])
 
-  const removeItem = useCallback((listingType: CartListingType, listingId: string) => {
-    dispatch({ type: 'REMOVE_ITEM', payload: { listingType, listingId } })
+  const removeItem = useCallback((listingType: CartListingType, variantId: string) => {
+    dispatch({ type: 'REMOVE_ITEM', payload: { listingType, variantId } })
   }, [])
 
   const setQuantity = useCallback(
-    (listingType: CartListingType, listingId: string, quantity: number) => {
-      dispatch({ type: 'SET_QUANTITY', payload: { listingType, listingId, quantity } })
+    (listingType: CartListingType, variantId: string, quantity: number) => {
+      dispatch({ type: 'SET_QUANTITY', payload: { listingType, variantId, quantity } })
     },
     []
   )

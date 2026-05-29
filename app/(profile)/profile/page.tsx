@@ -1,3 +1,4 @@
+import { SIGN_IN_PATH } from '@/lib/routes'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -10,12 +11,13 @@ export default async function ProfilePage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/signin')
+    redirect(SIGN_IN_PATH)
   }
 
-  const store = await getStoreByUserId(user.id)
-  const role = await getUserRoleByUserId(user.id)
-  console.log(role)
+  const [store, role] = await Promise.all([
+    getStoreByUserId(user.id),
+    getUserRoleByUserId(user.id),
+  ])
   return (
     <ProfilePageClient
       userEmail={user?.email ?? ''}

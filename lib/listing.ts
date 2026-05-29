@@ -38,7 +38,7 @@ export type CartItemId = string
 export type CartItem = {
   id: CartItemId
   listingType: ListingType
-  listingId: string
+  variantId: string
 
   // Seller context (vendor) so cart operations can be routed later.
   storeId: string
@@ -58,14 +58,14 @@ export type CartPersistenceV1 = {
   state: CartState
   lastUpdatedAt: number
   // Bump this when the CartItem shape changes.
-  version: 2
+  version: 3
 }
 
-export const CART_STORAGE_KEY = 'mercado-justo.cart.v2' as const
+export const CART_STORAGE_KEY = 'mercado-justo.cart.v3' as const
 export const CART_TTL_MS = 48 * 60 * 60 * 1000
 
-export function makeCartItemId(listingType: ListingType, listingId: string): CartItemId {
-  return `${listingType}:${listingId}`
+export function makeCartItemId(listingType: ListingType, variantId: string): CartItemId {
+  return `${listingType}:${variantId}`
 }
 
 export function calcItemSubtotal(item: CartItem) {

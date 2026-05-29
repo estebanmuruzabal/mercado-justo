@@ -4,6 +4,7 @@ export type StorePlan = 'free'
 export interface Store {
   id: string
   name: string
+  instagram: string | null
   address: string | null
   latitude: number | null
   longitude: number | null
@@ -18,6 +19,7 @@ export interface Store {
 export interface CreateStoreInput {
   name: string
   address?: string | null
+  instagram?: string | null
   latitude?: number | null
   longitude?: number | null
   mode?: StoreMode

@@ -15,6 +15,8 @@ export function mapListingRow(row: ListingRow): Listing {
     condition: (row.condition ?? 'new') as Listing['condition'],
     categoryId: row.category_id,
     storeId: row.store_id,
+    latitude: row.latitude === null ? null : Number(row.latitude),
+    longitude: row.longitude === null ? null : Number(row.longitude),
     listingType: row.listing_type as any,
     status: row.status as any,
     characteristics: (row.characteristics ?? {}) as any,

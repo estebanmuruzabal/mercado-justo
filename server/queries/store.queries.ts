@@ -10,6 +10,7 @@ export function mapStoreRow(row: StoreRow): Store {
   return {
     id: row.id,
     name: row.name,
+    instagram: row.instagram,
     address: row.address,
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),

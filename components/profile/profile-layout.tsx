@@ -2,7 +2,7 @@
 import { PersonalData } from './tabs/personal-data'
 import { Security } from './tabs/security'
 import { SellerSettings } from './tabs/seller-settings'
-import { Products } from './tabs/products'
+import { ListingManager } from '@/components/listings/ListingManager'
 import { DittoBots } from './tabs/ditto-bots'
 
 type TabId = 'personal' | 'security' | 'seller' | 'products' | 'ditto'
@@ -31,7 +31,7 @@ export function ProfileContent({
       return <SellerSettings store={null} onStoreCreated={() => {}} />
 
     case 'products':
-      return isSeller ? <Products /> : <p>Activá modo vendedor</p>
+      return isSeller ? <ListingManager /> : <p>Activá modo vendedor</p>
 
     case 'ditto':
       return <DittoBots />

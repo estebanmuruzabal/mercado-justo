@@ -24,7 +24,7 @@ async function getListingTypeForCategory(
 async function buildListingPayload(
   supabase: Awaited<ReturnType<typeof createClient>>,
   data: CreateListingInput,
-  storeId: string
+  store: { id: string; latitude: number | null; longitude: number | null }
 ) {
   const listing_type = await getListingTypeForCategory(supabase, data.categoryId)
   return {
@@ -34,9 +34,12 @@ async function buildListingPayload(
     stock: data.stock,
     condition: data.condition,
     category_id: data.categoryId,
-    store_id: storeId,
+    store_id: store.id,
     status: 'published',
     listing_type,
+    ...(listing_type === 'product'
+      ? { latitude: store.latitude, longitude: store.longitude }
+      : {}),
   }
 }
 
@@ -59,7 +62,7 @@ export async function createListing(
   const supabase = await createClient()
   const { data: insertedListing, error } = await supabase
     .from('listing')
-    .insert(await buildListingPayload(supabase, data, store.id) as never)
+    .insert(await buildListingPayload(supabase, data, store) as never)
     .select('*')
     .single()
 
