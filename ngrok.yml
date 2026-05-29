@@ -1,0 +1,31 @@
+# ngrok agent config (v3) — optional.
+#
+# Telegram rejects http/localhost, so to test the bot webhook locally you must
+# expose the dev server over HTTPS. The `npm run dev:tunnel` script runs a plain
+# `ngrok http 3000`; this file is only needed if you want a reserved/custom
+# domain or to manage the tunnel via `ngrok start`.
+#
+# Setup:
+#   1) Install ngrok and authenticate once:
+#        ngrok config add-authtoken <YOUR_TOKEN>
+#      (or export NGROK_AUTHTOKEN and rely on this file)
+#   2) Terminal A:  npm run dev
+#   3) Terminal B:  ngrok start web --config ngrok.yml
+#   4) Copy the https URL → NEXT_PUBLIC_SITE_URL in .env.local, restart `dev`
+#   5) npm run telegram:webhook:set
+#
+# Cloudflare Tunnel alternative (no account needed for quick tunnels):
+#   npm run dev:tunnel:cf      # cloudflared tunnel --url http://localhost:3000
+
+version: "3"
+
+agent:
+  authtoken: ${NGROK_AUTHTOKEN}
+
+tunnels:
+  web:
+    proto: http
+    addr: 3000
+    # Reserved domain (paid plans). Keeping a stable URL avoids re-running
+    # telegram:webhook:set on every restart:
+    # domain: mercado-justo-dev.ngrok-free.app

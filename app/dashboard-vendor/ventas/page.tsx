@@ -35,7 +35,7 @@ export default async function VendorSalesPage() {
         ) : (
           <>
             <div className='space-y-1'>
-              <h1 className='text-3xl font-bold'>Vendor panel</h1>
+              <h1 className='text-3xl font-bold'>Panel Vendedor</h1>
               <p className='text-sm text-muted-foreground'>Mis ventas</p>
             </div>
             <SalesTab storeId={store.id} />

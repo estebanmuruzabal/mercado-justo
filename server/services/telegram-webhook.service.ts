@@ -1,3 +1,4 @@
+import { getEnvironmentBadge } from '@/lib/config/environment'
 import { answerCallbackQuery, sendMessage } from '@/lib/telegram/client'
 import { bold, lines } from '@/lib/telegram/messages'
 import { parseStartPayload } from '@/lib/telegram/link'
@@ -16,6 +17,11 @@ import { connectByToken } from './telegram.service'
  * added without touching the transport route. Designed to never throw to the
  * caller: failures are logged and swallowed so the webhook can always 200.
  */
+
+/** Send a reply to a chat, tagged with the environment badge in non-prod. */
+async function reply(chatId: number, text: string): Promise<void> {
+  await sendMessage({ chatId, text: `${getEnvironmentBadge()}${text}` })
+}
 
 export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void> {
   try {
@@ -44,18 +50,15 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
   }
 
   if (text.startsWith('/help')) {
-    await sendMessage({ chatId, text: helpText() })
+    await reply(chatId, helpText())
     return
   }
 
   // Unknown input: gently point the user to the help command.
-  await sendMessage({
+  await reply(
     chatId,
-    text: lines(
-      'No reconozco ese mensaje. 🤔',
-      'Usá /help para ver qué puedo hacer.',
-    ),
-  })
+    lines('No reconozco ese mensaje. 🤔', 'Usá /help para ver qué puedo hacer.'),
+  )
 }
 
 async function handleStart(
@@ -67,42 +70,42 @@ async function handleStart(
 
   // Plain /start with no (valid) connect token: show onboarding instructions.
   if (!token) {
-    await sendMessage({
+    await reply(
       chatId,
-      text: lines(
+      lines(
         '👋 ' + bold('Bienvenido a Mercado Justo'),
         '',
         'Para conectar tu tienda y recibir notificaciones, abrí la sección',
         '“Notificaciones” en tu panel de vendedor y tocá “Conectar Telegram”.',
       ),
-    })
+    )
     return
   }
 
   const settings = await connectByToken(token, chatId, username)
 
   if (!settings) {
-    await sendMessage({
+    await reply(
       chatId,
-      text: lines(
+      lines(
         '⚠️ ' + bold('El enlace expiró o no es válido'),
         '',
         'Volvé al panel de vendedor y generá un nuevo enlace desde',
         'la sección “Notificaciones”.',
       ),
-    })
+    )
     return
   }
 
-  await sendMessage({
+  await reply(
     chatId,
-    text: lines(
+    lines(
       '✅ ' + bold('¡Tienda conectada!'),
       '',
       'Vas a recibir acá tus alertas de ventas y novedades.',
       'Podés ajustar tus preferencias desde el panel de vendedor.',
     ),
-  })
+  )
 }
 
 async function handleCallbackQuery(query: TelegramCallbackQuery): Promise<void> {

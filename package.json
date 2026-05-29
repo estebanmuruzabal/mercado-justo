@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/check-env.js",
     "dev": "next dev --turbo",
+    "prebuild": "node scripts/check-env.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -15,6 +17,12 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types --local > types/supabase.ts",
     "db:push": "supabase db push",
+    "env:check": "node scripts/check-env.js",
+    "dev:tunnel": "ngrok http 3000",
+    "dev:tunnel:cf": "cloudflared tunnel --url http://localhost:3000",
+    "telegram:webhook:set": "node scripts/telegram-set-webhook.js",
+    "telegram:webhook:info": "node scripts/telegram-set-webhook.js --info",
+    "telegram:webhook:delete": "node scripts/telegram-set-webhook.js --delete",
     "prepare": "husky"
   },
   "dependencies": {

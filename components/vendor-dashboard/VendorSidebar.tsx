@@ -52,7 +52,7 @@ export function VendorSidebar() {
       <div className='flex flex-1 flex-col gap-2 p-3'>
         <div className='px-2 pb-2'>
           <div className='flex items-center justify-between gap-2'>
-            <div className={cn('text-sm font-semibold text-neutral-900', collapsed ? 'hidden' : 'block')}>Vendor panel</div>
+            <div className={cn('text-sm font-semibold text-neutral-900', collapsed ? 'hidden' : 'block')}>Panel Vendedor</div>
             <button
               type='button'
               onClick={() => setCollapsed((v) => !v)}

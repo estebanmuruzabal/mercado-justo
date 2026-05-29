@@ -1,3 +1,4 @@
+import { getEnvironmentBadge } from '@/lib/config/environment'
 import { createServiceClient } from '@/lib/supabase/service'
 import { sendMessage, TelegramApiError } from '@/lib/telegram/client'
 import { VENDOR_TELEGRAM_EVENTS, type VendorTelegramEvent } from '@/lib/telegram/events'
@@ -178,7 +179,8 @@ export async function sendVendorTelegramEvent(
 
     await sendMessage({
       chatId: settings.chatId,
-      text: message.text,
+      // Tag non-production messages so real users never confuse environments.
+      text: `${getEnvironmentBadge()}${message.text}`,
       parseMode: message.parseMode,
       replyMarkup: toReplyMarkup(message),
     })

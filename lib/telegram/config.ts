@@ -1,3 +1,4 @@
+import { getSiteUrl, isHttpsSiteUrl } from '@/lib/config/environment'
 import { env } from '@/lib/env'
 
 /**
@@ -41,20 +42,13 @@ export function isTelegramConfigured(): boolean {
   return Boolean(env.TELEGRAM_BOT_TOKEN && env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME)
 }
 
-/** Absolute site URL used to build links inside Telegram messages (no trailing slash). */
-export function getSiteUrl(): string | null {
-  const raw = env.NEXT_PUBLIC_SITE_URL
-  if (!raw) return null
-  return raw.replace(/\/+$/, '')
-}
-
 /**
  * Telegram only accepts https URLs in inline keyboard `url` buttons. Returns the
  * absolute URL when the site is served over https, otherwise null (so callers can
- * gracefully omit the button in local/http environments).
+ * gracefully omit the button in local/http environments). Uses the centralized
+ * site URL resolver — never hardcode URLs here.
  */
 export function buildHttpsUrl(path: string): string | null {
-  const base = getSiteUrl()
-  if (!base || !base.startsWith('https://')) return null
-  return `${base}${path.startsWith('/') ? path : `/${path}`}`
+  if (!isHttpsSiteUrl()) return null
+  return `${getSiteUrl()}${path.startsWith('/') ? path : `/${path}`}`
 }
