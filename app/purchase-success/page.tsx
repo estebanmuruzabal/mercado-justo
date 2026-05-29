@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getCheckoutSignInUrl } from '@/lib/auth/checkout'
-import { PROFILE_PATH } from '@/lib/routes'
+import { PROFILE_PATH, PURCHASE_SUCCESS_PATH } from '@/lib/routes'
 
 function formatMoney(amount: number) {
   return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
@@ -22,7 +22,10 @@ export default async function PurchaseSuccessPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(getCheckoutSignInUrl(`/purchase-success${orderId ? `?orderId=${orderId}` : ''}`))
+    const returnPath = orderId
+      ? `${PURCHASE_SUCCESS_PATH}?${new URLSearchParams({ orderId }).toString()}`
+      : PURCHASE_SUCCESS_PATH
+    redirect(getCheckoutSignInUrl(returnPath))
   }
 
   if (!orderId) {

@@ -12,7 +12,7 @@ export function VendorBreadcrumbs({
       <ol className='flex items-center gap-2 text-sm text-muted-foreground'>
         <li>
           <Link href={VENDOR_DASHBOARD_PATH} className='hover:text-foreground'>
-            Dashboard Vendor
+            Overview
           </Link>
         </li>
         <li aria-hidden='true'>/</li>

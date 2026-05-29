@@ -34,7 +34,14 @@ export const PROFILE_NOTIFICATIONS_PATH = '/profile/notifications' as const
 export const BECOME_VENDOR_PATH = '/become-vendor' as const
 
 // ——— Vendor: dashboard ———
+/** Overview — landing del panel vendedor */
 export const VENDOR_DASHBOARD_PATH = '/dashboard-vendor' as const
+export const VENDOR_STORE_CREATED_PARAM = 'storeCreated' as const
+
+export function vendorDashboardPathAfterStoreCreated() {
+  const params = new URLSearchParams({ [VENDOR_STORE_CREATED_PARAM]: '1' })
+  return `${VENDOR_DASHBOARD_PATH}?${params.toString()}`
+}
 export const VENDOR_SELLER_PATH = '/dashboard-vendor/seller' as const
 export const VENDOR_LISTINGS_PATH = '/dashboard-vendor/listings' as const
 export const VENDOR_SALES_PATH = '/dashboard-vendor/ventas' as const

@@ -16,11 +16,11 @@ export {
 
 import { normalizeCheckoutCallbackUrl } from './callback-url'
 
-export function getCheckoutSignInUrl(callbackUrl = CHECKOUT_PATH) {
+export function getCheckoutSignInUrl(callbackUrl: string = CHECKOUT_PATH) {
   return signInPathWithCallback(normalizeCheckoutCallbackUrl(callbackUrl))
 }
 
-export function getCheckoutSignUpUrl(callbackUrl = CHECKOUT_PATH) {
+export function getCheckoutSignUpUrl(callbackUrl: string = CHECKOUT_PATH) {
   return signUpPathWithCallback(normalizeCheckoutCallbackUrl(callbackUrl))
 }
 

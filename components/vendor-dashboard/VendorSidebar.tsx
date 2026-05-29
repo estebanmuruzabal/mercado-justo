@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { useState } from 'react'
-import { Bell, Package, ShoppingBag, Store, Tags } from 'lucide-react'
+import { Bell, LayoutDashboard, Package, ShoppingBag, Store, Tags } from 'lucide-react'
 
 import {
   VENDOR_CATEGORIES_PATH,
+  VENDOR_DASHBOARD_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_NOTIFICATIONS_PATH,
   VENDOR_SALES_PATH,
@@ -22,6 +23,7 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { href: VENDOR_DASHBOARD_PATH, label: 'Overview', icon: LayoutDashboard },
   { href: VENDOR_SELLER_PATH, label: 'Modo vendedor', icon: Store },
   { href: VENDOR_LISTINGS_PATH, label: 'Mis Listings', icon: Package },
   { href: VENDOR_SALES_PATH, label: 'Ventas', icon: ShoppingBag },
@@ -34,6 +36,9 @@ export function VendorSidebar() {
   const [collapsed, setCollapsed] = useState(false)
 
   function isActive(href: string) {
+    if (href === VENDOR_DASHBOARD_PATH) {
+      return pathname === VENDOR_DASHBOARD_PATH
+    }
     return pathname === href || pathname.startsWith(`${href}/`)
   }
 

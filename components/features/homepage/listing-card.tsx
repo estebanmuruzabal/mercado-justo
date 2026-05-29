@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Heart, Minus, Plus } from 'lucide-react'
 
+import { ListingCardImage } from '@/components/ui/listing-card-image'
 import type { Listing, ProductListing } from './listing-section'
 import { getListingTypeLabel } from '@/lib/listing'
 
@@ -55,12 +56,11 @@ export function ProductListingCard({
       }}
     >
       <div className='relative overflow-hidden rounded-3xl bg-white shadow-sm'>
-        <img
+        <ListingCardImage
           src={listing.image}
           alt={listing.title}
-          className='h-[260px] w-full object-cover transition duration-300 hover:scale-105'
+          heightClass='h-[260px]'
           onClick={(e) => {
-            // Clicking the image navigates as required, but avoid any side effects from nested button handlers.
             e.stopPropagation()
             navigateToProductDetail()
           }}
@@ -165,11 +165,7 @@ function ServiceListingCard({ listing, isFavorite, onToggleFavorite }: OtherCard
     >
       <div className='rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
-          <img
-            src={listing.image}
-            alt={listing.title}
-            className='h-[220px] w-full object-cover transition duration-300 hover:scale-105'
-          />
+          <ListingCardImage src={listing.image} alt={listing.title} heightClass='h-[220px]' />
 
           <button
             type='button'
@@ -212,11 +208,7 @@ function PropertyListingCard({ listing, isFavorite, onToggleFavorite }: OtherCar
     >
       <div className='min-w-[280px] max-w-[280px] rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
-          <img
-            src={listing.image}
-            alt={listing.title}
-            className='h-[260px] w-full object-cover transition duration-300 hover:scale-105'
-          />
+          <ListingCardImage src={listing.image} alt={listing.title} heightClass='h-[260px]' />
 
           <button
             type='button'
@@ -259,11 +251,7 @@ function ExperienceListingCard({ listing, isFavorite, onToggleFavorite }: OtherC
     >
       <div className='min-w-[280px] max-w-[280px] rounded-3xl bg-white shadow-sm'>
         <div className='relative overflow-hidden rounded-3xl'>
-          <img
-            src={listing.image}
-            alt={listing.title}
-            className='h-[240px] w-full object-cover transition duration-300 hover:scale-105'
-          />
+          <ListingCardImage src={listing.image} alt={listing.title} heightClass='h-[240px]' />
 
           <button
             type='button'
@@ -307,11 +295,7 @@ function LinkCard({
       className='min-w-[280px] max-w-[280px] cursor-pointer'
     >
       <div className='relative overflow-hidden rounded-3xl bg-white shadow-sm'>
-        <img
-          src={listing.image}
-          alt={listing.title}
-          className='h-[260px] w-full object-cover transition duration-300 hover:scale-105'
-        />
+        <ListingCardImage src={listing.image} alt={listing.title} heightClass='h-[260px]' />
 
         <button
           type='button'

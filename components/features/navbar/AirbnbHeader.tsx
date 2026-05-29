@@ -14,6 +14,7 @@ import {
   HelpCircle,
   Plane,
 } from "lucide-react";
+import { ProfileAvatarImage } from "@/components/ui/profile-avatar-image";
 /* ============================================================================
  * AirbnbHeader
  * ----------------------------------------------------------------------------
@@ -440,9 +441,9 @@ function Divider() {
 }
 function Avatar({ avatarUrl }: { avatarUrl?: string }) {
   return (
-    <span className="block h-8 w-8 overflow-hidden rounded-full bg-neutral-200">
+    <span className="relative block h-8 w-8 overflow-hidden rounded-full bg-neutral-200">
       {avatarUrl ? (
-        <img src={avatarUrl} alt="Perfil" className="h-full w-full object-cover" />
+        <ProfileAvatarImage src={avatarUrl} alt="Perfil" />
       ) : (
         <span className="flex h-full w-full items-center justify-center text-neutral-500">
           <User className="h-4 w-4" />

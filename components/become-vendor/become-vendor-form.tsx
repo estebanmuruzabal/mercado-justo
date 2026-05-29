@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 
 import { useToast } from '@/hooks/use-toast'
 import { broadcastAuthSessionSync } from '@/lib/auth/session-sync'
-import { VENDOR_LISTINGS_PATH } from '@/lib/routes'
+import { vendorDashboardPathAfterStoreCreated } from '@/lib/routes'
 import { updateSellerProfileAction } from '@/server/actions/vendor-seller-profile.actions'
 import {
   VendorSellerInformationForm,
@@ -54,13 +54,8 @@ export function BecomeVendorForm() {
         return
       }
 
-      toast({
-        title: '¡Ya sos vendedor!',
-        description: 'Tu tienda está activa. Podés empezar a publicar productos.',
-      })
-
       broadcastAuthSessionSync()
-      router.push(VENDOR_LISTINGS_PATH)
+      router.push(vendorDashboardPathAfterStoreCreated())
       router.refresh()
     })
   }
