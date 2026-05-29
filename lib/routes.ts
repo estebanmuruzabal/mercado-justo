@@ -42,20 +42,29 @@ export function vendorDashboardPathAfterStoreCreated() {
   const params = new URLSearchParams({ [VENDOR_STORE_CREATED_PARAM]: '1' })
   return `${VENDOR_DASHBOARD_PATH}?${params.toString()}`
 }
-export const VENDOR_SELLER_PATH = '/dashboard-vendor/seller' as const
+export const VENDOR_INFORMATION_PATH = '/dashboard-vendor/vendor-information' as const
 export const VENDOR_LISTINGS_PATH = '/dashboard-vendor/listings' as const
-export const VENDOR_SALES_PATH = '/dashboard-vendor/ventas' as const
+export const VENDOR_SALES_PATH = '/dashboard-vendor/sales' as const
 export const VENDOR_CATEGORIES_PATH = '/dashboard-vendor/categorias' as const
 export const VENDOR_NOTIFICATIONS_PATH = '/dashboard-vendor/notifications' as const
 
-/** @deprecated Use VENDOR_SELLER_PATH */
-export const VENDOR_SELLER_PROFILE_PATH = VENDOR_SELLER_PATH
+/** @deprecated Use VENDOR_INFORMATION_PATH */
+export const VENDOR_SELLER_PROFILE_PATH = VENDOR_INFORMATION_PATH
 
 // ——— Marketplace / listings ———
 export function listingDetailPath(listingType: string, listingId: string) {
   return `/listing/${listingType}/${listingId}` as const
 }
 
+/** Public storefront of a vendor, addressed by its unique slug. */
+export function publicVendorPath(slug: string) {
+  return `/vendor/${slug}` as const
+}
+
+/**
+ * @deprecated Use {@link publicVendorPath}. Kept for legacy links; the
+ * `/seller/[storeId]` route now redirects to the slug-based profile.
+ */
 export function publicSellerPath(storeId: string) {
   return `/seller/${storeId}` as const
 }

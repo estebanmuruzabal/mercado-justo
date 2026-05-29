@@ -12,7 +12,7 @@ import {
   VENDOR_LISTINGS_PATH,
   VENDOR_NOTIFICATIONS_PATH,
   VENDOR_SALES_PATH,
-  VENDOR_SELLER_PATH,
+  VENDOR_INFORMATION_PATH,
 } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 
@@ -24,7 +24,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { href: VENDOR_DASHBOARD_PATH, label: 'Overview', icon: LayoutDashboard },
-  { href: VENDOR_SELLER_PATH, label: 'Modo vendedor', icon: Store },
+  { href: VENDOR_INFORMATION_PATH, label: 'Info de tu Tienda', icon: Store },
   { href: VENDOR_LISTINGS_PATH, label: 'Mis Listings', icon: Package },
   { href: VENDOR_SALES_PATH, label: 'Ventas', icon: ShoppingBag },
   { href: VENDOR_CATEGORIES_PATH, label: 'Categorías', icon: Tags },

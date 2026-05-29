@@ -380,47 +380,115 @@ export type Database = {
       store: {
         Row: {
           address: string | null
+          allow_followers: boolean
+          banner_url: string | null
+          bio: string | null
           created_at: string
+          follower_count: number
           id: string
           instagram: string | null
           latitude: number | null
+          logo_url: string | null
           longitude: number | null
           mode: string
           name: string
           plan: string
           product_limit: number
+          rating_avg: number
+          review_count: number
+          slug: string | null
           terms_accepted: boolean
           terms_accepted_at: string | null
         }
         Insert: {
           address?: string | null
+          allow_followers?: boolean
+          banner_url?: string | null
+          bio?: string | null
           created_at?: string
+          follower_count?: number
           id: string
           instagram?: string | null
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           mode?: string
           name: string
           plan?: string
           product_limit?: number
+          rating_avg?: number
+          review_count?: number
+          slug?: string | null
           terms_accepted?: boolean
           terms_accepted_at?: string | null
         }
         Update: {
           address?: string | null
+          allow_followers?: boolean
+          banner_url?: string | null
+          bio?: string | null
           created_at?: string
+          follower_count?: number
           id?: string
           instagram?: string | null
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           mode?: string
           name?: string
           plan?: string
           product_limit?: number
+          rating_avg?: number
+          review_count?: number
+          slug?: string | null
           terms_accepted?: boolean
           terms_accepted_at?: string | null
         }
         Relationships: []
+      }
+      store_review: {
+        Row: {
+          author_avatar_url: string | null
+          author_id: string
+          author_name: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_avatar_url?: string | null
+          author_id: string
+          author_name?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_avatar_url?: string | null
+          author_id?: string
+          author_name?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_review_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user: {
         Row: {
@@ -455,12 +523,38 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_follower: {
+        Row: {
+          created_at: string
+          follower_id: string
+          store_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          store_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_follower_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      slugify: { Args: { value: string }; Returns: string }
     }
     Enums: {
       listing_status: "draft" | "published"

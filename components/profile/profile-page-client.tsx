@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { BECOME_VENDOR_PATH, VENDOR_SELLER_PATH } from '@/lib/routes'
+import { BECOME_VENDOR_PATH, VENDOR_INFORMATION_PATH } from '@/lib/routes'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -144,7 +144,7 @@ export function ProfilePageClient({
                   label={t.label}
                   onClick={() => {
                     if (t.id === 'seller') {
-                      void router.push(isSeller ? VENDOR_SELLER_PATH : BECOME_VENDOR_PATH)
+                      void router.push(isSeller ? VENDOR_INFORMATION_PATH : BECOME_VENDOR_PATH)
                       return
                     }
                     setTab(t.id)
@@ -184,7 +184,7 @@ export function ProfilePageClient({
                       label={t.label}
                       onClick={() => {
                         if (t.id === 'seller') {
-                          void router.push(isSeller ? VENDOR_SELLER_PATH : BECOME_VENDOR_PATH)
+                          void router.push(isSeller ? VENDOR_INFORMATION_PATH : BECOME_VENDOR_PATH)
                           return
                         }
                         setTab(t.id)

@@ -4,11 +4,12 @@ import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
+import { ExternalLink } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { broadcastAuthSessionSync } from '@/lib/auth/session-sync'
-import { BECOME_VENDOR_PATH } from '@/lib/routes'
+import { BECOME_VENDOR_PATH, publicVendorPath } from '@/lib/routes'
 import type { Store } from '@/types/store'
 import { updateSellerProfileAction, deleteSellerModeAction } from '@/server/actions/vendor-seller-profile.actions'
 
@@ -25,7 +26,13 @@ import {
   type VendorSellerInformationFormSetValue,
 } from './vendor-seller-information-form'
 
-export function VendorSellerInformationClient({ initialStore }: { initialStore: Store }) {
+export function VendorSellerInformationClient({
+  initialStore,
+  userId,
+}: {
+  initialStore: Store
+  userId: string
+}) {
   const { toast } = useToast()
   const router = useRouter()
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -53,6 +60,11 @@ export function VendorSellerInformationClient({ initialStore }: { initialStore: 
     startTransition(async () => {
       const result = await updateSellerProfileAction({
         businessName: values.businessName,
+        slug: values.slug,
+        bio: values.bio ?? undefined,
+        bannerUrl: values.bannerUrl || undefined,
+        logoUrl: values.logoUrl || undefined,
+        allowFollowers: values.allowFollowers,
         address: values.address,
         instagram: values.instagram ?? undefined,
         latitude: values.latitude,
@@ -87,13 +99,27 @@ export function VendorSellerInformationClient({ initialStore }: { initialStore: 
 
   return (
     <div className='mx-auto max-w-3xl space-y-6'>
-      <div className='space-y-1'>
-        <h1 className='text-3xl font-bold'>Información del vendedor</h1>
-        <p className='text-sm text-muted-foreground'>Administra la información pública de tu negocio.</p>
+      <div className='flex flex-wrap items-end justify-between gap-3'>
+        <div className='space-y-1'>
+          <h1 className='text-3xl font-bold'>Información de tu tienda</h1>
+          <p className='text-sm text-muted-foreground'>Administra la identidad pública de tu negocio.</p>
+        </div>
+        {initialStore.slug ? (
+          <a
+            href={publicVendorPath(initialStore.slug)}
+            target='_blank'
+            rel='noreferrer'
+            className='inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent'
+          >
+            <ExternalLink className='h-4 w-4' />
+            Ver tienda pública
+          </a>
+        ) : null}
       </div>
 
       <VendorSellerInformationForm
         form={form}
+        userId={userId}
         coordMode={coordMode}
         onCoordModeChange={setCoordMode}
         geocoding={geocoding}

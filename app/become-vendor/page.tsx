@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 
 import { BecomeVendorForm } from '@/components/become-vendor/become-vendor-form'
 import { createClient } from '@/lib/supabase/server'
-import { BECOME_VENDOR_PATH, HOME_PATH, VENDOR_SELLER_PATH, signInPathWithCallback } from '@/lib/routes'
+import { BECOME_VENDOR_PATH, HOME_PATH, VENDOR_INFORMATION_PATH, signInPathWithCallback } from '@/lib/routes'
 import { getStoreByUserId } from '@/server/services/store.service'
 
 export default async function BecomeVendorPage() {
@@ -18,7 +18,7 @@ export default async function BecomeVendorPage() {
 
   const store = await getStoreByUserId(user.id)
   if (store) {
-    redirect(VENDOR_SELLER_PATH)
+    redirect(VENDOR_INFORMATION_PATH)
   }
 
   return (
@@ -27,7 +27,7 @@ export default async function BecomeVendorPage() {
         <Link href={HOME_PATH} className='text-sm text-muted-foreground hover:text-foreground'>
           ← Volver al inicio
         </Link>
-        <BecomeVendorForm />
+        <BecomeVendorForm userId={user.id} />
       </div>
     </main>
   )

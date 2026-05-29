@@ -19,8 +19,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next.js + Supabase Starter",
-  description: "A modern web application with authentication",
+  title: {
+    default: "Mercado Justo",
+    template: "%s | Mercado Justo",
+  },
+  description:
+    "Creá tu tienda digital, conectá con tu comunidad y vendé productos locales.",
 };
 
 export default async function RootLayout({

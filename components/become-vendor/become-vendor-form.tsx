@@ -20,7 +20,7 @@ import {
 } from '@/components/vendor-dashboard/vendor-seller/vendor-seller-information-schema'
 import { useSellerGeocoding } from '@/components/vendor-dashboard/vendor-seller/use-seller-geocoding'
 
-export function BecomeVendorForm() {
+export function BecomeVendorForm({ userId }: { userId: string }) {
   const { toast } = useToast()
   const router = useRouter()
   const [coordMode, setCoordMode] = useState<'auto' | 'map'>('auto')
@@ -43,6 +43,11 @@ export function BecomeVendorForm() {
     startTransition(async () => {
       const result = await updateSellerProfileAction({
         businessName: values.businessName,
+        slug: values.slug,
+        bio: values.bio ?? undefined,
+        bannerUrl: values.bannerUrl || undefined,
+        logoUrl: values.logoUrl || undefined,
+        allowFollowers: values.allowFollowers,
         address: values.address,
         instagram: values.instagram ?? undefined,
         latitude: values.latitude,
@@ -71,6 +76,7 @@ export function BecomeVendorForm() {
 
       <VendorSellerInformationForm
         form={form}
+        userId={userId}
         coordMode={coordMode}
         onCoordModeChange={setCoordMode}
         geocoding={geocoding}

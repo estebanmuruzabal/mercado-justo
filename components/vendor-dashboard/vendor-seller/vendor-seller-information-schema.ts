@@ -1,7 +1,19 @@
 import * as z from 'zod'
 
+import { isValidSlug, SLUG_MAX_LENGTH, SLUG_MIN_LENGTH } from '@/lib/vendor/slug'
+
 export const vendorSellerInformationSchema = z.object({
   businessName: z.string().trim().min(2, 'El nombre del negocio es requerido.'),
+  slug: z
+    .string()
+    .trim()
+    .min(SLUG_MIN_LENGTH, 'El slug es muy corto.')
+    .max(SLUG_MAX_LENGTH, 'El slug es muy largo.')
+    .refine(isValidSlug, 'Solo letras, números y guiones (ej: the-tree-kings).'),
+  bio: z.string().trim().max(500, 'Máximo 500 caracteres.').optional(),
+  bannerUrl: z.string().optional(),
+  logoUrl: z.string().optional(),
+  allowFollowers: z.boolean(),
   address: z.string().trim().min(2, 'La dirección es requerida.'),
   instagram: z
     .string()
@@ -42,6 +54,11 @@ export type VendorSellerInformationFormInput = z.input<typeof vendorSellerInform
 export function vendorSellerInformationDefaults(
   store?: {
     name?: string | null
+    slug?: string | null
+    bio?: string | null
+    bannerUrl?: string | null
+    logoUrl?: string | null
+    allowFollowers?: boolean | null
     address?: string | null
     instagram?: string | null
     latitude?: number | null
@@ -50,6 +67,11 @@ export function vendorSellerInformationDefaults(
 ): VendorSellerInformationFormInput {
   return {
     businessName: store?.name ?? '',
+    slug: store?.slug ?? '',
+    bio: store?.bio ?? '',
+    bannerUrl: store?.bannerUrl ?? '',
+    logoUrl: store?.logoUrl ?? '',
+    allowFollowers: store?.allowFollowers ?? true,
     address: store?.address ?? '',
     instagram: store?.instagram ?? '',
     latitude: store?.latitude == null ? '' : String(store.latitude),
