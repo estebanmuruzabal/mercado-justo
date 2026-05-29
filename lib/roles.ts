@@ -1,7 +1,15 @@
-import { ROLES, ROLE_LIST, type Role, isRole } from '@/types/roles'
+import {
+  ROLES,
+  ROLE_LIST,
+  STAFF_ROLES,
+  type Role,
+  type StaffRole,
+  isRole,
+  isStaffRole,
+} from '@/types/roles'
 
-export { ROLES, ROLE_LIST, isRole }
-export type { Role }
+export { ROLES, ROLE_LIST, STAFF_ROLES, isRole, isStaffRole }
+export type { Role, StaffRole }
 
 
 export function hasRole(userRole: Role | null | undefined, allowedRole: Role) {
@@ -21,6 +29,11 @@ export function isAdminRole(role: Role | null | undefined) {
 
 export function isSuperAdmin(role: Role | null | undefined) {
   return role === ROLES.SUPER_ADMIN
+}
+
+/** True when the role is allowed into the Super Admin Panel. */
+export function isStaff(role: Role | null | undefined) {
+  return isStaffRole(role)
 }
 
 // Basic usage:

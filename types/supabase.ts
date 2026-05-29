@@ -34,6 +34,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+        }
+        Relationships: []
+      }
       cart_item: {
         Row: {
           created_at: string
@@ -101,6 +134,39 @@ export type Database = {
           },
         ]
       }
+      delivery_batch: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          scheduled_window: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_window?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_window?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listing: {
         Row: {
           category_id: string
@@ -112,6 +178,10 @@ export type Database = {
           latitude: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           longitude: number | null
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          moderation_status: string
           price: number | null
           status: Database["public"]["Enums"]["listing_status"]
           stock: number
@@ -128,6 +198,10 @@ export type Database = {
           latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           longitude?: number | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: string
           price?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
@@ -144,6 +218,10 @@ export type Database = {
           latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           longitude?: number | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: string
           price?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
@@ -242,6 +320,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      moderation_report: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          details: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          reason: string
+          reporter_id: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          details?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          details?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       notification: {
         Row: {
@@ -377,6 +503,73 @@ export type Database = {
           },
         ]
       }
+      shipment: {
+        Row: {
+          batch_id: string | null
+          carbon_level: string | null
+          created_at: string
+          delivery_method: string | null
+          distance_km: number | null
+          id: string
+          order_id: string
+          scheduled_window: Json | null
+          sequence: number
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id?: string | null
+          carbon_level?: string | null
+          created_at?: string
+          delivery_method?: string | null
+          distance_km?: number | null
+          id?: string
+          order_id: string
+          scheduled_window?: Json | null
+          sequence?: number
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string | null
+          carbon_level?: string | null
+          created_at?: string
+          delivery_method?: string | null
+          distance_km?: number | null
+          id?: string
+          order_id?: string
+          scheduled_window?: Json | null
+          sequence?: number
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_batch"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipment_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipment_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store: {
         Row: {
           address: string | null
@@ -387,6 +580,7 @@ export type Database = {
           follower_count: number
           id: string
           instagram: string | null
+          last_active_at: string | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -398,6 +592,9 @@ export type Database = {
           review_count: number
           show_whatsapp: boolean
           slug: string | null
+          status: string
+          suspended_at: string | null
+          suspension_reason: string | null
           terms_accepted: boolean
           terms_accepted_at: string | null
           whatsapp_number: string | null
@@ -411,6 +608,7 @@ export type Database = {
           follower_count?: number
           id: string
           instagram?: string | null
+          last_active_at?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -422,6 +620,9 @@ export type Database = {
           review_count?: number
           show_whatsapp?: boolean
           slug?: string | null
+          status?: string
+          suspended_at?: string | null
+          suspension_reason?: string | null
           terms_accepted?: boolean
           terms_accepted_at?: string | null
           whatsapp_number?: string | null
@@ -435,6 +636,7 @@ export type Database = {
           follower_count?: number
           id?: string
           instagram?: string | null
+          last_active_at?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -446,6 +648,9 @@ export type Database = {
           review_count?: number
           show_whatsapp?: boolean
           slug?: string | null
+          status?: string
+          suspended_at?: string | null
+          suspension_reason?: string | null
           terms_accepted?: boolean
           terms_accepted_at?: string | null
           whatsapp_number?: string | null
@@ -616,6 +821,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_role: { Args: never; Returns: string }
+      has_role: { Args: { target_role: string }; Returns: boolean }
+      is_staff: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       slugify: { Args: { value: string }; Returns: string }
     }
     Enums: {
