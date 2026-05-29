@@ -11,6 +11,8 @@ export interface VendorProfile {
   latitude: number | null
   longitude: number | null
   instagram: string | null
+  whatsappNumber: string | null
+  showWhatsapp: boolean
   mode: StoreMode
   allowFollowers: boolean
   followerCount: number

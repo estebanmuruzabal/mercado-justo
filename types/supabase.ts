@@ -396,9 +396,11 @@ export type Database = {
           product_limit: number
           rating_avg: number
           review_count: number
+          show_whatsapp: boolean
           slug: string | null
           terms_accepted: boolean
           terms_accepted_at: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           address?: string | null
@@ -418,9 +420,11 @@ export type Database = {
           product_limit?: number
           rating_avg?: number
           review_count?: number
+          show_whatsapp?: boolean
           slug?: string | null
           terms_accepted?: boolean
           terms_accepted_at?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           address?: string | null
@@ -440,9 +444,11 @@ export type Database = {
           product_limit?: number
           rating_avg?: number
           review_count?: number
+          show_whatsapp?: boolean
           slug?: string | null
           terms_accepted?: boolean
           terms_accepted_at?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }

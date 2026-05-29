@@ -201,6 +201,52 @@ export function VendorSellerInformationForm({
               )}
             />
 
+            <FormField
+              control={form.control}
+              name='whatsappNumber'
+              render={({ field }) => (
+                <FormItem className='md:col-span-2'>
+                  <FormLabel>Número de WhatsApp</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      inputMode='tel'
+                      placeholder='5493624123456'
+                      disabled={disabled}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Con código de país, sin el signo + ni espacios. Se usa para el botón{' '}
+                    <span className='font-medium text-foreground'>wa.me</span>.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='showWhatsapp'
+              render={({ field }) => (
+                <FormItem className='flex items-center justify-between gap-4 rounded-lg border p-4 md:col-span-2'>
+                  <div className='space-y-0.5'>
+                    <FormLabel>Mostrar WhatsApp en el perfil</FormLabel>
+                    <FormDescription>Mostrá un botón de contacto directo en tu tienda pública.</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={Boolean(field.value)}
+                      onCheckedChange={(checked) =>
+                        form.setValue('showWhatsapp', checked, { shouldDirty: true })
+                      }
+                      disabled={disabled}
+                      aria-label='Mostrar WhatsApp en el perfil'
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <SellerCoordModeSection
               coordMode={coordMode}
               onCoordModeChange={onCoordModeChange}

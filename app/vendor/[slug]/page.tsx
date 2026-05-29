@@ -14,6 +14,10 @@ import { VendorTabs } from '@/components/vendor-public/vendor-tabs'
 const INITIAL_LISTINGS = 12
 const INITIAL_REVIEWS = 8
 
+const SITE_NAME = 'Mercado Justo'
+const DEFAULT_OG_IMAGE =
+  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1200&auto=format&fit=crop'
+
 export async function generateMetadata({
   params,
 }: {
@@ -21,16 +25,38 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const profile = await getVendorBySlug(slug)
-  if (!profile) return { title: 'Tienda no encontrada' }
 
-  const description = profile.bio ?? `Descubrí los productos de ${profile.name} en Mercado Justo.`
+  if (!profile) {
+    return {
+      title: { absolute: `Tienda no encontrada | ${SITE_NAME}` },
+      robots: { index: false, follow: false },
+    }
+  }
+
+  const title = `${profile.name} | ${SITE_NAME}`
+  const description =
+    profile.bio?.trim() ||
+    `Descubrí los productos de ${profile.name} en ${SITE_NAME}. Seguí la tienda y contactá al vendedor.`
+  const image = profile.bannerUrl || profile.logoUrl || DEFAULT_OG_IMAGE
+  const url = `/vendor/${profile.slug}`
+
   return {
-    title: `${profile.name} · Mercado Justo`,
+    title: { absolute: title },
     description,
+    alternates: { canonical: url },
     openGraph: {
-      title: profile.name,
+      type: 'profile',
+      siteName: SITE_NAME,
+      title,
       description,
-      images: profile.bannerUrl ? [{ url: profile.bannerUrl }] : undefined,
+      url,
+      images: [{ url: image, width: 1200, height: 630, alt: profile.name }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
     },
   }
 }

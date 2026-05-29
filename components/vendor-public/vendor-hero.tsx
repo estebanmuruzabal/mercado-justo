@@ -9,6 +9,7 @@ import type { VendorProfile } from '@/types/vendor'
 
 import { RatingStars } from './rating-stars'
 import { VendorActions } from './vendor-actions'
+import { VendorWhatsappButton } from './vendor-whatsapp-button'
 
 export function VendorHero({
   profile,
@@ -75,7 +76,10 @@ export function VendorHero({
             </div>
           </div>
 
-          <div className='pb-1 sm:self-end'>
+          <div className='flex flex-wrap items-center gap-2 pb-1 sm:justify-end sm:self-end'>
+            {profile.showWhatsapp && profile.whatsappNumber ? (
+              <VendorWhatsappButton number={profile.whatsappNumber} name={profile.name} />
+            ) : null}
             <VendorActions
               storeId={profile.id}
               slug={profile.slug}

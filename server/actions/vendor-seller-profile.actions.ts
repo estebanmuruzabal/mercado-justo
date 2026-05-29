@@ -15,6 +15,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { ROLES } from '@/lib/roles'
 import { createStore, generateUniqueSlug, getStoreByUserId } from '@/server/services/store.service'
 import { isValidSlug, SLUG_MAX_LENGTH, SLUG_MIN_LENGTH, slugify } from '@/lib/vendor/slug'
+import { isValidWhatsappNumber, normalizeWhatsappNumber } from '@/lib/vendor/whatsapp'
 
 const updateSellerProfileSchema = z.object({
   businessName: z.string().trim().min(2, 'El nombre del negocio es requerido.'),
@@ -36,6 +37,14 @@ const updateSellerProfileSchema = z.object({
   bannerUrl: z.string().url().nullish().or(z.literal('')).transform((v) => (v ? v : null)),
   logoUrl: z.string().url().nullish().or(z.literal('')).transform((v) => (v ? v : null)),
   allowFollowers: z.boolean().optional().default(true),
+  whatsappNumber: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? normalizeWhatsappNumber(v) : ''))
+    .refine((v) => v === '' || isValidWhatsappNumber(v), 'Número de WhatsApp inválido.')
+    .transform((v) => (v === '' ? null : v)),
+  showWhatsapp: z.boolean().optional().default(true),
   address: z.string().trim().min(2, 'La dirección es requerida.'),
   instagram: z
     .string()
@@ -89,8 +98,20 @@ export async function updateSellerProfileAction(input: z.input<typeof updateSell
     if (!user) return { success: false, error: 'No hay sesión activa.' }
 
     const store = await getStoreByUserId(user.id)
-    const { businessName, slug, bio, bannerUrl, logoUrl, allowFollowers, address, instagram, latitude, longitude } =
-      parsed.data
+    const {
+      businessName,
+      slug,
+      bio,
+      bannerUrl,
+      logoUrl,
+      allowFollowers,
+      whatsappNumber,
+      showWhatsapp,
+      address,
+      instagram,
+      latitude,
+      longitude,
+    } = parsed.data
 
     if (!store) {
       // Activación (create store + set seller role).
@@ -102,6 +123,8 @@ export async function updateSellerProfileAction(input: z.input<typeof updateSell
         bannerUrl,
         logoUrl,
         allowFollowers,
+        whatsappNumber,
+        showWhatsapp,
         address,
         instagram,
         latitude,
@@ -130,6 +153,8 @@ export async function updateSellerProfileAction(input: z.input<typeof updateSell
         banner_url: bannerUrl,
         logo_url: logoUrl,
         allow_followers: allowFollowers,
+        whatsapp_number: whatsappNumber,
+        show_whatsapp: showWhatsapp,
         address,
         instagram,
         latitude,

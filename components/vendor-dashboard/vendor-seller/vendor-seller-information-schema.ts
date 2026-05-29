@@ -1,6 +1,7 @@
 import * as z from 'zod'
 
 import { isValidSlug, SLUG_MAX_LENGTH, SLUG_MIN_LENGTH } from '@/lib/vendor/slug'
+import { isValidWhatsappNumber } from '@/lib/vendor/whatsapp'
 
 export const vendorSellerInformationSchema = z.object({
   businessName: z.string().trim().min(2, 'El nombre del negocio es requerido.'),
@@ -14,6 +15,15 @@ export const vendorSellerInformationSchema = z.object({
   bannerUrl: z.string().optional(),
   logoUrl: z.string().optional(),
   allowFollowers: z.boolean(),
+  whatsappNumber: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (v) => !v || isValidWhatsappNumber(v),
+      'Número inválido. Incluí el código de país (ej: 5493624123456).',
+    ),
+  showWhatsapp: z.boolean(),
   address: z.string().trim().min(2, 'La dirección es requerida.'),
   instagram: z
     .string()
@@ -59,6 +69,8 @@ export function vendorSellerInformationDefaults(
     bannerUrl?: string | null
     logoUrl?: string | null
     allowFollowers?: boolean | null
+    whatsappNumber?: string | null
+    showWhatsapp?: boolean | null
     address?: string | null
     instagram?: string | null
     latitude?: number | null
@@ -72,6 +84,8 @@ export function vendorSellerInformationDefaults(
     bannerUrl: store?.bannerUrl ?? '',
     logoUrl: store?.logoUrl ?? '',
     allowFollowers: store?.allowFollowers ?? true,
+    whatsappNumber: store?.whatsappNumber ?? '',
+    showWhatsapp: store?.showWhatsapp ?? true,
     address: store?.address ?? '',
     instagram: store?.instagram ?? '',
     latitude: store?.latitude == null ? '' : String(store.latitude),

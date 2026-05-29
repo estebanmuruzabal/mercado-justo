@@ -65,6 +65,8 @@ export function VendorSellerInformationClient({
         bannerUrl: values.bannerUrl || undefined,
         logoUrl: values.logoUrl || undefined,
         allowFollowers: values.allowFollowers,
+        whatsappNumber: values.whatsappNumber ?? undefined,
+        showWhatsapp: values.showWhatsapp,
         address: values.address,
         instagram: values.instagram ?? undefined,
         latitude: values.latitude,

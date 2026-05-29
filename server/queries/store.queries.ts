@@ -15,6 +15,8 @@ export function mapStoreRow(row: StoreRow): Store {
     bannerUrl: row.banner_url ?? null,
     logoUrl: row.logo_url ?? null,
     allowFollowers: row.allow_followers ?? true,
+    whatsappNumber: row.whatsapp_number ?? null,
+    showWhatsapp: row.show_whatsapp ?? true,
     followerCount: row.follower_count ?? 0,
     reviewCount: row.review_count ?? 0,
     ratingAvg: row.rating_avg === null ? 0 : Number(row.rating_avg),

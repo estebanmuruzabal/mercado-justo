@@ -16,6 +16,8 @@ function buildStorePayload(data: CreateStoreInput) {
     banner_url: data.bannerUrl ?? null,
     logo_url: data.logoUrl ?? null,
     allow_followers: data.allowFollowers ?? true,
+    whatsapp_number: data.whatsappNumber ?? null,
+    show_whatsapp: data.showWhatsapp ?? true,
     instagram: data.instagram ?? null,
     address: data.address?.trim() || null,
     latitude: data.latitude ?? null,

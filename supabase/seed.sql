@@ -35,6 +35,7 @@ begin
 
   insert into public.store (
     id, name, slug, bio, banner_url, logo_url, allow_followers,
+    whatsapp_number, show_whatsapp,
     address, latitude, longitude, mode, plan, product_limit,
     terms_accepted, terms_accepted_at
   )
@@ -46,6 +47,7 @@ begin
     'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1500&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop',
     true,
+    '5493624123456', true,
     'Plantation, Florida',
     -27.4705, -58.9868,
     'online', 'free', 50,
@@ -58,6 +60,8 @@ begin
     banner_url = excluded.banner_url,
     logo_url = excluded.logo_url,
     allow_followers = excluded.allow_followers,
+    whatsapp_number = excluded.whatsapp_number,
+    show_whatsapp = excluded.show_whatsapp,
     address = excluded.address;
 
   select id into v_cat from public.category order by name limit 1;

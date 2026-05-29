@@ -9,6 +9,8 @@ export interface Store {
   bannerUrl: string | null
   logoUrl: string | null
   allowFollowers: boolean
+  whatsappNumber: string | null
+  showWhatsapp: boolean
   followerCount: number
   reviewCount: number
   ratingAvg: number
@@ -31,6 +33,8 @@ export interface CreateStoreInput {
   bannerUrl?: string | null
   logoUrl?: string | null
   allowFollowers?: boolean
+  whatsappNumber?: string | null
+  showWhatsapp?: boolean
   address?: string | null
   instagram?: string | null
   latitude?: number | null

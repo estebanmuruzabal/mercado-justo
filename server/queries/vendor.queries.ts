@@ -1,3 +1,5 @@
+import { cache } from 'react'
+
 import { createClient } from '@/lib/supabase/server'
 import type { ListingType } from '@/lib/listing'
 import type { MarketplaceListing } from '@/types/marketplace'
@@ -11,7 +13,7 @@ import type {
 import type { StoreMode } from '@/types/store'
 
 const VENDOR_SELECT =
-  'id,slug,name,bio,banner_url,logo_url,address,latitude,longitude,instagram,mode,allow_followers,follower_count,review_count,rating_avg,created_at'
+  'id,slug,name,bio,banner_url,logo_url,address,latitude,longitude,instagram,whatsapp_number,show_whatsapp,mode,allow_followers,follower_count,review_count,rating_avg,created_at'
 
 type VendorRow = {
   id: string
@@ -24,6 +26,8 @@ type VendorRow = {
   latitude: number | null
   longitude: number | null
   instagram: string | null
+  whatsapp_number: string | null
+  show_whatsapp: boolean
   mode: string
   allow_followers: boolean
   follower_count: number
@@ -44,6 +48,8 @@ function mapVendorRow(row: VendorRow): VendorProfile {
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),
     instagram: row.instagram,
+    whatsappNumber: row.whatsapp_number,
+    showWhatsapp: row.show_whatsapp,
     mode: row.mode as StoreMode,
     allowFollowers: row.allow_followers,
     followerCount: row.follower_count,
@@ -53,7 +59,11 @@ function mapVendorRow(row: VendorRow): VendorProfile {
   }
 }
 
-export async function getVendorBySlug(slug: string): Promise<VendorProfile | null> {
+/**
+ * Cached per request so `generateMetadata` and the page render share a single
+ * DB round-trip for the same slug.
+ */
+export const getVendorBySlug = cache(async (slug: string): Promise<VendorProfile | null> => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('store')
@@ -63,7 +73,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorProfile | nul
 
   if (error) throw error
   return data ? mapVendorRow(data as VendorRow) : null
-}
+})
 
 /** Resolve the public slug for a store id (used to redirect legacy /seller links). */
 export async function getVendorSlugByStoreId(storeId: string): Promise<string | null> {
