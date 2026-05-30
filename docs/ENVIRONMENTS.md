@@ -34,6 +34,19 @@ Professional, SaaS-style separation of **development**, **staging**, and **produ
 | `TELEGRAM_BOT_TOKEN`                  |   ❌   | for Telegram    | Server secret from @BotFather                    |
 | `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`   |   ✅   | for Telegram    | Bot username without `@` (must match the token)  |
 | `TELEGRAM_WEBHOOK_SECRET`             |   ❌   | for Telegram    | `openssl rand -hex 32`; validated on the webhook |
+| `RESEND_API_KEY`                      |   ❌   | for email       | Server secret from [Resend Dashboard](https://resend.com/api-keys) |
+| `RESEND_FROM_EMAIL`                   |   ❌   | for email       | Sender address (default test: `onboarding@resend.dev`) |
+| `RESEND_REPLY_TO`                     |   ❌   | for email       | Optional reply-to address |
+
+**Auth emails** (signup confirmation, password reset) use **Supabase Auth** native flows — not Resend.
+
+**Operational emails** (orders, vendor approval, moderation, etc.) use **Resend** via `lib/notifications/email/send.ts`. Preview templates locally:
+
+```bash
+npm run email:dev
+```
+
+In test mode (`onboarding@resend.dev`), Resend only delivers to the email address on your Resend account. Verify a custom domain in production before going live.
 
 `APP_ENV` resolution order: `NEXT_PUBLIC_APP_ENV` → `VERCEL_ENV` (production→production, preview→staging) → `NODE_ENV`.
 
@@ -174,4 +187,5 @@ npm run dev:tunnel:cf           # HTTPS tunnel (cloudflared)
 npm run telegram:webhook:set    # register webhook for current env
 npm run telegram:webhook:info   # show bot + webhook status
 npm run telegram:webhook:delete # remove webhook
+npm run email:dev               # preview React Email templates
 ```

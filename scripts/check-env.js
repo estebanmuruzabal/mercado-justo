@@ -9,7 +9,22 @@
 
 const { loadEnv } = require('./lib/load-env')
 
-loadEnv()
+function resolveEnvFiles() {
+  const args = process.argv.slice(2)
+  const flagIdx = args.indexOf('--env-file')
+  if (flagIdx !== -1) {
+    const file = args[flagIdx + 1]
+    if (!file) {
+      console.error('Usage: node scripts/check-env.js --env-file <path>')
+      process.exit(1)
+    }
+    return [file]
+  }
+  return ['.env', '.env.local']
+}
+
+const envFiles = resolveEnvFiles()
+loadEnv(envFiles)
 
 const APP_ENV =
   process.env.NEXT_PUBLIC_APP_ENV ||
@@ -49,10 +64,25 @@ const RULES = [
     group: 'telegram',
     check: (v) => (isProd && v.length < 16 ? 'use a longer random secret in production' : null),
   },
+  // Resend is optional; if any var is present, API key is required.
+  { key: 'RESEND_API_KEY', required: false, group: 'resend' },
+  {
+    key: 'RESEND_FROM_EMAIL',
+    required: false,
+    group: 'resend',
+    check: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : 'must be a valid email'),
+  },
+  {
+    key: 'RESEND_REPLY_TO',
+    required: false,
+    group: 'resend',
+    check: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : 'must be a valid email'),
+  },
 ]
 
 const telegramKeys = RULES.filter((r) => r.group === 'telegram').map((r) => r.key)
 const telegramEnabled = telegramKeys.some((k) => process.env[k])
+const resendEnabled = Boolean(process.env.RESEND_API_KEY?.trim())
 
 let errors = 0
 let warnings = 0
@@ -61,7 +91,10 @@ console.log(`\nEnvironment check — APP_ENV=${APP_ENV}\n${'─'.repeat(40)}`)
 
 for (const rule of RULES) {
   const value = process.env[rule.key]
-  const required = rule.required || (rule.group === 'telegram' && telegramEnabled)
+  const required =
+    rule.required ||
+    (rule.group === 'telegram' && telegramEnabled) ||
+    (rule.group === 'resend' && resendEnabled && rule.key === 'RESEND_API_KEY')
 
   if (!value) {
     if (required) {
@@ -92,7 +125,9 @@ for (const rule of RULES) {
 console.log('─'.repeat(40))
 
 if (errors > 0) {
-  console.error(`\n${errors} error(s) found. Fix them in .env.local (or your Vercel env).\n`)
+  console.error(
+    `\n${errors} error(s) found. Fix them in ${envFiles.join(', ')} (or your Vercel env).\n`,
+  )
   process.exit(1)
 }
 

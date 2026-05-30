@@ -8,6 +8,9 @@ export const HOME_PATH = '/' as const
 // ——— Auth ———
 export const SIGN_IN_PATH = '/signin' as const
 export const SIGN_UP_PATH = '/signup' as const
+export const FORGOT_PASSWORD_PATH = '/forgot-password' as const
+export const RESET_PASSWORD_PATH = '/reset-password' as const
+export const AUTH_CALLBACK_PATH = '/auth/callback' as const
 
 export function signInPathWithCallback(callbackUrl: string) {
   const params = new URLSearchParams({ callbackUrl })

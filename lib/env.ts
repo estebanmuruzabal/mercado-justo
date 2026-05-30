@@ -32,6 +32,12 @@ const envSchema = z
     TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
     NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: z.string().min(1).optional(),
     TELEGRAM_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+    // ── Resend (operational / transactional email) ──
+    // Optional so the app builds without it; email services no-op when missing.
+    RESEND_API_KEY: z.string().min(1).optional(),
+    RESEND_FROM_EMAIL: z.string().email().optional(),
+    RESEND_REPLY_TO: z.string().email().optional(),
   })
   .refine(
     (env) => Boolean(env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),

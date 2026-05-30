@@ -1,5 +1,6 @@
 'use server'
 
+import { after } from 'next/server'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 
@@ -9,6 +10,7 @@ import { createAdminClient } from '@/server/admin/client'
 import { withAudit } from '@/server/admin/audit'
 import { ADMIN_VENDORS_PATH } from '@/lib/routes'
 import { type VendorStatus } from '@/lib/admin/types'
+import { dispatchNotificationEvent } from '@/lib/notifications/events/dispatch'
 
 export type AdminActionResult = { success: true } | { success: false; error: string }
 
@@ -51,13 +53,19 @@ async function setVendorStatus(
 export async function approveVendorAction(vendorId: string): Promise<AdminActionResult> {
   const parsed = vendorIdSchema.safeParse(vendorId)
   if (!parsed.success) return { success: false, error: 'Vendor inválido.' }
-  return setVendorStatus(
+  const result = await setVendorStatus(
     parsed.data,
     'active',
     { suspended_at: null, suspension_reason: null },
     PERMISSIONS.VENDORS_APPROVE,
     'vendor.approve',
   )
+  if (result.success) {
+    after(() =>
+      dispatchNotificationEvent({ type: 'vendor.approved', payload: { storeId: parsed.data } }),
+    )
+  }
+  return result
 }
 
 export async function suspendVendorAction(
