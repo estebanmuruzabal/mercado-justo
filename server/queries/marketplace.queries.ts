@@ -79,6 +79,46 @@ export async function fetchMarketplaceListings(
   return ((data ?? []) as ListingRow[]).map(mapRowToMarketplaceListing)
 }
 
+export type PublicStoreSummary = {
+  id: string
+  name: string
+  slug: string
+  logoUrl: string | null
+  ratingAvg: number
+  reviewCount: number
+}
+
+export async function fetchPublicStores(): Promise<PublicStoreSummary[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('store')
+    .select('id, name, slug, logo_url, rating_avg, review_count')
+    .eq('status', 'active')
+    .not('slug', 'is', null)
+    .order('name', { ascending: true })
+
+  if (error) throw error
+
+  return ((data ?? []) as Array<{
+    id: string
+    name: string
+    slug: string | null
+    logo_url: string | null
+    rating_avg: number
+    review_count: number
+  }>)
+    .filter((row): row is typeof row & { slug: string } => Boolean(row.slug))
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      logoUrl: row.logo_url,
+      ratingAvg: Number(row.rating_avg),
+      reviewCount: row.review_count,
+    }))
+}
+
 export async function fetchMarketplaceCategories() {
   const supabase = await createClient()
 

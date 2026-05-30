@@ -4,6 +4,13 @@
 
 // ——— Público ———
 export const HOME_PATH = '/' as const
+export const STORES_PATH = '/tiendas' as const
+export const CATEGORIES_PATH = '/categorias' as const
+export const HELP_PATH = '/ayuda' as const
+export const TERMS_PATH = '/terminos' as const
+export const PRIVACY_PATH = '/privacidad' as const
+export const CONTACT_PATH = '/contacto' as const
+export const BUILD_INFO_API_PATH = '/api/build-info' as const
 
 // ——— Auth ———
 export const SIGN_IN_PATH = '/signin' as const
