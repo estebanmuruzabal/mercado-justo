@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getSiteUrl } from "@/lib/config/environment";
 import { Toaster } from "@/components/ui/sonner";
 import { CartStoreProvider } from "@/stores/cart-store/CartStoreProvider";
 import { NotificationRealtimeProvider } from "@/components/notifications/notification-realtime-provider";
@@ -19,8 +20,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next.js + Supabase Starter",
-  description: "A modern web application with authentication",
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: "Mercado Justo",
+    template: "%s | Mercado Justo",
+  },
+  description:
+    "Creá tu tienda digital, conectá con tu comunidad y vendé productos locales.",
 };
 
 export default async function RootLayout({

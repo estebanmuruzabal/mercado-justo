@@ -1,9 +1,11 @@
 'use server'
 
-import { ROLES } from '@/lib/roles'
+import { ROLES, isStaff } from '@/lib/roles'
 import { mapAuthErrorMessage } from '@/lib/auth/errors'
 import { getPostAuthRedirectPath } from '@/lib/auth/callback-url'
 import { createClient } from '@/lib/supabase/server'
+import { getUserRoleByUserId } from '@/server/queries/user.queries'
+import { ADMIN_DASHBOARD_PATH } from '@/lib/routes'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -94,9 +96,9 @@ export async function signUp(data: SignUpData): Promise<AuthActionResult> {
 
 export async function signIn(data: SignInData): Promise<AuthActionResult> {
   const supabase = await createClient()
-  const redirectTo = getPostAuthRedirectPath(data.callbackUrl, '/')
+  const requestedRedirect = getPostAuthRedirectPath(data.callbackUrl, '/')
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email: data.email,
     password: data.password,
   })
@@ -106,7 +108,18 @@ export async function signIn(data: SignInData): Promise<AuthActionResult> {
   }
 
   revalidateAuthSurfaces()
-  return { ok: true, redirectTo }
+
+  // Platform staff land in the admin panel by default, unless they were
+  // following an explicit internal deep link elsewhere.
+  const userId = signInData.user?.id
+  if (userId && (!data.callbackUrl || requestedRedirect === '/')) {
+    const role = await getUserRoleByUserId(userId)
+    if (isStaff(role)) {
+      return { ok: true, redirectTo: ADMIN_DASHBOARD_PATH }
+    }
+  }
+
+  return { ok: true, redirectTo: requestedRedirect }
 }
 
 export async function signOut() {

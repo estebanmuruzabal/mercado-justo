@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { SignInForm } from '@/components/features/auth/sign-in-form'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { normalizeCheckoutCallbackUrl } from '@/lib/auth/checkout'
+import { FORGOT_PASSWORD_PATH } from '@/lib/routes'
 
 export default async function SignInPage({
   searchParams,
@@ -20,8 +21,13 @@ export default async function SignInPage({
             Enter your email and password to sign in to your account
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <SignInForm callbackUrl={callbackUrl} redirectFallback={callbackUrl} />
+          <p className="text-center text-sm">
+            <Link href={FORGOT_PASSWORD_PATH} className="text-muted-foreground hover:text-primary hover:underline">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-muted-foreground">

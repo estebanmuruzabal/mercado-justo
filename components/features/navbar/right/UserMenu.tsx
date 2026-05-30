@@ -23,7 +23,7 @@ import {
   VENDOR_CATEGORIES_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_SALES_PATH,
-  VENDOR_SELLER_PATH,
+  VENDOR_INFORMATION_PATH,
   HOME_PATH,
   signInPathWithCallback,
   signUpPathWithCallback,
@@ -160,7 +160,7 @@ export function UserMenu({
     }
 
     if (actionKey === 'vendor_seller') {
-      router.push(VENDOR_SELLER_PATH)
+      router.push(VENDOR_INFORMATION_PATH)
       return
     }
 
@@ -181,7 +181,7 @@ export function UserMenu({
     if (itemId === 'vendor_listings') return pathname.startsWith(VENDOR_LISTINGS_PATH)
     if (itemId === 'vendor_sales') return pathname.startsWith(VENDOR_SALES_PATH)
     if (itemId === 'vendor_categories') return pathname.startsWith(VENDOR_CATEGORIES_PATH)
-    if (itemId === 'vendor_seller') return pathname.startsWith(VENDOR_SELLER_PATH)
+    if (itemId === 'vendor_seller') return pathname.startsWith(VENDOR_INFORMATION_PATH)
 
     if (itemId === 'ayuda') return pathname === HOME_PATH
 
@@ -210,7 +210,7 @@ export function UserMenu({
         { id: 'vendor_listings', label: 'Mis Listings', icon: Package },
         { id: 'vendor_sales', label: 'Ventas', icon: ShoppingBag },
         { id: 'vendor_categories', label: 'Categorías', icon: Tags },
-        { id: 'vendor_seller', label: 'Modo vendedor', icon: Store },
+        { id: 'vendor_seller', label: 'Maneja tu tienda', icon: Store },
       ]
     : [
         { divider: true },

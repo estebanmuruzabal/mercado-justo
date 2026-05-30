@@ -1,7 +1,9 @@
 'use server'
 
+import { after } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { dispatchNotificationEvent } from '@/lib/notifications/events/dispatch'
 
 const cartItemSchema = z.object({
   variantId: z.string().min(1),
@@ -101,6 +103,9 @@ export async function createOrderFromCartAction(
 
   const { error: itemsError } = await supabase.from('order_item').insert(orderItemsPayload as never[])
   if (itemsError) throw itemsError
+
+  // Non-blocking: fan-out order notifications (Telegram + email, etc.).
+  after(() => dispatchNotificationEvent({ type: 'order.created', payload: { orderId } }))
 
   return { orderId }
 }

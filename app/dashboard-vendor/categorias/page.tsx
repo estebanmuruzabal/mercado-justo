@@ -34,7 +34,7 @@ export default async function VendorCategoriesPage() {
           </div>
         ) : (
           <div className='space-y-2'>
-            <h1 className='text-3xl font-bold'>Vendor panel</h1>
+            <h1 className='text-3xl font-bold'>Panel Vendedor</h1>
             <p className='text-sm text-muted-foreground'>Categorías</p>
             <CategoriesTab />
           </div>

@@ -4,6 +4,16 @@ export type StorePlan = 'free'
 export interface Store {
   id: string
   name: string
+  slug: string | null
+  bio: string | null
+  bannerUrl: string | null
+  logoUrl: string | null
+  allowFollowers: boolean
+  whatsappNumber: string | null
+  showWhatsapp: boolean
+  followerCount: number
+  reviewCount: number
+  ratingAvg: number
   instagram: string | null
   address: string | null
   latitude: number | null
@@ -18,6 +28,13 @@ export interface Store {
 
 export interface CreateStoreInput {
   name: string
+  slug?: string | null
+  bio?: string | null
+  bannerUrl?: string | null
+  logoUrl?: string | null
+  allowFollowers?: boolean
+  whatsappNumber?: string | null
+  showWhatsapp?: boolean
   address?: string | null
   instagram?: string | null
   latitude?: number | null

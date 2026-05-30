@@ -23,8 +23,8 @@ export default async function VendorSellerPage() {
   return (
     <main className='min-h-screen px-6 py-10'>
       <div className='mx-auto max-w-6xl space-y-6'>
-        <VendorBreadcrumbs current='Información del vendedor' />
-        <VendorSellerInformationClient initialStore={store} />
+        <VendorBreadcrumbs current='Información de tu tienda' />
+        <VendorSellerInformationClient initialStore={store} userId={user.id} />
       </div>
     </main>
   )

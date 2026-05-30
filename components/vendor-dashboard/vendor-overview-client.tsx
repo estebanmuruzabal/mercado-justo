@@ -19,14 +19,14 @@ import {
   VENDOR_DASHBOARD_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_SALES_PATH,
-  VENDOR_SELLER_PATH,
+  VENDOR_INFORMATION_PATH,
   VENDOR_STORE_CREATED_PARAM,
 } from '@/lib/routes'
 
 const QUICK_LINKS = [
   { href: VENDOR_LISTINGS_PATH, label: 'Mis listings', description: 'Publicá y gestioná productos', icon: Package },
   { href: VENDOR_SALES_PATH, label: 'Ventas', description: 'Revisá pedidos y entregas', icon: ShoppingBag },
-  { href: VENDOR_SELLER_PATH, label: 'Información del vendedor', description: 'Datos de tu tienda', icon: Store },
+  { href: VENDOR_INFORMATION_PATH, label: 'Información del vendedor', description: 'Datos de tu tienda', icon: Store },
   { href: VENDOR_CATEGORIES_PATH, label: 'Categorías', description: 'Organizá tu catálogo', icon: LayoutGrid },
 ] as const
 

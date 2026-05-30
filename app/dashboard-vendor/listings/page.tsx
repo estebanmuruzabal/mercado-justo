@@ -38,7 +38,7 @@ export default async function VendorListingsPage() {
           <>
             <div className='flex items-center justify-between gap-4'>
               <div className='space-y-1'>
-                <h1 className='text-3xl font-bold'>Vendor panel</h1>
+                <h1 className='text-3xl font-bold'>Panel Vendedor</h1>
                 <p className='text-sm text-muted-foreground'>Gestioná tus listings</p>
               </div>
               <Link
