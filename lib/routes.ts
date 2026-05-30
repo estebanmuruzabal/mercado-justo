@@ -51,9 +51,6 @@ export const VENDOR_SALES_PATH = '/dashboard-vendor/sales' as const
 export const VENDOR_CATEGORIES_PATH = '/dashboard-vendor/categorias' as const
 export const VENDOR_NOTIFICATIONS_PATH = '/dashboard-vendor/notifications' as const
 
-/** @deprecated Use VENDOR_INFORMATION_PATH */
-export const VENDOR_SELLER_PROFILE_PATH = VENDOR_INFORMATION_PATH
-
 // ——— Super Admin Panel ———
 /** Landing del panel de administración global (solo staff). */
 export const ADMIN_DASHBOARD_PATH = '/admin' as const
