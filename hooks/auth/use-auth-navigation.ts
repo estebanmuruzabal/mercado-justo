@@ -16,14 +16,6 @@ export function useAuthNavigation() {
       return { handled: true as const, error: result.error }
     }
 
-    if ('needsEmailConfirmation' in result && result.needsEmailConfirmation) {
-      return {
-        handled: true as const,
-        needsEmailConfirmation: true as const,
-        message: result.message,
-      }
-    }
-
     if ('ok' in result && result.ok) {
       const supabase = createClient()
       await supabase.auth.getSession()

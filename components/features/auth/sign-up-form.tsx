@@ -81,14 +81,6 @@ export function SignUpForm({
         return
       }
 
-      if (outcome.needsEmailConfirmation) {
-        toast({
-          title: 'Revisá tu email',
-          description: outcome.message,
-        })
-        return
-      }
-
       if (outcome.ok) {
         onSuccess?.()
       }
