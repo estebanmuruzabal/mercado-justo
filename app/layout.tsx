@@ -8,6 +8,7 @@ import { AuthSessionProvider } from "@/components/auth/auth-session-provider";
 import { LocationProvider } from "@/components/location/location-provider";
 import "./globals.css";
 import Header from "@/components/layout/header/header";
+import { AppFooter } from "@/components/layout/footer/app-footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,14 +38,15 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
       >
         <CartStoreProvider>
           <NotificationRealtimeProvider>
             <AuthSessionProvider>
             <LocationProvider>
               <Header />
-              {children}
+              <div className="flex flex-1 flex-col">{children}</div>
+              <AppFooter />
             </LocationProvider>
             </AuthSessionProvider>
           </NotificationRealtimeProvider>

@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/check-env.js",
+    "predev": "node scripts/check-env.js && node scripts/generate-build-info.js",
     "dev": "next dev --turbo",
-    "prebuild": "node scripts/check-env.js",
+    "prebuild": "node scripts/check-env.js && node scripts/generate-build-info.js",
     "build": "next build",
     "preprod": "node scripts/check-env.js --env-file .env.production",
     "prod": "node scripts/run-prod.js",
