@@ -24,10 +24,7 @@ export interface SignInData {
   callbackUrl?: string
 }
 
-export type AuthActionResult =
-  | { ok: true; redirectTo: string }
-  | { error: string }
-  | { needsEmailConfirmation: true; message: string }
+export type AuthActionResult = { ok: true; redirectTo: string } | { error: string }
 
 function revalidateAuthSurfaces() {
   revalidatePath('/', 'layout')
@@ -54,15 +51,6 @@ async function ensureSessionAfterSignUp(
 
   if (authData.session) {
     return null
-  }
-
-  const needsEmailConfirmation = authData.user && !authData.user.email_confirmed_at
-  if (needsEmailConfirmation) {
-    return {
-      needsEmailConfirmation: true,
-      message:
-        'Cuenta creada. Revisá tu email para confirmarla y después podés iniciar sesión.',
-    }
   }
 
   const { error: signInError } = await supabase.auth.signInWithPassword({

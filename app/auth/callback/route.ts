@@ -5,7 +5,7 @@ import { SIGN_IN_PATH } from '@/lib/routes'
 
 /**
  * Supabase Auth callback — exchanges the PKCE code for a session, then redirects.
- * Used for password recovery and future email confirmation flows.
+ * Used for password recovery and OAuth flows.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)

@@ -37,7 +37,7 @@ describe('Authentication Flow', () => {
     it('returns ok when signup returns a session', async () => {
       mockSupabase.auth.signUp.mockResolvedValue({
         data: {
-          user: { id: '123', email_confirmed_at: new Date().toISOString() },
+          user: { id: '123' },
           session: { access_token: 'token' },
         },
         error: null,
@@ -57,7 +57,7 @@ describe('Authentication Flow', () => {
     it('signs in silently when signup has no session', async () => {
       mockSupabase.auth.signUp.mockResolvedValue({
         data: {
-          user: { id: '123', email_confirmed_at: new Date().toISOString() },
+          user: { id: '123' },
           session: null,
         },
         error: null,
