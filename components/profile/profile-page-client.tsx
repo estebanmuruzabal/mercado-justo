@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   Bot,
-  Layers3,
   Package,
   Shield,
   ShoppingBag,
@@ -16,7 +15,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-import { CategoriesTab } from '@/components/profile/tabs/categories'
 import { ProfileContent } from '@/components/profile/profile-content'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,10 +26,10 @@ import {
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { isSuperAdmin, type Role } from '@/lib/roles'
+import type { Role } from '@/lib/roles'
 import type { Store as StoreModel } from '@/types/store'
 
-type TabId = 'personal' | 'security' | 'seller' | 'products' | 'purchases' | 'sales' | 'categories' | 'ditto'
+type TabId = 'personal' | 'security' | 'seller' | 'products' | 'purchases' | 'sales' | 'ditto'
 
 const TAB_ICONS: Record<TabId, LucideIcon> = {
   personal: User,
@@ -40,7 +38,6 @@ const TAB_ICONS: Record<TabId, LucideIcon> = {
   products: Package,
   purchases: ShoppingBag,
   sales: StoreIcon,
-  categories: Layers3,
   ditto: Bot,
 }
 
@@ -77,7 +74,6 @@ function TabNavButton({
 export function ProfilePageClient({
   userEmail,
   initialStore,
-  initialRole,
 }: {
   userEmail: string
   initialStore: StoreModel | null
@@ -87,7 +83,6 @@ export function ProfilePageClient({
   const [tab, setTab] = useState<TabId>('personal')
   const [store, setStore] = useState<StoreModel | null>(initialStore)
   const isSeller = Boolean(store)
-  const isAdmin = isSuperAdmin(initialRole)
 
   const tabs = useMemo(() => {
     const base: Array<{ id: TabId; label: string }> = [
@@ -97,12 +92,11 @@ export function ProfilePageClient({
       { id: 'purchases', label: 'Mis compras' },
       ...(isSeller ? [{ id: 'products' as const, label: 'Productos' }] : []),
       ...(isSeller ? [{ id: 'sales' as const, label: 'Mis ventas' }] : []),
-      ...(isAdmin ? [{ id: 'categories' as const, label: 'Categorías' }] : []),
       { id: 'ditto', label: 'DittoBots' },
     ]
 
     return base
-  }, [isAdmin, isSeller])
+  }, [isSeller])
 
   useEffect(() => {
     if (tab === 'products' && !isSeller) {
@@ -112,12 +106,6 @@ export function ProfilePageClient({
       setTab('seller')
     }
   }, [isSeller, tab])
-
-  useEffect(() => {
-    if (tab === 'categories' && !isAdmin) {
-      setTab(isSeller ? 'seller' : 'personal')
-    }
-  }, [isAdmin, isSeller, tab])
 
   const initial = userEmail?.trim()?.charAt(0)?.toUpperCase() ?? '?'
 
@@ -199,16 +187,12 @@ export function ProfilePageClient({
           <main className='min-w-0 flex-1'>
             <Card className='shadow-sm'>
               <CardContent className='pt-6 pb-6'>
-                {tab === 'categories' ? (
-                  <CategoriesTab />
-                ) : (
-                  <ProfileContent
-                    tab={tab}
-                    user={{ email: userEmail }}
-                    store={store}
-                    onStoreCreated={setStore}
-                  />
-                )}
+                <ProfileContent
+                  tab={tab}
+                  user={{ email: userEmail }}
+                  store={store}
+                  onStoreCreated={setStore}
+                />
               </CardContent>
             </Card>
           </main>

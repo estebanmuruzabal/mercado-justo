@@ -4,10 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { useState } from 'react'
-import { Bell, LayoutDashboard, Package, ShoppingBag, Store, Tags } from 'lucide-react'
+import { Bell, LayoutDashboard, Package, ShoppingBag, Store } from 'lucide-react'
 
 import {
-  VENDOR_CATEGORIES_PATH,
   VENDOR_DASHBOARD_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_NOTIFICATIONS_PATH,
@@ -27,7 +26,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: VENDOR_INFORMATION_PATH, label: 'Info de tu Tienda', icon: Store },
   { href: VENDOR_LISTINGS_PATH, label: 'Mis Listings', icon: Package },
   { href: VENDOR_SALES_PATH, label: 'Ventas', icon: ShoppingBag },
-  { href: VENDOR_CATEGORIES_PATH, label: 'Categorías', icon: Tags },
   { href: VENDOR_NOTIFICATIONS_PATH, label: 'Notificaciones', icon: Bell },
 ]
 

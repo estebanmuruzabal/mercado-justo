@@ -10,7 +10,6 @@ import {
   Package,
   ShoppingBag,
   Store,
-  Tags,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -20,7 +19,6 @@ import { signOutClient } from '@/lib/auth/sign-out-client'
 import {
   BECOME_VENDOR_PATH,
   PROFILE_PATH,
-  VENDOR_CATEGORIES_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_SALES_PATH,
   VENDOR_INFORMATION_PATH,
@@ -154,11 +152,6 @@ export function UserMenu({
       return
     }
 
-    if (actionKey === 'vendor_categories') {
-      router.push(VENDOR_CATEGORIES_PATH)
-      return
-    }
-
     if (actionKey === 'vendor_seller') {
       router.push(VENDOR_INFORMATION_PATH)
       return
@@ -180,7 +173,6 @@ export function UserMenu({
 
     if (itemId === 'vendor_listings') return pathname.startsWith(VENDOR_LISTINGS_PATH)
     if (itemId === 'vendor_sales') return pathname.startsWith(VENDOR_SALES_PATH)
-    if (itemId === 'vendor_categories') return pathname.startsWith(VENDOR_CATEGORIES_PATH)
     if (itemId === 'vendor_seller') return pathname.startsWith(VENDOR_INFORMATION_PATH)
 
     if (itemId === 'ayuda') return pathname === HOME_PATH
@@ -209,7 +201,6 @@ export function UserMenu({
         { divider: true },
         { id: 'vendor_listings', label: 'Mis Listings', icon: Package },
         { id: 'vendor_sales', label: 'Ventas', icon: ShoppingBag },
-        { id: 'vendor_categories', label: 'Categorías', icon: Tags },
         { id: 'vendor_seller', label: 'Maneja tu tienda', icon: Store },
       ]
     : [

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Eye,
   EyeOff,
@@ -30,67 +31,51 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
-import { createClient } from '@/lib/supabase/client'
+import { getListingTypeLabel, type ListingType } from '@/lib/listing'
 import { cn } from '@/lib/utils'
 import {
   createCategoryAction,
   deleteCategoryAction,
   updateCategoryAction,
 } from '@/server/actions/category.actions'
+import type { AdminCategoryRow } from '@/server/queries/admin/categories.queries'
 
-type CategoryItem = {
-  id: string
-  name: string
-  parentId: string | null
-  isVisible: boolean
-  createdAt: string
-}
+const ADMIN_LISTING_TYPES = ['product', 'service', 'property'] as const satisfies readonly ListingType[]
 
 type CategoryFormState = {
   name: string
   parentId: string
   isVisible: boolean
+  listingType: (typeof ADMIN_LISTING_TYPES)[number]
 }
 
 const EMPTY_FORM: CategoryFormState = {
   name: '',
   parentId: '',
   isVisible: true,
+  listingType: 'product',
 }
 
-function sortCategories(items: CategoryItem[]) {
+function sortCategories(items: AdminCategoryRow[]) {
   return [...items].sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
 }
 
-function mapCategoryRow(row: {
-  id: string
-  name: string
-  parent_id: string | null
-  is_visible: boolean
-  created_at: string
-}): CategoryItem {
-  return {
-    id: row.id,
-    name: row.name,
-    parentId: row.parent_id,
-    isVisible: row.is_visible,
-    createdAt: row.created_at,
-  }
+function getParentLabel(category: AdminCategoryRow, categories: AdminCategoryRow[]) {
+  if (!category.parentId) return 'Raíz'
+  return categories.find((item) => item.id === category.parentId)?.name ?? 'Raíz'
 }
 
-function getParentLabel(category: CategoryItem, categories: CategoryItem[]) {
-  if (!category.parentId) return 'Root'
-  return categories.find((item) => item.id === category.parentId)?.name ?? 'Root'
-}
+export function CategoriesAdminPanel({
+  initialCategories,
+}: {
+  initialCategories: AdminCategoryRow[]
+}) {
+  const router = useRouter()
+  const [categories, setCategories] = useState(() => sortCategories(initialCategories))
 
-export function CategoriesTab() {
-  const supabase = createClient()
-
-  const [categories, setCategories] = useState<CategoryItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [refreshKey, setRefreshKey] = useState(0)
+  useEffect(() => {
+    setCategories(sortCategories(initialCategories))
+  }, [initialCategories])
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
@@ -99,49 +84,29 @@ export function CategoriesTab() {
   const [form, setForm] = useState<CategoryFormState>(EMPTY_FORM)
   const [formError, setFormError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
-
   const [submitting, setSubmitting] = useState(false)
 
   const editingCategory = useMemo(
     () => (editId ? categories.find((item) => item.id === editId) ?? null : null),
-    [categories, editId]
+    [categories, editId],
   )
 
   const deletingCategory = useMemo(
     () => (deleteId ? categories.find((item) => item.id === deleteId) ?? null : null),
-    [categories, deleteId]
+    [categories, deleteId],
   )
 
-  useEffect(() => {
-    let active = true
+  const parentOptions = useMemo(
+    () =>
+      categories.filter(
+        (item) => item.id !== editId && item.listingType === form.listingType,
+      ),
+    [categories, editId, form.listingType],
+  )
 
-    async function load() {
-      setLoading(true)
-      setError(null)
-
-      const { data, error: fetchError } = await supabase
-        .from('category')
-        .select('id, name, parent_id, is_visible, created_at')
-        .order('name', { ascending: true })
-
-      if (!active) return
-
-      if (fetchError) {
-        setCategories([])
-        setError(fetchError.message)
-      } else {
-        const mapped = (data ?? []).map(mapCategoryRow)
-        setCategories(sortCategories(mapped))
-      }
-
-      setLoading(false)
-    }
-
-    void load()
-    return () => {
-      active = false
-    }
-  }, [supabase, refreshKey])
+  function syncFromServer() {
+    router.refresh()
+  }
 
   function openCreate() {
     setForm(EMPTY_FORM)
@@ -151,11 +116,12 @@ export function CategoriesTab() {
     setCreateOpen(true)
   }
 
-  function openEdit(category: CategoryItem) {
+  function openEdit(category: AdminCategoryRow) {
     setForm({
       name: category.name,
       parentId: category.parentId ?? '',
       isVisible: category.isVisible,
+      listingType: category.listingType as CategoryFormState['listingType'],
     })
     setFormError(null)
     setDeleteError(null)
@@ -182,7 +148,7 @@ export function CategoriesTab() {
     }
 
     const duplicate = categories.some(
-      (item) => item.name.trim().toLowerCase() === name.toLowerCase() && item.id !== editId
+      (item) => item.name.trim().toLowerCase() === name.toLowerCase() && item.id !== editId,
     )
     if (duplicate) {
       setFormError('Ya existe una categoría con ese nombre.')
@@ -193,26 +159,25 @@ export function CategoriesTab() {
     setFormError(null)
     setDeleteError(null)
 
+    const payload = {
+      name,
+      parentId: form.parentId || null,
+      isVisible: form.isVisible,
+      listingType: form.listingType,
+    }
+
     try {
       if (editId) {
-        await updateCategoryAction(editId, {
-          name,
-          parentId: form.parentId || null,
-          isVisible: form.isVisible,
-        })
+        await updateCategoryAction(editId, payload)
       } else {
-        await createCategoryAction({
-          name,
-          parentId: form.parentId || null,
-          isVisible: form.isVisible,
-        })
+        await createCategoryAction(payload)
       }
 
       closeForm()
-      setRefreshKey((v) => v + 1)
+      syncFromServer()
     } catch (submitError) {
       setFormError(
-        submitError instanceof Error ? submitError.message : 'No se pudo guardar la categoría.'
+        submitError instanceof Error ? submitError.message : 'No se pudo guardar la categoría.',
       )
       setSubmitting(false)
     }
@@ -225,14 +190,15 @@ export function CategoriesTab() {
     setDeleteError(null)
 
     try {
+      const targetId = deleteId
       setDeleteId(null)
-      await deleteCategoryAction(deleteId)
-      setRefreshKey((v) => v + 1)
+      await deleteCategoryAction(targetId)
+      syncFromServer()
     } catch (deleteErrorValue) {
       setDeleteError(
         deleteErrorValue instanceof Error
           ? deleteErrorValue.message
-          : 'No se pudo eliminar la categoría.'
+          : 'No se pudo eliminar la categoría.',
       )
     } finally {
       setSubmitting(false)
@@ -244,9 +210,9 @@ export function CategoriesTab() {
       <Card className='shadow-sm'>
         <CardHeader className='gap-4 sm:flex-row sm:items-start sm:justify-between'>
           <div className='space-y-1'>
-            <CardTitle className='text-xl'>Categorías</CardTitle>
+            <CardTitle className='text-xl'>Taxonomía de categorías</CardTitle>
             <CardDescription>
-              Gestioná categorías raíz y dejá listo el esquema para subcategorías futuras.
+              Gestioná categorías raíz, subcategorías y tipos de listing. Solo super-admin.
             </CardDescription>
           </div>
 
@@ -259,37 +225,12 @@ export function CategoriesTab() {
         <Separator />
 
         <CardContent className='p-0'>
-          {loading ? (
-            <div className='space-y-3 p-6'>
-              <div className='grid grid-cols-4 gap-4'>
-                <Skeleton className='h-4 w-32' />
-                <Skeleton className='h-4 w-24' />
-                <Skeleton className='h-4 w-24' />
-                <Skeleton className='ml-auto h-4 w-16' />
-              </div>
-              <Separator />
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className='grid grid-cols-4 gap-4 py-2'>
-                  <Skeleton className='h-5 w-40' />
-                  <Skeleton className='h-5 w-24' />
-                  <Skeleton className='h-5 w-28' />
-                  <Skeleton className='ml-auto h-8 w-20' />
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className='space-y-4 p-6'>
-              <p className='text-sm text-destructive'>{error}</p>
-              <Button variant='outline' onClick={() => setRefreshKey((v) => v + 1)}>
-                Reintentar
-              </Button>
-            </div>
-          ) : categories.length === 0 ? (
+          {categories.length === 0 ? (
             <div className='flex flex-col items-start gap-4 p-6'>
               <div className='space-y-1'>
                 <p className='font-medium'>No hay categorías todavía.</p>
                 <p className='text-sm text-muted-foreground'>
-                  Creá la primera categoría para empezar a organizar el catálogo.
+                  Creá la primera categoría para organizar el catálogo del marketplace.
                 </p>
               </div>
               <Button onClick={openCreate} className='gap-2'>
@@ -302,10 +243,11 @@ export function CategoriesTab() {
               <table className='min-w-full border-separate border-spacing-0'>
                 <thead className='bg-muted/40'>
                   <tr className='text-left text-xs font-medium uppercase tracking-wide text-muted-foreground'>
-                    <th className='px-6 py-4'>Category name</th>
-                    <th className='px-6 py-4'>Parent category</th>
-                    <th className='px-6 py-4'>Visibility status</th>
-                    <th className='px-6 py-4 text-right'>Actions</th>
+                    <th className='px-6 py-4'>Nombre</th>
+                    <th className='px-6 py-4'>Tipo</th>
+                    <th className='px-6 py-4'>Padre</th>
+                    <th className='px-6 py-4'>Visibilidad</th>
+                    <th className='px-6 py-4 text-right'>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -319,6 +261,9 @@ export function CategoriesTab() {
                           </p>
                         </div>
                       </td>
+                      <td className='px-6 py-4'>
+                        <Badge variant='outline'>{getListingTypeLabel(category.listingType)}</Badge>
+                      </td>
                       <td className='px-6 py-4 text-sm text-muted-foreground'>
                         {getParentLabel(category, categories)}
                       </td>
@@ -327,8 +272,12 @@ export function CategoriesTab() {
                           variant={category.isVisible ? 'default' : 'secondary'}
                           className='gap-1.5'
                         >
-                          {category.isVisible ? <Eye className='size-3.5' /> : <EyeOff className='size-3.5' />}
-                          {category.isVisible ? 'Visible' : 'Hidden'}
+                          {category.isVisible ? (
+                            <Eye className='size-3.5' />
+                          ) : (
+                            <EyeOff className='size-3.5' />
+                          )}
+                          {category.isVisible ? 'Visible' : 'Oculta'}
                         </Badge>
                       </td>
                       <td className='px-6 py-4'>
@@ -377,14 +326,14 @@ export function CategoriesTab() {
               </DialogTitle>
               <DialogDescription>
                 {editingCategory
-                  ? 'Actualizá el nombre, el padre y la visibilidad.'
-                  : 'Definí una categoría raíz o vinculala con otra categoría.'}
+                  ? 'Actualizá nombre, tipo, padre y visibilidad.'
+                  : 'Definí una categoría raíz o vinculala como subcategoría.'}
               </DialogDescription>
             </DialogHeader>
 
             <div className='space-y-4'>
               <div className='space-y-2'>
-                <Label htmlFor='category-name'>Category name</Label>
+                <Label htmlFor='category-name'>Nombre</Label>
                 <Input
                   id='category-name'
                   value={form.name}
@@ -395,7 +344,40 @@ export function CategoriesTab() {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='category-parent'>Parent category</Label>
+                <Label htmlFor='category-listing-type'>Tipo de listing</Label>
+                <select
+                  id='category-listing-type'
+                  value={form.listingType}
+                  onChange={(event) => {
+                    const listingType = event.target.value as CategoryFormState['listingType']
+                    setForm((current) => ({
+                      ...current,
+                      listingType,
+                      parentId:
+                        current.parentId &&
+                        categories.some(
+                          (item) =>
+                            item.id === current.parentId && item.listingType === listingType,
+                        )
+                          ? current.parentId
+                          : '',
+                    }))
+                  }}
+                  className={cn(
+                    'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none',
+                    'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                  )}
+                >
+                  {ADMIN_LISTING_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {getListingTypeLabel(type)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='category-parent'>Categoría padre</Label>
                 <select
                   id='category-parent'
                   value={form.parentId}
@@ -404,17 +386,15 @@ export function CategoriesTab() {
                   }
                   className={cn(
                     'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none',
-                    'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
+                    'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                   )}
                 >
-                  <option value=''>Root</option>
-                  {categories
-                    .filter((item) => item.id !== editId)
-                    .map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
+                  <option value=''>Raíz</option>
+                  {parentOptions.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -427,7 +407,7 @@ export function CategoriesTab() {
                   }
                   className='size-4 rounded border-input'
                 />
-                Visible to users
+                Visible para usuarios
               </label>
 
               {formError ? <p className='text-sm text-destructive'>{formError}</p> : null}
@@ -477,4 +457,3 @@ export function CategoriesTab() {
     </div>
   )
 }
-

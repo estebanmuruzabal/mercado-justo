@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { LayoutGrid, Package, ShoppingBag, Store } from 'lucide-react'
+import { Package, ShoppingBag, Store } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -15,7 +15,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  VENDOR_CATEGORIES_PATH,
   VENDOR_DASHBOARD_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_SALES_PATH,
@@ -27,7 +26,6 @@ const QUICK_LINKS = [
   { href: VENDOR_LISTINGS_PATH, label: 'Mis listings', description: 'Publicá y gestioná productos', icon: Package },
   { href: VENDOR_SALES_PATH, label: 'Ventas', description: 'Revisá pedidos y entregas', icon: ShoppingBag },
   { href: VENDOR_INFORMATION_PATH, label: 'Información del vendedor', description: 'Datos de tu tienda', icon: Store },
-  { href: VENDOR_CATEGORIES_PATH, label: 'Categorías', description: 'Organizá tu catálogo', icon: LayoutGrid },
 ] as const
 
 export function VendorOverviewClient() {

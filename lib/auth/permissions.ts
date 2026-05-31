@@ -37,6 +37,9 @@ export const PERMISSIONS = {
   // Analytics.
   ANALYTICS_VIEW: 'analytics:view',
 
+  // Category taxonomy (super-admin only).
+  CATEGORIES_MANAGE: 'categories:manage',
+
   // Audit log.
   AUDIT_VIEW: 'audit:view',
 } as const

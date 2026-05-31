@@ -55,7 +55,6 @@ export function vendorDashboardPathAfterStoreCreated() {
 export const VENDOR_INFORMATION_PATH = '/dashboard-vendor/vendor-information' as const
 export const VENDOR_LISTINGS_PATH = '/dashboard-vendor/listings' as const
 export const VENDOR_SALES_PATH = '/dashboard-vendor/sales' as const
-export const VENDOR_CATEGORIES_PATH = '/dashboard-vendor/categorias' as const
 export const VENDOR_NOTIFICATIONS_PATH = '/dashboard-vendor/notifications' as const
 
 // ——— Super Admin Panel ———
@@ -68,6 +67,7 @@ export const ADMIN_LOGISTICS_PATH = '/admin/logistics' as const
 export const ADMIN_MODERATION_PATH = '/admin/moderation' as const
 export const ADMIN_NOTIFICATIONS_PATH = '/admin/notifications' as const
 export const ADMIN_ANALYTICS_PATH = '/admin/analytics' as const
+export const ADMIN_CATEGORIES_PATH = '/admin/categories' as const
 
 // ——— Marketplace / listings ———
 export function listingDetailPath(listingType: string, listingId: string) {

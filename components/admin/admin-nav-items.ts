@@ -6,11 +6,13 @@ import {
   ShieldCheck,
   ShoppingBag,
   Store,
+  Tags,
   Truck,
 } from 'lucide-react'
 
 import {
   ADMIN_ANALYTICS_PATH,
+  ADMIN_CATEGORIES_PATH,
   ADMIN_DASHBOARD_PATH,
   ADMIN_LISTINGS_PATH,
   ADMIN_LOGISTICS_PATH,
@@ -36,6 +38,7 @@ export type AdminNavItem = {
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: ADMIN_DASHBOARD_PATH, label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.ADMIN_ACCESS },
   { href: ADMIN_VENDORS_PATH, label: 'Vendors', icon: Store, permission: PERMISSIONS.VENDORS_VIEW },
+  { href: ADMIN_CATEGORIES_PATH, label: 'Categorías', icon: Tags, permission: PERMISSIONS.CATEGORIES_MANAGE },
   { href: ADMIN_LISTINGS_PATH, label: 'Productos', icon: Package, permission: PERMISSIONS.LISTINGS_VIEW },
   { href: ADMIN_ORDERS_PATH, label: 'Órdenes', icon: ShoppingBag, permission: PERMISSIONS.ORDERS_VIEW },
   { href: ADMIN_LOGISTICS_PATH, label: 'Logística', icon: Truck, permission: PERMISSIONS.LOGISTICS_MANAGE },
