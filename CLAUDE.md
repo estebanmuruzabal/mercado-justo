@@ -92,6 +92,38 @@ resolveCommercialSnapshots(publicationIds: string[]): Promise<Map<string, Commer
 
 **Prohibido** fuera de `offer/**`: `OfferRepository`, `findVariants`, `findDefaultVariant`, deep imports de `offer/infrastructure/*` o `offer/domain/*`. El fallback Strangler (`listing_variant`) vive **dentro** de Offer BC y se expone opaco como `CommercialSnapshot.source: 'legacy'`.
 
+
+### Marketplace Relations — Canonical Graph Boundary (B5 / C5)
+
+**Estado (2026-05-31):** R3.0 complete — read BC con `resolveRelationSnapshots()`. **Próximo:** R3.1 (writes, owner-aware RLS, `createRelation`).
+
+Relations BC expone **una única API pública** para lectura del grafo:
+
+```typescript
+resolveRelationSnapshots(publicationIds, options?): Promise<Map<string, RelationSnapshot[]>>
+```
+
+**Consumer → resolveRelationSnapshots() → Relations Repository → publication_relation**
+
+Prohibido fuera de `relations/**`:
+
+- `createClient().from('publication_relation')`
+- deep imports de `infrastructure/**`, `domain/**`, `policies/**`, `mappers/**`
+- acceso directo desde Discovery o Transaction
+
+`RelationSnapshot` incluye `RelatedPublicationSummary` (B1) y `version: 1` (C1).
+
+Repository methods are internal implementation details and must never become public APIs.
+
+**`includePrivate` contract (R3.0):**
+
+- Requires `actor: RelationReadActor` (source owner, admin, or serviceRole) — ignored without authorization.
+- Extends visibility for scheduled/expired/inherit-hidden edges only; does not mean "show everything".
+- Current RLS only returns edges with `visibility IN ('public', 'inherit')` — private DB edges are not accessible yet.
+- TODO(R3.1): Private relations become fully accessible only after owner-aware RLS policies.
+
+**Registry strangler:** `@/domains/marketplace/shared/domain/relation-type-registry` is deprecated — migrate to `@/domains/marketplace/relations`. TODO(R3.2): remove shared re-export.
+
 ### Marketplace Discovery — Canonical Read Ownership Rule
 
 Marketplace tiene **una sola fuente canónica por fase** (`DISCOVERY_SOURCE`):

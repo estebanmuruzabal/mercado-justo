@@ -98,6 +98,58 @@ const eslintConfig = [
               group: ["@/domains/marketplace/listings/application/queries/*"],
               message: "A4: use resolveCommercialSnapshots from @/domains/marketplace/offer.",
             },
+            {
+              group: ["@/domains/marketplace/relations/infrastructure/*"],
+              message:
+                "B5/C5: use resolveRelationSnapshots from @/domains/marketplace/relations.",
+            },
+            {
+              group: ["@/domains/marketplace/relations/domain/*"],
+              message: "B5/C5: use RelationSnapshot from @/domains/marketplace/relations only.",
+            },
+            {
+              group: ["@/domains/marketplace/relations/application/mappers/*"],
+              message:
+                "B5/C5: use resolveRelationSnapshots from @/domains/marketplace/relations.",
+            },
+            {
+              group: ["@/domains/marketplace/relations/application/actions/*"],
+              message: "B5/C5: relation actions are internal until R3.1.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/domains/marketplace/relations/**",
+      "test/domains/marketplace/relations/**",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/domains/marketplace/relations/infrastructure/*"],
+              message:
+                "B5/C5: use resolveRelationSnapshots from @/domains/marketplace/relations.",
+            },
+            {
+              group: ["@/domains/marketplace/relations/domain/*"],
+              message: "B5/C5: use RelationSnapshot from @/domains/marketplace/relations only.",
+            },
+            {
+              group: ["@/domains/marketplace/relations/application/mappers/*"],
+              message:
+                "B5/C5: use resolveRelationSnapshots from @/domains/marketplace/relations.",
+            },
+            {
+              group: ["@/domains/marketplace/relations/application/actions/*"],
+              message: "B5/C5: relation actions are internal until R3.1.",
+            },
           ],
         },
       ],
