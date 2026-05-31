@@ -16,6 +16,53 @@ export type BuildDiscoveryFeedOptions = {
 const PUBLICATION_FEED_SELECT =
   'id, legacy_listing_id, publication_type, title, taxonomy_node_id, owner_id, owner_type, latitude, longitude, created_at, attributes_json'
 
+type OfferVariantRow = {
+  id: string
+  price: number
+  is_default: boolean
+  attributes_json: Record<string, unknown> | null
+  legacy_variant_id: string | null
+  offer: { publication_id: string }
+}
+
+function toVariantFeedRow(row: OfferVariantRow, listingKey: string): VariantFeedRow {
+  return {
+    id: row.id,
+    listing_id: listingKey,
+    price: row.price,
+    is_default: row.is_default,
+    attributes_json: row.attributes_json,
+  }
+}
+
+async function fetchOfferVariantsByPublicationIds(
+  publicationIds: string[],
+  listingKeyByPublicationId: Map<string, string>,
+): Promise<Map<string, VariantFeedRow[]>> {
+  const map = new Map<string, VariantFeedRow[]>()
+  if (publicationIds.length === 0) return map
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('offer_variant')
+    .select(
+      'id, price, is_default, attributes_json, legacy_variant_id, offer!inner(publication_id, is_active)',
+    )
+    .in('offer.publication_id', publicationIds)
+    .eq('offer.is_active', true)
+
+  if (error) throwOnSupabaseError(error)
+
+  for (const row of (data ?? []) as OfferVariantRow[]) {
+    const publicationId = row.offer.publication_id
+    const listingKey = listingKeyByPublicationId.get(publicationId) ?? publicationId
+    const list = map.get(listingKey) ?? []
+    list.push(toVariantFeedRow(row, listingKey))
+    map.set(listingKey, list)
+  }
+  return map
+}
+
 async function fetchVariantsByListingIds(
   listingIds: string[],
 ): Promise<Map<string, VariantFeedRow[]>> {
@@ -37,6 +84,19 @@ async function fetchVariantsByListingIds(
     map.set(key, list)
   }
   return map
+}
+
+function mergePricingMaps(
+  offerVariants: Map<string, VariantFeedRow[]>,
+  listingVariants: Map<string, VariantFeedRow[]>,
+): Map<string, VariantFeedRow[]> {
+  const merged = new Map(listingVariants)
+  for (const [key, rows] of offerVariants) {
+    if (rows.length > 0) {
+      merged.set(key, rows)
+    }
+  }
+  return merged
 }
 
 async function fetchStoreNames(storeIds: string[]): Promise<Map<string, string>> {
@@ -107,15 +167,22 @@ export async function buildDiscoveryFeed(
   const rows = (data ?? []) as PublicationFeedRow[]
   if (rows.length === 0) return []
 
-  const listingIds = rows.map((r) => r.legacy_listing_id ?? r.id)
+  const publicationIds = rows.map((r) => r.id)
+  const listingKeyByPublicationId = new Map(
+    rows.map((r) => [r.id, r.legacy_listing_id ?? r.id]),
+  )
+  const listingIds = [...new Set(listingKeyByPublicationId.values())]
   const storeIds = [...new Set(rows.filter((r) => r.owner_type === 'store').map((r) => r.owner_id))]
   const categoryIds = [...new Set(rows.map((r) => r.taxonomy_node_id))]
 
-  const [variantsByListingId, storeNames, categoryNames] = await Promise.all([
+  const [offerVariants, listingVariants, storeNames, categoryNames] = await Promise.all([
+    fetchOfferVariantsByPublicationIds(publicationIds, listingKeyByPublicationId),
     fetchVariantsByListingIds(listingIds),
     fetchStoreNames(storeIds),
     fetchCategoryNames(categoryIds),
   ])
+
+  const variantsByListingId = mergePricingMaps(offerVariants, listingVariants)
 
   return mapPublicationRowsToMarketplaceListings(
     rows,

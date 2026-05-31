@@ -65,6 +65,28 @@ const eslintConfig = [
       ],
     },
   },
+  {
+    files: ["src/app/**/*.{ts,tsx}"],
+    ignores: [
+      "src/app/admin/**",
+      "src/app/dashboard-vendor/**",
+      "src/app/checkout/**",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/domains/marketplace/listings/application/queries/*"],
+              message:
+                "Discovery Boundary: public pages must use @/domains/marketplace/discovery for reads.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

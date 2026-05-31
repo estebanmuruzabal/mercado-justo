@@ -26,6 +26,40 @@ export type VariantFeedRow = {
 export type StoreNameLookup = Map<string, string>
 export type CategoryNameLookup = Map<string, string>
 
+export function mapPublicationRowToMarketplaceListing(
+  row: PublicationFeedRow,
+  variantRows: VariantFeedRow[],
+  storeNames: StoreNameLookup,
+  categoryNames: CategoryNameLookup,
+): MarketplaceListing {
+  const listingKey = row.legacy_listing_id ?? row.id
+  const defaultVariant = variantRows.find((v) => v.is_default) ?? variantRows[0]
+  const attrs = (defaultVariant?.attributes_json ?? row.attributes_json ?? {}) as Record<
+    string,
+    unknown
+  >
+  const titleFromAttrs = typeof attrs.name === 'string' ? attrs.name : null
+  const imageFromAttrs = typeof attrs.image === 'string' ? attrs.image : null
+
+  return {
+    id: String(listingKey),
+    publicationId: row.id,
+    listingType: row.publication_type as ListingType,
+    title: titleFromAttrs ?? row.title ?? '',
+    price: Number(defaultVariant?.price ?? 0),
+    image: imageFromAttrs,
+    storeId: String(row.owner_id),
+    storeName: storeNames.get(row.owner_id) ?? 'Vendedor',
+    categoryId: String(row.taxonomy_node_id),
+    categoryName: categoryNames.get(row.taxonomy_node_id),
+    latitude: row.latitude === null ? null : Number(row.latitude),
+    longitude: row.longitude === null ? null : Number(row.longitude),
+    variantId: defaultVariant ? String(defaultVariant.id) : undefined,
+    hasOptions: variantRows.length > 1,
+    createdAt: row.created_at,
+  }
+}
+
 export function mapPublicationRowsToMarketplaceListings(
   publications: PublicationFeedRow[],
   variantsByListingId: Map<string, VariantFeedRow[]>,
@@ -35,31 +69,7 @@ export function mapPublicationRowsToMarketplaceListings(
   return publications.map((row) => {
     const listingKey = row.legacy_listing_id ?? row.id
     const variantRows = variantsByListingId.get(listingKey) ?? []
-    const defaultVariant = variantRows.find((v) => v.is_default) ?? variantRows[0]
-    const attrs = (defaultVariant?.attributes_json ?? row.attributes_json ?? {}) as Record<
-      string,
-      unknown
-    >
-    const titleFromAttrs = typeof attrs.name === 'string' ? attrs.name : null
-    const imageFromAttrs = typeof attrs.image === 'string' ? attrs.image : null
-
-    return {
-      id: String(listingKey),
-      publicationId: row.id,
-      listingType: row.publication_type as ListingType,
-      title: titleFromAttrs ?? row.title ?? '',
-      price: Number(defaultVariant?.price ?? 0),
-      image: imageFromAttrs,
-      storeId: String(row.owner_id),
-      storeName: storeNames.get(row.owner_id) ?? 'Vendedor',
-      categoryId: String(row.taxonomy_node_id),
-      categoryName: categoryNames.get(row.taxonomy_node_id),
-      latitude: row.latitude === null ? null : Number(row.latitude),
-      longitude: row.longitude === null ? null : Number(row.longitude),
-      variantId: defaultVariant ? String(defaultVariant.id) : undefined,
-      hasOptions: variantRows.length > 1,
-      createdAt: row.created_at,
-    }
+    return mapPublicationRowToMarketplaceListing(row, variantRows, storeNames, categoryNames)
   })
 }
 

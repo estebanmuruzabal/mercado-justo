@@ -12,6 +12,7 @@ export {
 } from './config/discovery-source'
 export {
   fetchDiscoveryFeed,
+  fetchDiscoveryFeedDual,
   fetchDiscoveryFeedFromPublication,
   fetchMarketplaceListingsViaDiscovery,
   type DiscoveryFeedOptions,

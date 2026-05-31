@@ -2,6 +2,7 @@ import type { MarketplaceListing } from '@/domains/marketplace/listings/domain/m
 import { fetchMarketplaceListings } from '@/domains/marketplace/listings/application/queries/marketplace.queries'
 import { getDiscoverySource } from '../../config/discovery-source'
 import { mergeDiscoveryFeeds } from '../mappers/publication-to-discovery.mapper'
+import { logDiscoveryParityIfEnabled } from '../parity/discovery-parity'
 import {
   buildDiscoveryFeed,
   type BuildDiscoveryFeedOptions,
@@ -16,6 +17,18 @@ export async function fetchDiscoveryFeedFromPublication(
   return buildDiscoveryFeed(options)
 }
 
+export async function fetchDiscoveryFeedDual(
+  options: DiscoveryFeedOptions = {},
+): Promise<MarketplaceListing[]> {
+  const [fromPublication, fromListing] = await Promise.all([
+    buildDiscoveryFeed(options),
+    fetchMarketplaceListings(options),
+  ])
+  const merged = mergeDiscoveryFeeds(fromPublication, fromListing)
+  logDiscoveryParityIfEnabled(fromPublication, fromListing, merged)
+  return merged
+}
+
 export async function fetchDiscoveryFeed(
   options: DiscoveryFeedOptions = {},
 ): Promise<MarketplaceListing[]> {
@@ -25,17 +38,15 @@ export async function fetchDiscoveryFeed(
     return fetchMarketplaceListings(options)
   }
 
-  const fromPublication = await buildDiscoveryFeed(options)
-
-  if (source === 'publication') {
-    if (fromPublication.length > 0) {
-      return fromPublication
-    }
-    return fetchMarketplaceListings(options)
+  if (source === 'dual') {
+    return fetchDiscoveryFeedDual(options)
   }
 
-  const fromListing = await fetchMarketplaceListings(options)
-  return mergeDiscoveryFeeds(fromPublication, fromListing)
+  const fromPublication = await buildDiscoveryFeed(options)
+  if (fromPublication.length > 0) {
+    return fromPublication
+  }
+  return fetchMarketplaceListings(options)
 }
 
 /** @deprecated Use fetchDiscoveryFeed — kept for gradual import migration */

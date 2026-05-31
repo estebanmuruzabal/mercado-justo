@@ -56,6 +56,54 @@ Mercado Justo migra a Ditto. Toda contribución DEBE respetar arquitectura por d
 - NO hardcodear URLs — usar `shared/routing/routes.ts`
 - NO modificar DB sin migration en `supabase/migrations/`
 
+### Marketplace Discovery — Discovery Boundary
+
+Discovery es el **único subdominio autorizado** para:
+
+- browse
+- feed
+- search
+- map
+- vendor storefront listings
+
+**Ninguna página pública** puede importar `@/domains/marketplace/listings/application/queries/*`.
+
+**Excepciones** (legacy paths internos):
+
+- admin
+- seller dashboard / listing manager
+- checkout
+- cart
+- orders
+
+Todas las **nuevas consultas públicas** deben entrar por `@/domains/marketplace/discovery`.
+
+Permitido en UI pública: `listings/domain/*` (tipos DTO), `listings/presentation/*` (componentes).
+
+### Marketplace Discovery — Canonical Read Ownership Rule
+
+Marketplace tiene **una sola fuente canónica por fase** (`DISCOVERY_SOURCE`):
+
+| Fase | Valor | Canónico | Fallback |
+|------|-------|----------|----------|
+| A | `listing` | listing | — |
+| B | `dual` | publication | listing |
+| C | `publication` | publication | — |
+
+Reglas:
+
+1. **Ningún componente UI** puede leer simultáneamente `publication` y `listing`.
+2. **Toda mezcla** ocurre exclusivamente dentro de `@/domains/marketplace/discovery`.
+3. Prohibido en páginas públicas:
+
+```typescript
+// ❌ NUNCA
+const listing = await fetchMarketplaceListings(...)
+const publication = await buildDiscoveryFeed(...)
+```
+
+**Prohibido crear nuevas queries** en `listings/application/queries/` salvo excepciones arriba. Lectura pública nueva → `discovery/application/queries/` o `discovery/projections/`.
+
 ---
 
 ### 1. Type Generation is Non-Negotiable

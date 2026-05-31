@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import { StaticPageShell } from '@/shared/shell/layout/static-page-shell'
 import { HOME_PATH } from '@/shared/routing/routes'
-import { fetchMarketplaceCategories } from '@/domains/marketplace/listings/application/queries/marketplace.queries'
+import { fetchMarketplaceCategories } from '@/domains/marketplace/discovery'
 
 export const metadata = {
   title: 'Categorías',

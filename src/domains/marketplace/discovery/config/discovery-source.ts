@@ -4,7 +4,7 @@ export type DiscoverySource = 'listing' | 'dual' | 'publication'
  * Strangler migration phases — mnemonic for DISCOVERY_SOURCE values.
  *
  * Fase A → DISCOVERY_SOURCE=listing   (sunset 2026-09-30)
- * Fase B → DISCOVERY_SOURCE=dual      (sunset 2026-12-31)
+ * Fase B → DISCOVERY_SOURCE=dual      (sunset 2026-12-31) — enables parity logs in dev/test
  * Fase C → DISCOVERY_SOURCE=publication (permanente; default)
  */
 export const DISCOVERY_MIGRATION_PHASE = {

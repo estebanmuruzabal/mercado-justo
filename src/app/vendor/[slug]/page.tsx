@@ -4,10 +4,10 @@ import { notFound } from 'next/navigation'
 import {
   getVendorBySlug,
   getVendorCategories,
-  getVendorListings,
   getVendorReviews,
   getViewerVendorState,
 } from '@/domains/vendors/application/queries/vendor.queries'
+import { buildVendorFeed } from '@/domains/marketplace/discovery'
 import { VendorHero } from '@/domains/vendors/presentation/storefront/vendor-hero'
 import { VendorTabs } from '@/domains/vendors/presentation/storefront/vendor-tabs'
 
@@ -72,7 +72,7 @@ export default async function VendorProfilePage({
   if (!profile) notFound()
 
   const [listings, categories, reviewsPage, viewer] = await Promise.all([
-    getVendorListings({ storeId: profile.id, storeName: profile.name, limit: INITIAL_LISTINGS }),
+    buildVendorFeed({ storeId: profile.id, limit: INITIAL_LISTINGS }),
     getVendorCategories(profile.id),
     getVendorReviews({ storeId: profile.id, limit: INITIAL_REVIEWS }),
     getViewerVendorState(profile.id),

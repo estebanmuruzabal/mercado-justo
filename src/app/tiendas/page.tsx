@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import { StaticPageShell } from '@/shared/shell/layout/static-page-shell'
 import { publicVendorPath } from '@/shared/routing/routes'
-import { fetchPublicStores } from '@/domains/marketplace/listings/application/queries/marketplace.queries'
+import { fetchPublicStores } from '@/domains/marketplace/discovery'
 
 export const metadata = {
   title: 'Tiendas',
