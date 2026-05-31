@@ -3,11 +3,13 @@
  * TODO(R4.0): remove this re-export once all consumers migrate.
  *
  * Active consumers (outside Relations BC — do not remove until migrated):
- * - test/domains/marketplace/discovery/discovery-evolution.test.ts
- *   imports: isAllowedRelation, relationTypeFromLegacyComposition
+ * - src/domains/marketplace/shared/index.ts (indirect barrel re-export only)
  *
  * Removed in R3.3 (Plan A — dead code, zero call sites):
  * - publication-composition.ts (entity + legacyCompositionToRelationType)
+ *
+ * Removed in R3.4 (registry tests moved to relations test folder):
+ * - test/domains/marketplace/discovery/discovery-evolution.test.ts
  *
  * Verified canonical paths (Relations BC):
  * - Registry source module:

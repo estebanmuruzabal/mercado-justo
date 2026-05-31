@@ -95,7 +95,7 @@ resolveCommercialSnapshots(publicationIds: string[]): Promise<Map<string, Commer
 
 ### Marketplace Relations — Canonical Graph Boundary (B5 / C5)
 
-**Estado (2026-05-31):** R3.3 phase complete — RLS prep documented, `publication-composition.ts` removed (dead code). **R3.3 partial (epic):** owner-aware RLS SQL pending R3.4. **Próximo:** R3.4 (RLS SQL + reubicar registry tests desde Discovery).
+**Estado (2026-05-31):** R3.4 phase complete — owner-aware RLS SQL + app parity tests + Discovery registry extraction. **R3.4 partial (epic):** shared registry barrel pending R4.0. **Próximo:** R4.0 (remove shared re-export).
 
 Relations BC expone **una única API pública** para lectura del grafo:
 
@@ -120,10 +120,34 @@ Repository methods are internal implementation details and must never become pub
 - Requires `actor: RelationReadActor` (source owner, admin, or serviceRole) — ignored without authorization.
 - Authorization centralized in `application/auth/relation-read-authorization.service.ts` (`shouldIncludeRelationEdge`).
 - `relation-policy.ts` is domain-only (B4/C2 visibility/temporal rules) — no actor auth logic.
-- Current RLS only returns edges with `visibility IN ('public', 'inherit')` — private DB edges are not accessible yet.
-- **RLS implementation pending R3.4** — application-layer auth is ready; DB policies are not.
+- **R3.4 RLS (implemented):** additive policies on `publication_relation`:
+  - `publication_relation_select_public` — `visibility IN ('public', 'inherit')` (unchanged)
+  - `publication_relation_select_private_source_owner` — `visibility = 'private'` + source owner (`store`/`user` owner_id = auth.uid())
+  - `publication_relation_select_staff` — platform staff via `is_staff()`
+- Application auth mirrors SQL (defense in depth). `serviceRole` bypasses RLS only with Supabase service client; repository uses user JWT.
 
-**R3.3 — Owner-aware RLS preparation (docs only, no SQL):**
+**R3.4 — App vs SQL parity:**
+
+| Case | App | SQL (R3.4) |
+|------|-----|------------|
+| public edge | allow | allow (`select_public`) |
+| private + source owner + includePrivate | allow | allow (`select_private_source_owner`) |
+| private + non-owner | deny | deny |
+| includePrivate without actor | deny | deny (app); SQL hides private |
+| admin / isAdmin | allow | allow via `is_staff()` |
+| serviceRole + user client | allow (app) | deny at DB (documented) |
+| org owner | deny | deny |
+
+**Rollback (R3.4 migration only):**
+
+```sql
+DROP POLICY IF EXISTS publication_relation_select_private_source_owner ON public.publication_relation;
+DROP POLICY IF EXISTS publication_relation_select_staff ON public.publication_relation;
+```
+
+Migration: `supabase/migrations/20260603120000_publication_relation_owner_rls.sql`
+
+**R3.3 — Owner-aware RLS preparation (historical):**
 
 Ownership flow today:
 
@@ -131,22 +155,15 @@ Ownership flow today:
 2. **Public filter (domain)** — `relation-policy.ts` / `isPublicRelationEdge()` — temporal + endpoint visibility; no actor.
 3. **Private filter (application)** — `relation.queries.ts` builds `RelationOwnerContext` from source publication and calls `shouldIncludeRelationEdge()`.
 4. **Authorization** — `application/auth/relation-read-authorization.service.ts` — `canRequestPrivateReads`, `isAuthorizedReadActor` (admin/serviceRole bypass; else `ownerRefFromPublicationRow` + `isStoreOwner` / `isUserOwner` from `shared/application/ownership-policy.ts`).
-5. **DB RLS** — policy `publication_relation_select_public` allows only `visibility IN ('public', 'inherit')`. Private edges never reach the application layer today.
+5. **DB RLS** — public/inherit via `publication_relation_select_public`; private via owner + staff policies (R3.4).
 
 **Ownership source:**
 
-| Layer | Current (R3.3) | Future (R3.4+) |
-|-------|----------------|----------------|
-| Data | `publication.owner_type` / `owner_id` via JOIN in repository | Same columns; RLS enforces at DB |
-| Normalization | Ad-hoc primitives → `OwnerRef` in auth service only | Align RLS rules with auth service semantics (source-owner) |
-| Private reads | Application filter ready; RLS blocks rows | RLS SELECT policy for `visibility = 'private'` (source publication owner) |
-
-**RLS hook points (R3.4):**
-
-- SQL: new `SELECT` policy on `publication_relation` joining source `publication` owner to `auth.uid()` / store membership
-- Repository: user-scoped Supabase client vs service role (if needed)
-- Auth service: rules must mirror RLS (defense in depth)
-- Queries: `includePrivate` becomes effective only when RLS returns private rows
+| Layer | R3.4 state |
+|-------|------------|
+| Data | `publication.owner_type` / `owner_id` via JOIN in repository |
+| DB enforcement | RLS policies on `publication_relation` (owner + staff) |
+| Application | `shouldIncludeRelationEdge` mirrors SQL (defense in depth) |
 
 **R3.3 publication-composition removal (Plan A):**
 
@@ -162,28 +179,17 @@ Pre-flight audit found zero call sites for `PublicationComposition` / `legacyCom
 | Consumidor | Estado |
 |------------|--------|
 | `publication-composition.ts` | **removed** (R3.3 — dead code) |
-| `test/domains/marketplace/discovery/discovery-evolution.test.ts` | pending |
-| `src/domains/marketplace/shared/index.ts` (indirect barrel) | pending |
+| `test/domains/marketplace/discovery/discovery-evolution.test.ts` | **removed** (R3.4 — tests → relations) |
+| `src/domains/marketplace/shared/index.ts` (indirect barrel) | pending (R4.0) |
 
 **Consumidores restantes del shared registry:**
 
-- `test/domains/marketplace/discovery/discovery-evolution.test.ts`
 - `src/domains/marketplace/shared/index.ts`
 
 - Deprecated path: `@/domains/marketplace/shared/domain/relation-type-registry`
 - Canonical registry module: `@/domains/marketplace/relations/domain/registry/relation-type-registry`
 - Public type-only: `import type { RelationType } from '@/domains/marketplace/relations'` (helpers not on public boundary)
-- TODO(R4.0): remove shared re-export
-
-**Discovery registry consumer (assessment — R3.3, no code changes):**
-
-`discovery-evolution.test.ts` still imports `isAllowedRelation` and `relationTypeFromLegacyComposition` from the shared registry because:
-
-- Cross-cutting evolution test outside `relations/**`
-- ESLint blocks `relations/domain/*` in discovery test paths (C5)
-- `relations/index.ts` does not expose registry helpers (runtime boundary)
-
-**Migration path:** R3.4 — move registry assertions to `test/domains/marketplace/relations/` (deep imports allowed). R4.0 — remove shared re-export and `shared/index.ts` barrel. Discovery productivo should consume `resolveRelationSnapshots()` when graph integration lands (not R3.3).
+- **R4.0 candidate:** remove shared re-export and `shared/index.ts` barrel
 
 ### Marketplace Discovery — Canonical Read Ownership Rule
 

@@ -6,10 +6,6 @@ import {
   DISCOVERY_SOURCE_SUNSET,
   getDiscoverySource,
 } from '@/domains/marketplace/discovery/config/discovery-source'
-import {
-  isAllowedRelation,
-  relationTypeFromLegacyComposition,
-} from '@/domains/marketplace/shared/domain/relation-type-registry'
 import { structuralRoleFromLegacyKind } from '@/domains/marketplace/shared/domain/structural-role'
 import {
   canEditPublication,
@@ -48,17 +44,6 @@ describe('structural-role', () => {
 
   it('maps base to root', () => {
     expect(structuralRoleFromLegacyKind('base')).toBe('root')
-  })
-})
-
-describe('relation-type-registry', () => {
-  it('allows recipe uses product', () => {
-    expect(isAllowedRelation('uses', 'recipe', 'product')).toBe(true)
-  })
-
-  it('maps legacy composition types', () => {
-    expect(relationTypeFromLegacyComposition('base_recipe')).toBe('uses')
-    expect(relationTypeFromLegacyComposition('base_variant')).toBe('commercial_variant_of')
   })
 })
 

@@ -13,7 +13,7 @@ function normalizeOptions(
   ResolveRelationSnapshotsOptions {
   const depth = options.depth ?? 1
   if (depth > 1 && process.env.NODE_ENV !== 'production') {
-    console.warn('[relations] depth > 1 is reserved for R3.4; clamping to 1')
+    console.warn('[relations] depth > 1 is reserved for a future release; clamping to 1')
   }
 
   return {
@@ -31,8 +31,9 @@ function normalizeOptions(
  * `includePrivate` extends visibility for authorized actors only (source owner, admin, serviceRole).
  * Without `actor`, `includePrivate` is ignored and public filtering applies.
  *
- * R3.0: private DB edges are not returned by current RLS — see ResolveRelationSnapshotsOptions JSDoc.
- * TODO(R3.1): Private relations become fully accessible only after owner-aware RLS policies.
+ * R3.4: DB RLS returns private rows for source owners (publication_relation_select_private_source_owner)
+ * and platform staff (publication_relation_select_staff). Application auth mirrors SQL (defense in depth).
+ * serviceRole bypasses RLS only when using the Supabase service client — repository uses user JWT.
  */
 export async function resolveRelationSnapshots(
   publicationIds: string[],
