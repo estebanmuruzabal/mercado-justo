@@ -1,8 +1,10 @@
 import type { RelationStatus } from '../../domain/policies/relation-policy'
 import type { RelationType } from '../../domain/registry/relation-type-registry'
 import type { RelationVisibility } from '../../domain/entities/publication-relation'
+import type { RelationReadActor } from '../auth/relation-read-authorization.service'
 
 export type { RelationStatus }
+export type { RelationReadActor }
 
 export type RelatedPublicationSummary = {
   id: string
@@ -27,13 +29,8 @@ export type RelationSnapshot = {
 /**
  * Authorization context for non-public relation reads.
  * Required when `includePrivate` is true.
+ * @see relation-read-authorization.service
  */
-export type RelationReadActor = {
-  userId: string
-  isAdmin?: boolean
-  /** Reserved for R3.1 service-role reads. */
-  serviceRole?: boolean
-}
 
 export type ResolveRelationSnapshotsOptions = {
   direction?: 'outgoing' | 'incoming' | 'both'

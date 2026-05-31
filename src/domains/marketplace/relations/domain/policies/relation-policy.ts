@@ -1,9 +1,9 @@
-import {
-  isStoreOwner,
-  isUserOwner,
-  ownerRefFromPublicationRow,
-} from '@/domains/marketplace/shared/application/ownership-policy'
 import type { PublicationRelation } from '../entities/publication-relation'
+import {
+  isAuthorizedReadActor,
+  type RelationOwnerContext,
+  type RelationReadActor,
+} from '../../application/auth/relation-read-authorization.service'
 
 export type RelationStatus = 'active' | 'inactive' | 'scheduled' | 'expired'
 
@@ -12,17 +12,6 @@ export type VisibilityResolution = 'visible' | 'hidden'
 export type PublicationVisibilityContext = {
   visibility: string
   lifecycleState: string
-}
-
-export type RelationReadActor = {
-  userId: string
-  isAdmin?: boolean
-  serviceRole?: boolean
-}
-
-export type RelationOwnerContext = {
-  ownerType: string
-  ownerId: string
 }
 
 export function assertNotSelfRelation(sourcePublicationId: string, targetPublicationId: string): void {
@@ -87,28 +76,13 @@ export function isPublicRelationEdge(
 }
 
 /**
- * Whether an authorized actor may bypass public filters for a relation edge.
- * Authorization is based on the source publication owner, admin, or service role.
+ * @deprecated Use isAuthorizedReadActor from relation-read-authorization.service — TODO(R3.2): remove
  */
 export function canBypassPublicRelationFilter(
   actor: RelationReadActor | undefined,
   sourceOwner: RelationOwnerContext,
 ): boolean {
-  if (!actor) {
-    return false
-  }
-
-  if (actor.isAdmin || actor.serviceRole) {
-    return true
-  }
-
-  const owner = ownerRefFromPublicationRow({
-    owner_type: sourceOwner.ownerType,
-    owner_id: sourceOwner.ownerId,
-  })
-
-  const ownershipActor = { userId: actor.userId }
-  return isStoreOwner(ownershipActor, owner) || isUserOwner(ownershipActor, owner)
+  return isAuthorizedReadActor(actor, sourceOwner)
 }
 
 function isPublishedPublic(publication: PublicationVisibilityContext): boolean {

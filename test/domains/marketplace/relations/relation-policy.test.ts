@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   assertNotSelfRelation,
-  canBypassPublicRelationFilter,
   compareRelationsDeterministic,
   resolveRelationStatus,
   resolveRelationVisibility,
@@ -107,26 +106,6 @@ describe('resolveRelationVisibility (B4 / ADR-R3-007)', () => {
     expect(
       resolveRelationVisibility(relation({ visibility: 'inherit' }), pub('private'), pub('private')),
     ).toBe('hidden')
-  })
-})
-
-describe('canBypassPublicRelationFilter (H1)', () => {
-  const storeOwner = { ownerType: 'store', ownerId: 'user-1' }
-
-  it('returns false without actor', () => {
-    expect(canBypassPublicRelationFilter(undefined, storeOwner)).toBe(false)
-  })
-
-  it('returns true for store owner', () => {
-    expect(canBypassPublicRelationFilter({ userId: 'user-1' }, storeOwner)).toBe(true)
-  })
-
-  it('returns true for admin', () => {
-    expect(canBypassPublicRelationFilter({ userId: 'other', isAdmin: true }, storeOwner)).toBe(true)
-  })
-
-  it('returns false for unrelated user', () => {
-    expect(canBypassPublicRelationFilter({ userId: 'other' }, storeOwner)).toBe(false)
   })
 })
 

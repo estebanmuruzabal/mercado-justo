@@ -42,6 +42,44 @@ const scheduledEdge = () => ({
   direction: 'outgoing' as const,
 })
 
+const publicEdge = () => ({
+  relation: {
+    id: 'rel-public',
+    sourcePublicationId: 'pub-1',
+    targetPublicationId: 'pub-2',
+    relationType: 'uses' as const,
+    metadata: {},
+    visibility: 'public' as const,
+    validFrom: null,
+    validTo: null,
+    createdBy: null,
+    createdAt: '2026-01-01T00:00:00Z',
+    isActive: true,
+  },
+  sourcePublication: {
+    id: 'pub-1',
+    title: 'A',
+    publicationType: 'recipe',
+    visibility: 'public',
+    lifecycleState: 'published',
+    ownerType: 'store',
+    ownerId: 'user-1',
+    attributes: {},
+  },
+  targetPublication: {
+    id: 'pub-2',
+    title: 'B',
+    publicationType: 'product',
+    visibility: 'public',
+    lifecycleState: 'published',
+    ownerType: 'store',
+    ownerId: 'user-2',
+    attributes: {},
+  },
+  anchorPublicationId: 'pub-1',
+  direction: 'outgoing' as const,
+})
+
 describe('resolveRelationSnapshots', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -73,6 +111,34 @@ describe('resolveRelationSnapshots', () => {
       actor: { userId: 'stranger', isAdmin: true },
     })
     expect(result.get('pub-1')).toHaveLength(1)
+  })
+
+  it('excludes non-public edges for non-owner actor with includePrivate', async () => {
+    vi.mocked(findRelationsByPublicationIds).mockResolvedValue([scheduledEdge()])
+
+    const result = await resolveRelationSnapshots(['pub-1'], {
+      includePrivate: true,
+      actor: { userId: 'stranger' },
+    })
+    expect(result.get('pub-1')).toEqual([])
+  })
+
+  it('includes non-public edges for serviceRole actor', async () => {
+    vi.mocked(findRelationsByPublicationIds).mockResolvedValue([scheduledEdge()])
+
+    const result = await resolveRelationSnapshots(['pub-1'], {
+      includePrivate: true,
+      actor: { userId: 'stranger', serviceRole: true },
+    })
+    expect(result.get('pub-1')).toHaveLength(1)
+  })
+
+  it('includes public edges without includePrivate', async () => {
+    vi.mocked(findRelationsByPublicationIds).mockResolvedValue([publicEdge()])
+
+    const result = await resolveRelationSnapshots(['pub-1'])
+    expect(result.get('pub-1')).toHaveLength(1)
+    expect(result.get('pub-1')?.[0]?.relationId).toBe('rel-public')
   })
 
   it('clamps depth > 1 to 1 with warning in dev', async () => {

@@ -2,11 +2,9 @@ import type {
   RelationSnapshot,
   ResolveRelationSnapshotsOptions,
 } from '../dto/relation-snapshot.dto'
+import { shouldIncludeRelationEdge } from '../auth/relation-read-authorization.service'
 import { mapRelationReadRowToSnapshot } from '../mappers/relation-snapshot.mapper'
-import {
-  canBypassPublicRelationFilter,
-  isPublicRelationEdge,
-} from '../../domain/policies/relation-policy'
+import { isPublicRelationEdge } from '../../domain/policies/relation-policy'
 import { findRelationsByPublicationIds } from '../../infrastructure/relation.repository'
 
 function normalizeOptions(
@@ -52,8 +50,6 @@ export async function resolveRelationSnapshots(
     return result
   }
 
-  const mayIncludePrivate = normalized.includePrivate && normalized.actor !== undefined
-
   const rows = await findRelationsByPublicationIds(uniqueIds, {
     direction: normalized.direction,
     relationTypes: normalized.relationTypes,
@@ -66,14 +62,17 @@ export async function resolveRelationSnapshots(
       row.targetPublication,
     )
 
-    const canBypass =
-      mayIncludePrivate &&
-      canBypassPublicRelationFilter(normalized.actor, {
-        ownerType: row.sourcePublication.ownerType,
-        ownerId: row.sourcePublication.ownerId,
+    if (
+      !shouldIncludeRelationEdge({
+        isPublic,
+        includePrivate: normalized.includePrivate,
+        actor: normalized.actor,
+        sourceOwner: {
+          ownerType: row.sourcePublication.ownerType,
+          ownerId: row.sourcePublication.ownerId,
+        },
       })
-
-    if (!isPublic && !canBypass) {
+    ) {
       continue
     }
 
