@@ -12,11 +12,16 @@ export const PERMISSIONS = {
   // Cross-cutting access to the admin panel.
   ADMIN_ACCESS: 'admin:access',
 
-  // Vendors.
+  // Platform users (super-admin only).
+  USERS_VIEW: 'users:view',
+  USERS_MANAGE: 'users:manage',
+
+  // Vendors (super-admin only).
   VENDORS_VIEW: 'vendors:view',
   VENDORS_APPROVE: 'vendors:approve',
   VENDORS_SUSPEND: 'vendors:suspend',
-  VENDORS_DISABLE: 'vendors:disable',
+  VENDORS_FEATURE: 'vendors:feature',
+  VENDORS_EDIT: 'vendors:edit',
 
   // Listings / products moderation.
   LISTINGS_VIEW: 'listings:view',
@@ -63,7 +68,6 @@ const ROLE_PERMISSIONS: Partial<Record<Role, readonly Permission[]>> = {
     P.ORDERS_VIEW,
     P.SHIPMENTS_OVERRIDE,
     P.LOGISTICS_MANAGE,
-    P.VENDORS_VIEW,
     P.NOTIFICATIONS_VIEW,
     P.ANALYTICS_VIEW,
   ],
@@ -72,7 +76,6 @@ const ROLE_PERMISSIONS: Partial<Record<Role, readonly Permission[]>> = {
     P.ADMIN_ACCESS,
     P.LISTINGS_VIEW,
     P.LISTINGS_MODERATE,
-    P.VENDORS_VIEW,
     P.REPORTS_VIEW,
     P.REPORTS_RESOLVE,
     P.NOTIFICATIONS_VIEW,
@@ -80,7 +83,6 @@ const ROLE_PERMISSIONS: Partial<Record<Role, readonly Permission[]>> = {
 
   [ROLES.SUPPORT]: [
     P.ADMIN_ACCESS,
-    P.VENDORS_VIEW,
     P.ORDERS_VIEW,
     P.LISTINGS_VIEW,
     P.REPORTS_VIEW,
@@ -104,4 +106,13 @@ export function permissionsForRole(role: Role | null | undefined): readonly Perm
 /** True when the role may enter the admin panel at all. */
 export function canAccessAdmin(role: Role | null | undefined): boolean {
   return can(role, P.ADMIN_ACCESS)
+}
+
+/** True when the role is super-admin (full platform control). */
+export function canManageUsers(role: Role | null | undefined): boolean {
+  return can(role, P.USERS_MANAGE)
+}
+
+export function canManageVendors(role: Role | null | undefined): boolean {
+  return can(role, P.VENDORS_VIEW)
 }

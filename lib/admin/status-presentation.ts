@@ -2,6 +2,7 @@ import {
   type ListingModerationStatus,
   type ReportStatus,
   type ShipmentStatus,
+  type UserStatus,
   type VendorStatus,
 } from '@/lib/admin/types'
 
@@ -34,9 +35,25 @@ export const SHIPMENT_STATUS_ORDER: ShipmentStatus[] = [
 
 export const VENDOR_STATUS_PRESENTATION: Record<VendorStatus, StatusPresentation> = {
   active: { label: 'Activo', className: 'bg-emerald-50 text-emerald-700' },
-  pending: { label: 'Pendiente', className: 'bg-amber-50 text-amber-700' },
+  pending_review: { label: 'Pendiente de revisión', className: 'bg-amber-50 text-amber-700' },
   suspended: { label: 'Suspendido', className: 'bg-rose-50 text-rose-700' },
-  disabled: { label: 'Desactivado', className: 'bg-neutral-100 text-neutral-500' },
+}
+
+export const USER_STATUS_PRESENTATION: Record<UserStatus, StatusPresentation> = {
+  active: { label: 'Activo', className: 'bg-emerald-50 text-emerald-700' },
+  suspended: { label: 'Suspendido', className: 'bg-amber-50 text-amber-700' },
+  banned: { label: 'Baneado', className: 'bg-rose-50 text-rose-700' },
+}
+
+export const ROLE_LABELS: Record<string, string> = {
+  user: 'Comprador',
+  seller: 'Vendedor',
+  'seller-admin': 'Admin vendedor',
+  'property-admin': 'Admin propiedades',
+  'super-admin': 'Super Admin',
+  'logistics-admin': 'Logística',
+  moderator: 'Moderador',
+  support: 'Soporte',
 }
 
 export const LISTING_MODERATION_PRESENTATION: Record<

@@ -4,8 +4,7 @@ import { after } from 'next/server'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 
-import { assertPermission } from '@/server/auth/require-staff'
-import { PERMISSIONS } from '@/lib/auth/permissions'
+import { assertSuperAdmin } from '@/server/auth/require-staff'
 import { createAdminClient } from '@/server/admin/client'
 import { withAudit } from '@/server/admin/audit'
 import { ADMIN_VENDORS_PATH } from '@/lib/routes'
@@ -20,15 +19,20 @@ const suspendSchema = z.object({
   reason: z.string().trim().min(3, 'Indicá un motivo.').max(500),
 })
 
+const updateStoreSchema = z.object({
+  vendorId: z.string().uuid(),
+  name: z.string().trim().min(2, 'Nombre muy corto.').max(120),
+  bio: z.string().trim().max(500).optional(),
+})
+
 async function setVendorStatus(
   vendorId: string,
   status: VendorStatus,
   extra: Record<string, unknown>,
-  permission: (typeof PERMISSIONS)[keyof typeof PERMISSIONS],
   action: string,
 ): Promise<AdminActionResult> {
   try {
-    const actor = await assertPermission(permission)
+    const actor = await assertSuperAdmin()
     const admin = createAdminClient()
 
     await withAudit(
@@ -46,18 +50,17 @@ async function setVendorStatus(
     revalidatePath(ADMIN_VENDORS_PATH)
     return { success: true }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'No se pudo actualizar el vendor.' }
+    return { success: false, error: err instanceof Error ? err.message : 'No se pudo actualizar el vendedor.' }
   }
 }
 
 export async function approveVendorAction(vendorId: string): Promise<AdminActionResult> {
   const parsed = vendorIdSchema.safeParse(vendorId)
-  if (!parsed.success) return { success: false, error: 'Vendor inválido.' }
+  if (!parsed.success) return { success: false, error: 'Vendedor inválido.' }
   const result = await setVendorStatus(
     parsed.data,
     'active',
     { suspended_at: null, suspension_reason: null },
-    PERMISSIONS.VENDORS_APPROVE,
     'vendor.approve',
   )
   if (result.success) {
@@ -79,31 +82,97 @@ export async function suspendVendorAction(
     parsed.data.vendorId,
     'suspended',
     { suspended_at: new Date().toISOString(), suspension_reason: parsed.data.reason },
-    PERMISSIONS.VENDORS_SUSPEND,
     'vendor.suspend',
-  )
-}
-
-export async function disableVendorAction(vendorId: string): Promise<AdminActionResult> {
-  const parsed = vendorIdSchema.safeParse(vendorId)
-  if (!parsed.success) return { success: false, error: 'Vendor inválido.' }
-  return setVendorStatus(
-    parsed.data,
-    'disabled',
-    { suspended_at: new Date().toISOString() },
-    PERMISSIONS.VENDORS_DISABLE,
-    'vendor.disable',
   )
 }
 
 export async function reactivateVendorAction(vendorId: string): Promise<AdminActionResult> {
   const parsed = vendorIdSchema.safeParse(vendorId)
-  if (!parsed.success) return { success: false, error: 'Vendor inválido.' }
+  if (!parsed.success) return { success: false, error: 'Vendedor inválido.' }
   return setVendorStatus(
     parsed.data,
     'active',
     { suspended_at: null, suspension_reason: null },
-    PERMISSIONS.VENDORS_APPROVE,
     'vendor.reactivate',
   )
+}
+
+export async function updateVendorStoreAction(
+  input: z.input<typeof updateStoreSchema>,
+): Promise<AdminActionResult> {
+  const parsed = updateStoreSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos.' }
+  }
+
+  try {
+    const actor = await assertSuperAdmin()
+    const admin = createAdminClient()
+
+    await withAudit(
+      actor,
+      {
+        action: 'vendor.update_store',
+        entityType: 'store',
+        entityId: parsed.data.vendorId,
+        metadata: { name: parsed.data.name, bio: parsed.data.bio ?? null },
+      },
+      async () => {
+        const { error } = await admin
+          .from('store')
+          .update({
+            name: parsed.data.name,
+            bio: parsed.data.bio ?? null,
+          } as never)
+          .eq('id', parsed.data.vendorId)
+        if (error) throw error
+      },
+    )
+
+    revalidatePath(ADMIN_VENDORS_PATH)
+    return { success: true }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'No se pudo editar la tienda.',
+    }
+  }
+}
+
+export async function featureVendorAction(
+  vendorId: string,
+  featured: boolean,
+): Promise<AdminActionResult> {
+  const parsed = vendorIdSchema.safeParse(vendorId)
+  if (!parsed.success) return { success: false, error: 'Vendedor inválido.' }
+
+  try {
+    const actor = await assertSuperAdmin()
+    const admin = createAdminClient()
+
+    await withAudit(
+      actor,
+      {
+        action: featured ? 'vendor.feature' : 'vendor.unfeature',
+        entityType: 'store',
+        entityId: parsed.data,
+        metadata: { is_featured: featured },
+      },
+      async () => {
+        const { error } = await admin
+          .from('store')
+          .update({ is_featured: featured } as never)
+          .eq('id', parsed.data)
+        if (error) throw error
+      },
+    )
+
+    revalidatePath(ADMIN_VENDORS_PATH)
+    return { success: true }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'No se pudo destacar el vendedor.',
+    }
+  }
 }

@@ -57,9 +57,11 @@ const TYPE_LABELS: Record<string, string> = {
 export function ListingsModerationTable({
   listings,
   canModerate,
+  storeIdFilter,
 }: {
   listings: AdminListingRow[]
   canModerate: boolean
+  storeIdFilter?: string
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -85,12 +87,13 @@ export function ListingsModerationTable({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return listings.filter((l) => {
+      if (storeIdFilter && l.vendorId !== storeIdFilter) return false
       if (filter === 'reported' && l.reportCount === 0) return false
       if (filter !== 'all' && filter !== 'reported' && l.moderationStatus !== filter) return false
       if (q && !l.title.toLowerCase().includes(q) && !l.vendorName.toLowerCase().includes(q)) return false
       return true
     })
-  }, [listings, search, filter])
+  }, [listings, search, filter, storeIdFilter])
 
   function moderate(listingId: string, decision: 'approved' | 'rejected' | 'hidden', why?: string) {
     startTransition(async () => {

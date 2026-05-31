@@ -53,5 +53,9 @@ export const BATCH_STATUSES = [
 export type BatchStatus = (typeof BATCH_STATUSES)[number]
 
 // ——— Vendor lifecycle ———
-export const VENDOR_STATUSES = ['active', 'pending', 'suspended', 'disabled'] as const
+export const VENDOR_STATUSES = ['active', 'suspended', 'pending_review'] as const
 export type VendorStatus = (typeof VENDOR_STATUSES)[number]
+
+// ——— Platform user lifecycle ———
+export const USER_STATUSES = ['active', 'suspended', 'banned'] as const
+export type UserStatus = (typeof USER_STATUSES)[number]

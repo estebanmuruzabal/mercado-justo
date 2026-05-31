@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isActiveDelivery } from '@/lib/admin/engines/fulfillment-engine'
 import { aggregateCarbonScore } from '@/lib/admin/engines/sustainability-engine'
 import { type ShipmentStatus } from '@/lib/admin/types'
+import { ROLES } from '@/lib/roles'
 
 export type AdminDashboardKpis = {
   totalSales: number
@@ -12,6 +13,12 @@ export type AdminDashboardKpis = {
   ordersToday: number
   openIssues: number
   carbonScore: number
+  totalUsers: number
+  totalVendors: number
+  totalListings: number
+  totalStores: number
+  totalReports: number
+  totalCategories: number
 }
 
 function startOfToday(): string {
@@ -26,13 +33,17 @@ function daysAgo(days: number): string {
   return d.toISOString()
 }
 
+const NON_VENDOR_ROLES = [
+  ROLES.USER,
+  ROLES.SUPER_ADMIN,
+  ROLES.LOGISTICS_ADMIN,
+  ROLES.MODERATOR,
+  ROLES.SUPPORT,
+] as const
+
 /**
  * Global platform KPIs for the admin dashboard. Reads run under the staff
  * session (admin-read RLS grants cross-vendor visibility).
- *
- * Counts use head-only count queries; sums/carbon fetch minimal columns and
- * aggregate in TS via the engines. For very large datasets these can be moved
- * to SQL aggregate RPCs later without changing the call site.
  */
 export async function getAdminDashboardKpis(): Promise<AdminDashboardKpis> {
   const supabase = await createClient()
@@ -44,6 +55,12 @@ export async function getAdminDashboardKpis(): Promise<AdminDashboardKpis> {
     newUsersRes,
     ordersTodayRes,
     openReportsRes,
+    totalUsersRes,
+    totalVendorsRes,
+    totalListingsRes,
+    totalStoresRes,
+    totalReportsRes,
+    totalCategoriesRes,
   ] = await Promise.all([
     supabase.from('order').select('total'),
     supabase.from('shipment').select('status, distance_km, delivery_method'),
@@ -54,6 +71,15 @@ export async function getAdminDashboardKpis(): Promise<AdminDashboardKpis> {
       .from('moderation_report')
       .select('*', { count: 'exact', head: true })
       .in('status', ['open', 'reviewing']),
+    supabase
+      .from('user')
+      .select('*', { count: 'exact', head: true })
+      .in('role', [...NON_VENDOR_ROLES]),
+    supabase.from('user').select('*', { count: 'exact', head: true }).eq('role', ROLES.SELLER),
+    supabase.from('listing').select('*', { count: 'exact', head: true }),
+    supabase.from('store').select('*', { count: 'exact', head: true }),
+    supabase.from('moderation_report').select('*', { count: 'exact', head: true }),
+    supabase.from('category').select('*', { count: 'exact', head: true }),
   ])
 
   const totalSales = (orderTotals.data ?? []).reduce(
@@ -83,5 +109,11 @@ export async function getAdminDashboardKpis(): Promise<AdminDashboardKpis> {
     ordersToday: ordersTodayRes.count ?? 0,
     openIssues: (openReportsRes.count ?? 0) + incidents,
     carbonScore,
+    totalUsers: totalUsersRes.count ?? 0,
+    totalVendors: totalVendorsRes.count ?? 0,
+    totalListings: totalListingsRes.count ?? 0,
+    totalStores: totalStoresRes.count ?? 0,
+    totalReports: totalReportsRes.count ?? 0,
+    totalCategories: totalCategoriesRes.count ?? 0,
   }
 }

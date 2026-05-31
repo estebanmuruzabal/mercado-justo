@@ -4,7 +4,14 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { ExternalLink, MoreHorizontal, Search } from 'lucide-react'
+import {
+  BarChart3,
+  ExternalLink,
+  MoreHorizontal,
+  Package,
+  Search,
+  Star,
+} from 'lucide-react'
 
 import {
   Table,
@@ -39,39 +46,32 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { StatusBadge } from '@/components/admin/ui/StatusBadge'
 import { VENDOR_STATUS_PRESENTATION } from '@/lib/admin/status-presentation'
 import { formatCurrency, formatNumber, formatRelativeTime } from '@/lib/admin/format'
 import { VENDOR_STATUSES, type VendorStatus } from '@/lib/admin/types'
-import { publicVendorPath } from '@/lib/routes'
+import { adminListingsPath, publicVendorPath } from '@/lib/routes'
 import type { AdminVendorRow } from '@/server/queries/admin/vendors.queries'
 import {
   approveVendorAction,
-  disableVendorAction,
+  featureVendorAction,
   reactivateVendorAction,
   suspendVendorAction,
+  updateVendorStoreAction,
 } from '@/server/actions/admin/vendor.actions'
 
-export type VendorCapabilities = {
-  canApprove: boolean
-  canSuspend: boolean
-  canDisable: boolean
-}
-
-export function VendorsTable({
-  vendors,
-  capabilities,
-}: {
-  vendors: AdminVendorRow[]
-  capabilities: VendorCapabilities
-}) {
+export function VendorsTable({ vendors }: { vendors: AdminVendorRow[] }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | VendorStatus>('all')
   const [suspendTarget, setSuspendTarget] = useState<AdminVendorRow | null>(null)
+  const [editTarget, setEditTarget] = useState<AdminVendorRow | null>(null)
   const [reason, setReason] = useState('')
+  const [editName, setEditName] = useState('')
+  const [editBio, setEditBio] = useState('')
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -81,8 +81,6 @@ export function VendorsTable({
       return true
     })
   }, [vendors, search, statusFilter])
-
-  const hasActions = capabilities.canApprove || capabilities.canSuspend || capabilities.canDisable
 
   function run(action: () => Promise<{ success: boolean; error?: string }>, okMsg: string) {
     startTransition(async () => {
@@ -102,7 +100,31 @@ export function VendorsTable({
     const value = reason
     setSuspendTarget(null)
     setReason('')
-    run(() => suspendVendorAction({ vendorId: target.id, reason: value }), 'Vendor suspendido.')
+    run(
+      () => suspendVendorAction({ vendorId: target.id, reason: value }),
+      'Vendedor suspendido.',
+    )
+  }
+
+  function openEdit(vendor: AdminVendorRow) {
+    setEditTarget(vendor)
+    setEditName(vendor.name)
+    setEditBio(vendor.bio ?? '')
+  }
+
+  function confirmEdit() {
+    if (!editTarget) return
+    const target = editTarget
+    run(
+      () =>
+        updateVendorStoreAction({
+          vendorId: target.id,
+          name: editName,
+          bio: editBio,
+        }),
+      'Tienda actualizada.',
+    )
+    setEditTarget(null)
   }
 
   return (
@@ -113,7 +135,7 @@ export function VendorsTable({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder='Buscar vendor...'
+            placeholder='Buscar vendedor...'
             className='pl-9'
           />
         </div>
@@ -137,20 +159,20 @@ export function VendorsTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Vendor</TableHead>
+                <TableHead>Vendedor</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className='text-right'>Rating</TableHead>
                 <TableHead className='text-right'>Ventas</TableHead>
                 <TableHead className='text-right'>Problemas</TableHead>
                 <TableHead>Última actividad</TableHead>
-                {hasActions ? <TableHead className='w-10' /> : null}
+                <TableHead className='w-10' />
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={hasActions ? 7 : 6} className='h-24 text-center text-muted-foreground'>
-                    No hay vendors que coincidan.
+                  <TableCell colSpan={7} className='h-24 text-center text-muted-foreground'>
+                    No hay vendedores que coincidan.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -163,7 +185,12 @@ export function VendorsTable({
                           <AvatarFallback>{v.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className='min-w-0'>
-                          <div className='truncate font-medium'>{v.name}</div>
+                          <div className='flex items-center gap-2 truncate font-medium'>
+                            {v.name}
+                            {v.isFeatured ? (
+                              <Star className='h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400' />
+                            ) : null}
+                          </div>
                           {v.suspensionReason ? (
                             <div className='truncate text-xs text-rose-600'>{v.suspensionReason}</div>
                           ) : null}
@@ -190,64 +217,69 @@ export function VendorsTable({
                     <TableCell className='text-sm text-muted-foreground'>
                       {formatRelativeTime(v.lastActiveAt)}
                     </TableCell>
-                    {hasActions ? (
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='icon' disabled={isPending}>
-                              <MoreHorizontal className='h-4 w-4' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end'>
-                            {v.slug ? (
-                              <DropdownMenuItem asChild>
-                                <Link href={publicVendorPath(v.slug)} target='_blank'>
-                                  <ExternalLink className='mr-2 h-4 w-4' /> Ver perfil
-                                </Link>
-                              </DropdownMenuItem>
-                            ) : null}
-                            {capabilities.canApprove && v.status !== 'active' ? (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  run(
-                                    () =>
-                                      v.status === 'suspended' || v.status === 'disabled'
-                                        ? reactivateVendorAction(v.id)
-                                        : approveVendorAction(v.id),
-                                    'Vendor activado.',
-                                  )
-                                }
-                              >
-                                {v.status === 'pending' ? 'Aprobar' : 'Reactivar'}
-                              </DropdownMenuItem>
-                            ) : null}
-                            {(capabilities.canApprove || capabilities.canSuspend || capabilities.canDisable) &&
-                            v.slug ? (
-                              <DropdownMenuSeparator />
-                            ) : null}
-                            {capabilities.canSuspend && v.status !== 'suspended' ? (
-                              <DropdownMenuItem
-                                className='text-rose-600'
-                                onClick={() => {
-                                  setSuspendTarget(v)
-                                  setReason('')
-                                }}
-                              >
-                                Suspender
-                              </DropdownMenuItem>
-                            ) : null}
-                            {capabilities.canDisable && v.status !== 'disabled' ? (
-                              <DropdownMenuItem
-                                className='text-rose-600'
-                                onClick={() => run(() => disableVendorAction(v.id), 'Vendor desactivado.')}
-                              >
-                                Desactivar
-                              </DropdownMenuItem>
-                            ) : null}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    ) : null}
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='ghost' size='icon' disabled={isPending}>
+                            <MoreHorizontal className='h-4 w-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          {v.slug ? (
+                            <DropdownMenuItem asChild>
+                              <Link href={publicVendorPath(v.slug)} target='_blank'>
+                                <ExternalLink className='mr-2 h-4 w-4' /> Ver tienda
+                              </Link>
+                            </DropdownMenuItem>
+                          ) : null}
+                          <DropdownMenuItem onClick={() => openEdit(v)}>Editar tienda</DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={adminListingsPath(v.id)}>
+                              <Package className='mr-2 h-4 w-4' /> Ver publicaciones
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {v.status === 'pending_review' ? (
+                            <DropdownMenuItem
+                              onClick={() => run(() => approveVendorAction(v.id), 'Vendedor aprobado.')}
+                            >
+                              Aprobar vendedor
+                            </DropdownMenuItem>
+                          ) : null}
+                          {v.status !== 'suspended' ? (
+                            <DropdownMenuItem
+                              className='text-rose-600'
+                              onClick={() => {
+                                setSuspendTarget(v)
+                                setReason('')
+                              }}
+                            >
+                              Suspender vendedor
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => run(() => reactivateVendorAction(v.id), 'Vendedor reactivado.')}
+                            >
+                              Reactivar vendedor
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() =>
+                              run(
+                                () => featureVendorAction(v.id, !v.isFeatured),
+                                v.isFeatured ? 'Vendedor sin destacar.' : 'Vendedor destacado.',
+                              )
+                            }
+                          >
+                            <Star className='mr-2 h-4 w-4' />
+                            {v.isFeatured ? 'Quitar destacado' : 'Destacar vendedor'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled>
+                            <BarChart3 className='mr-2 h-4 w-4' /> Ver métricas (próximamente)
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -259,7 +291,7 @@ export function VendorsTable({
       <Dialog open={Boolean(suspendTarget)} onOpenChange={(o) => !o && setSuspendTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Suspender vendor</DialogTitle>
+            <DialogTitle>Suspender vendedor</DialogTitle>
             <DialogDescription>
               {suspendTarget ? `Vas a suspender a "${suspendTarget.name}". Indicá el motivo.` : ''}
             </DialogDescription>
@@ -280,6 +312,32 @@ export function VendorsTable({
               onClick={confirmSuspend}
             >
               Suspender
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(editTarget)} onOpenChange={(o) => !o && setEditTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar tienda</DialogTitle>
+          </DialogHeader>
+          <div className='space-y-3'>
+            <div className='space-y-1'>
+              <Label htmlFor='store-name'>Nombre</Label>
+              <Input id='store-name' value={editName} onChange={(e) => setEditName(e.target.value)} />
+            </div>
+            <div className='space-y-1'>
+              <Label htmlFor='store-bio'>Descripción</Label>
+              <Textarea id='store-bio' value={editBio} onChange={(e) => setEditBio(e.target.value)} rows={3} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setEditTarget(null)}>
+              Cancelar
+            </Button>
+            <Button disabled={isPending} onClick={confirmEdit}>
+              Guardar
             </Button>
           </DialogFooter>
         </DialogContent>

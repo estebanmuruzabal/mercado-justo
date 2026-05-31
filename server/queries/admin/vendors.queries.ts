@@ -6,7 +6,9 @@ export type AdminVendorRow = {
   name: string
   logoUrl: string | null
   slug: string | null
+  bio: string | null
   status: VendorStatus
+  isFeatured: boolean
   rating: number
   reviewCount: number
   salesCount: number
@@ -29,7 +31,7 @@ export async function listVendorsForAdmin(): Promise<AdminVendorRow[]> {
     supabase
       .from('store')
       .select(
-        'id, name, logo_url, slug, status, rating_avg, review_count, created_at, last_active_at, suspension_reason',
+        'id, name, logo_url, slug, bio, status, is_featured, rating_avg, review_count, created_at, last_active_at, suspension_reason',
       )
       .order('created_at', { ascending: false }),
     supabase.from('order').select('seller_id, total'),
@@ -46,7 +48,9 @@ export async function listVendorsForAdmin(): Promise<AdminVendorRow[]> {
     name: string
     logo_url: string | null
     slug: string | null
+    bio: string | null
     status: string
+    is_featured: boolean | null
     rating_avg: number | null
     review_count: number | null
     created_at: string
@@ -79,7 +83,9 @@ export async function listVendorsForAdmin(): Promise<AdminVendorRow[]> {
       name: store.name,
       logoUrl: store.logo_url,
       slug: store.slug,
+      bio: store.bio,
       status: (store.status as VendorStatus) ?? 'active',
+      isFeatured: store.is_featured ?? false,
       rating: Number(store.rating_avg ?? 0),
       reviewCount: store.review_count ?? 0,
       salesCount: sales.count,

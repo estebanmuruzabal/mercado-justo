@@ -3,7 +3,11 @@
 const { execSync } = require('child_process')
 const path = require('path')
 
-const SEED_FILE = path.join('supabase', 'seed.sql')
+const SEED_FILES = [
+  path.join('supabase', 'seeds', 'seed.shared.sql'),
+  path.join('supabase', 'seeds', 'seed.dev.sql'),
+]
+
 const DEFAULT_DB_URL = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 
 function isSupabaseRunning() {
@@ -17,9 +21,12 @@ function isSupabaseRunning() {
 
 function runSeed() {
   const dbUrl = process.env.SUPABASE_LOCAL_DB_URL || DEFAULT_DB_URL
-  execSync(`psql "${dbUrl}" -v ON_ERROR_STOP=1 -f ${SEED_FILE}`, {
-    stdio: 'inherit',
-  })
+  for (const file of SEED_FILES) {
+    console.log(`  → ${file}`)
+    execSync(`psql "${dbUrl}" -v ON_ERROR_STOP=1 -f ${file}`, {
+      stdio: 'inherit',
+    })
+  }
 }
 
 function main() {
@@ -29,7 +36,7 @@ function main() {
     process.exit(1)
   }
 
-  console.log('Seeding local database from', SEED_FILE, '...')
+  console.log('Seeding local database...')
   try {
     runSeed()
     console.log('✓ Seed completed successfully.')

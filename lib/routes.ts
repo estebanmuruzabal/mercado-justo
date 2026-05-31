@@ -60,6 +60,7 @@ export const VENDOR_NOTIFICATIONS_PATH = '/dashboard-vendor/notifications' as co
 // ——— Super Admin Panel ———
 /** Landing del panel de administración global (solo staff). */
 export const ADMIN_DASHBOARD_PATH = '/admin' as const
+export const ADMIN_USERS_PATH = '/admin/users' as const
 export const ADMIN_VENDORS_PATH = '/admin/vendors' as const
 export const ADMIN_LISTINGS_PATH = '/admin/listings' as const
 export const ADMIN_ORDERS_PATH = '/admin/orders' as const
@@ -68,6 +69,12 @@ export const ADMIN_MODERATION_PATH = '/admin/moderation' as const
 export const ADMIN_NOTIFICATIONS_PATH = '/admin/notifications' as const
 export const ADMIN_ANALYTICS_PATH = '/admin/analytics' as const
 export const ADMIN_CATEGORIES_PATH = '/admin/categories' as const
+
+export function adminListingsPath(storeId?: string) {
+  if (!storeId) return ADMIN_LISTINGS_PATH
+  const params = new URLSearchParams({ storeId })
+  return `${ADMIN_LISTINGS_PATH}?${params.toString()}` as const
+}
 
 // ——— Marketplace / listings ———
 export function listingDetailPath(listingType: string, listingId: string) {

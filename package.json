@@ -18,6 +18,7 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:seed": "node scripts/db-seed.js",
+    "db:seed:staging": "node scripts/db-seed-staging.js",
     "db:setup": "node scripts/db-setup.js",
     "db:types": "supabase gen types --local > types/supabase.ts",
     "db:push": "supabase db push",

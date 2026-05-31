@@ -42,7 +42,7 @@ function main() {
     console.log('\n✓ Database setup complete. Demo credentials:')
     console.log('  Super Admin: admin@test.com / 123456')
     console.log('  Compradores: buyer1@test.com … buyer3@test.com / 123456')
-    console.log('  Vendedores:  vendor1@test.com … vendor3@test.com / 123456')
+    console.log('  Vendedores:  vendor1@test.com … vendor4@test.com / 123456')
     if (resetFailed) {
       console.warn('\n  Note: reset finished with warnings — verify data with: npm run db:seed')
     }

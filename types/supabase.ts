@@ -580,6 +580,7 @@ export type Database = {
           follower_count: number
           id: string
           instagram: string | null
+          is_featured: boolean
           last_active_at: string | null
           latitude: number | null
           logo_url: string | null
@@ -608,6 +609,7 @@ export type Database = {
           follower_count?: number
           id: string
           instagram?: string | null
+          is_featured?: boolean
           last_active_at?: string | null
           latitude?: number | null
           logo_url?: string | null
@@ -636,6 +638,7 @@ export type Database = {
           follower_count?: number
           id?: string
           instagram?: string | null
+          is_featured?: boolean
           last_active_at?: string | null
           latitude?: number | null
           logo_url?: string | null
@@ -708,7 +711,11 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          last_access_at: string | null
           role: string
+          status: string
+          suspended_at: string | null
+          suspension_reason: string | null
           updated_at: string
           username: string | null
         }
@@ -718,7 +725,11 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          last_access_at?: string | null
           role?: string
+          status?: string
+          suspended_at?: string | null
+          suspension_reason?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -728,7 +739,11 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          last_access_at?: string | null
           role?: string
+          status?: string
+          suspended_at?: string | null
+          suspension_reason?: string | null
           updated_at?: string
           username?: string | null
         }

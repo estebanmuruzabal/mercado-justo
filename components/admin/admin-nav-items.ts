@@ -8,6 +8,7 @@ import {
   Store,
   Tags,
   Truck,
+  Users,
 } from 'lucide-react'
 
 import {
@@ -19,6 +20,7 @@ import {
   ADMIN_MODERATION_PATH,
   ADMIN_NOTIFICATIONS_PATH,
   ADMIN_ORDERS_PATH,
+  ADMIN_USERS_PATH,
   ADMIN_VENDORS_PATH,
 } from '@/lib/routes'
 import { PERMISSIONS, type Permission } from '@/lib/auth/permissions'
@@ -37,7 +39,8 @@ export type AdminNavItem = {
  */
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: ADMIN_DASHBOARD_PATH, label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.ADMIN_ACCESS },
-  { href: ADMIN_VENDORS_PATH, label: 'Vendors', icon: Store, permission: PERMISSIONS.VENDORS_VIEW },
+  { href: ADMIN_USERS_PATH, label: 'Usuarios', icon: Users, permission: PERMISSIONS.USERS_VIEW },
+  { href: ADMIN_VENDORS_PATH, label: 'Vendedores', icon: Store, permission: PERMISSIONS.VENDORS_VIEW },
   { href: ADMIN_CATEGORIES_PATH, label: 'Categorías', icon: Tags, permission: PERMISSIONS.CATEGORIES_MANAGE },
   { href: ADMIN_LISTINGS_PATH, label: 'Productos', icon: Package, permission: PERMISSIONS.LISTINGS_VIEW },
   { href: ADMIN_ORDERS_PATH, label: 'Órdenes', icon: ShoppingBag, permission: PERMISSIONS.ORDERS_VIEW },

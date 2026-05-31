@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getUserRoleByUserId } from '@/server/queries/user.queries'
 import { canAccessAdmin, can, type Permission } from '@/lib/auth/permissions'
-import { isStaff, type Role } from '@/lib/roles'
+import { isStaff, isSuperAdmin, type Role } from '@/lib/roles'
 import { HOME_PATH, SIGN_IN_PATH, signInPathWithCallback } from '@/lib/routes'
 
 export type StaffContext = {
@@ -52,6 +52,41 @@ export async function requirePermission(
   }
 
   return ctx
+}
+
+/**
+ * Server Component guard for super-admin-only routes (Users, Vendors management).
+ */
+export async function requireSuperAdmin(callbackUrl?: string): Promise<StaffContext> {
+  const ctx = await requireStaff(callbackUrl)
+
+  if (!isSuperAdmin(ctx.role)) {
+    redirect(HOME_PATH)
+  }
+
+  return ctx
+}
+
+/**
+ * Server Action guard for super-admin-only mutations.
+ */
+export async function assertSuperAdmin(): Promise<StaffContext> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  const role = await getUserRoleByUserId(user.id)
+
+  if (!isStaff(role) || !isSuperAdmin(role)) {
+    throw new Error('Forbidden')
+  }
+
+  return { userId: user.id, role: role as Role }
 }
 
 /**
