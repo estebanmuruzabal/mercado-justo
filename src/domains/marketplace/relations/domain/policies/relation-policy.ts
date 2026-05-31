@@ -1,9 +1,4 @@
 import type { PublicationRelation } from '../entities/publication-relation'
-import {
-  isAuthorizedReadActor,
-  type RelationOwnerContext,
-  type RelationReadActor,
-} from '../../application/auth/relation-read-authorization.service'
 
 export type RelationStatus = 'active' | 'inactive' | 'scheduled' | 'expired'
 
@@ -73,16 +68,6 @@ export function isPublicRelationEdge(
     resolveRelationStatus(relation, now) === 'active' &&
     resolveRelationVisibility(relation, sourcePublication, targetPublication) === 'visible'
   )
-}
-
-/**
- * @deprecated Use isAuthorizedReadActor from relation-read-authorization.service — TODO(R3.2): remove
- */
-export function canBypassPublicRelationFilter(
-  actor: RelationReadActor | undefined,
-  sourceOwner: RelationOwnerContext,
-): boolean {
-  return isAuthorizedReadActor(actor, sourceOwner)
 }
 
 function isPublishedPublic(publication: PublicationVisibilityContext): boolean {

@@ -88,13 +88,3 @@ describe('shouldIncludeRelationEdge', () => {
     ).toBe(false)
   })
 })
-
-describe('canBypassPublicRelationFilter deprecated wrapper', () => {
-  it('delegates to isAuthorizedReadActor', async () => {
-    const { canBypassPublicRelationFilter } = await import(
-      '@/domains/marketplace/relations/domain/policies/relation-policy'
-    )
-    expect(canBypassPublicRelationFilter({ userId: 'user-1' }, storeOwner)).toBe(true)
-    expect(canBypassPublicRelationFilter(undefined, storeOwner)).toBe(false)
-  })
-})

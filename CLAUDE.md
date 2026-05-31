@@ -95,7 +95,7 @@ resolveCommercialSnapshots(publicationIds: string[]): Promise<Map<string, Commer
 
 ### Marketplace Relations — Canonical Graph Boundary (B5 / C5)
 
-**Estado (2026-05-31):** R3.0 complete — read BC con `resolveRelationSnapshots()`. **Próximo:** R3.1 (writes, owner-aware RLS, `createRelation`).
+**Estado (2026-05-31):** R3.2 complete — read BC + auth centralizada. **Próximo:** R3.3 (owner-aware RLS, migrar `publication-composition.ts` off shared registry).
 
 Relations BC expone **una única API pública** para lectura del grafo:
 
@@ -115,14 +115,26 @@ Prohibido fuera de `relations/**`:
 
 Repository methods are internal implementation details and must never become public APIs.
 
-**`includePrivate` contract (R3.0):**
+**`includePrivate` contract (R3.0 / R3.1):**
 
 - Requires `actor: RelationReadActor` (source owner, admin, or serviceRole) — ignored without authorization.
-- Extends visibility for scheduled/expired/inherit-hidden edges only; does not mean "show everything".
+- Authorization centralized in `application/auth/relation-read-authorization.service.ts` (`shouldIncludeRelationEdge`).
+- `relation-policy.ts` is domain-only (B4/C2 visibility/temporal rules) — no actor auth logic.
 - Current RLS only returns edges with `visibility IN ('public', 'inherit')` — private DB edges are not accessible yet.
-- TODO(R3.1): Private relations become fully accessible only after owner-aware RLS policies.
+- TODO(R3.3): Private relations become fully accessible only after owner-aware RLS policies.
 
-**Registry strangler:** `@/domains/marketplace/shared/domain/relation-type-registry` is deprecated — migrate to `@/domains/marketplace/relations`. TODO(R3.2): remove shared re-export.
+**R3.2 cleanup:**
+
+- `canBypassPublicRelationFilter` removed (was deprecated wrapper in R3.1).
+- Domain → Application dependency removed from `relation-policy.ts`.
+
+**Registry strangler (retained — active consumers outside Relations BC):**
+
+- Deprecated path: `@/domains/marketplace/shared/domain/relation-type-registry`
+- Active consumers: `publication-composition.ts`, `discovery-evolution.test.ts`
+- Canonical registry module: `@/domains/marketplace/relations/domain/registry/relation-type-registry`
+- Public type-only: `import type { RelationType } from '@/domains/marketplace/relations'` (helpers not on public boundary)
+- TODO(R3.3): migrate `publication-composition.ts`; TODO(R4.0): remove shared re-export
 
 ### Marketplace Discovery — Canonical Read Ownership Rule
 
