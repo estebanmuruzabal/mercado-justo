@@ -1,2 +1,2 @@
-export * from './domain/entities/offer'
-export * from './infrastructure/offer.repository'
+export { resolveCommercialSnapshots } from './application/queries/offer.queries'
+export type { CommercialSnapshot } from './application/dto/commercial-snapshot.dto'

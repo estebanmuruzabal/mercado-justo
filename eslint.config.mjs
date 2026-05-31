@@ -87,6 +87,52 @@ const eslintConfig = [
       ],
     },
   },
+  {
+    files: ["src/domains/marketplace/discovery/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/domains/marketplace/listings/application/queries/*"],
+              message: "A4: use resolveCommercialSnapshots from @/domains/marketplace/offer.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/domains/marketplace/offer/**",
+      "test/domains/marketplace/offer/**",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/domains/marketplace/offer/infrastructure/*"],
+              message:
+                "A5: use resolveCommercialSnapshots from @/domains/marketplace/offer.",
+            },
+            {
+              group: ["@/domains/marketplace/offer/domain/*"],
+              message: "A5: use CommercialSnapshot from @/domains/marketplace/offer only.",
+            },
+            {
+              group: ["@/domains/marketplace/offer/application/mappers/*"],
+              message:
+                "A5: use resolveCommercialSnapshots from @/domains/marketplace/offer.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

@@ -600,6 +600,7 @@ export type Database = {
           attributes_json: Json
           created_at: string
           id: string
+          is_active: boolean
           is_default: boolean
           legacy_variant_id: string | null
           name: string | null
@@ -613,6 +614,7 @@ export type Database = {
           attributes_json?: Json
           created_at?: string
           id?: string
+          is_active?: boolean
           is_default?: boolean
           legacy_variant_id?: string | null
           name?: string | null
@@ -626,6 +628,7 @@ export type Database = {
           attributes_json?: Json
           created_at?: string
           id?: string
+          is_active?: boolean
           is_default?: boolean
           legacy_variant_id?: string | null
           name?: string | null

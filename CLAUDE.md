@@ -80,6 +80,18 @@ Todas las **nuevas consultas públicas** deben entrar por `@/domains/marketplace
 
 Permitido en UI pública: `listings/domain/*` (tipos DTO), `listings/presentation/*` (componentes).
 
+### Marketplace Offer — Canonical Commerce Boundary (A5)
+
+Offer BC expone **una única API pública** para datos comerciales (precio, stock, variantes):
+
+```typescript
+resolveCommercialSnapshots(publicationIds: string[]): Promise<Map<string, CommercialSnapshot>>
+```
+
+**Consumidores** (Discovery, Search, Vendor Storefront, API, Mobile) deben importar solo desde `@/domains/marketplace/offer`.
+
+**Prohibido** fuera de `offer/**`: `OfferRepository`, `findVariants`, `findDefaultVariant`, deep imports de `offer/infrastructure/*` o `offer/domain/*`. El fallback Strangler (`listing_variant`) vive **dentro** de Offer BC y se expone opaco como `CommercialSnapshot.source: 'legacy'`.
+
 ### Marketplace Discovery — Canonical Read Ownership Rule
 
 Marketplace tiene **una sola fuente canónica por fase** (`DISCOVERY_SOURCE`):

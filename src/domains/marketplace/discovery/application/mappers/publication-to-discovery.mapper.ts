@@ -21,6 +21,8 @@ export type VariantFeedRow = {
   price: number | null
   is_default: boolean
   attributes_json?: Record<string, unknown> | null
+  /** When set, overrides length-based hasOptions (from CommercialSnapshot) */
+  hasOptions?: boolean
 }
 
 export type StoreNameLookup = Map<string, string>
@@ -55,7 +57,7 @@ export function mapPublicationRowToMarketplaceListing(
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),
     variantId: defaultVariant ? String(defaultVariant.id) : undefined,
-    hasOptions: variantRows.length > 1,
+    hasOptions: variantRows.some((v) => v.hasOptions) || variantRows.length > 1,
     createdAt: row.created_at,
   }
 }
