@@ -1,5 +1,5 @@
 /**
- * @deprecated Use structural-role.ts and relation-type-registry.ts instead.
+ * @deprecated Use structural-role.ts and relations/domain/registry/relation-type-registry.ts instead.
  * Remove after Offer subdomain stabilization (checkout still on listing_variant).
  * Target removal: 2026-12-31 (Q4 2026).
  * Tracking: grep "publication-kind" — must be zero imports before delete.

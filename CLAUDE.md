@@ -95,7 +95,7 @@ resolveCommercialSnapshots(publicationIds: string[]): Promise<Map<string, Commer
 
 ### Marketplace Relations — Canonical Graph Boundary (B5 / C5)
 
-**Estado (2026-05-31):** R3.4 phase complete — owner-aware RLS SQL + app parity tests + Discovery registry extraction. **R3.4 partial (epic):** shared registry barrel pending R4.0. **Próximo:** R4.0 (remove shared re-export).
+**Estado (2026-05-31):** R4.0 phase complete — shared relation registry strangler removed. Registry source of truth: `relations/domain/registry/relation-type-registry.ts` only.
 
 Relations BC expone **una única API pública** para lectura del grafo:
 
@@ -174,22 +174,13 @@ Pre-flight audit found zero call sites for `PublicationComposition` / `legacyCom
 - `canBypassPublicRelationFilter` removed (was deprecated wrapper in R3.1).
 - Domain → Application dependency removed from `relation-policy.ts`.
 
-**Registry strangler (retained — active consumers outside Relations BC):**
+**R4.0 — Registry source of truth (strangler removed):**
 
-| Consumidor | Estado |
-|------------|--------|
-| `publication-composition.ts` | **removed** (R3.3 — dead code) |
-| `test/domains/marketplace/discovery/discovery-evolution.test.ts` | **removed** (R3.4 — tests → relations) |
-| `src/domains/marketplace/shared/index.ts` (indirect barrel) | pending (R4.0) |
-
-**Consumidores restantes del shared registry:**
-
-- `src/domains/marketplace/shared/index.ts`
-
-- Deprecated path: `@/domains/marketplace/shared/domain/relation-type-registry`
-- Canonical registry module: `@/domains/marketplace/relations/domain/registry/relation-type-registry`
-- Public type-only: `import type { RelationType } from '@/domains/marketplace/relations'` (helpers not on public boundary)
-- **R4.0 candidate:** remove shared re-export and `shared/index.ts` barrel
+- Internal registry: `@/domains/marketplace/relations/domain/registry/relation-type-registry.ts`
+- Public type-only: `import type { RelationType } from '@/domains/marketplace/relations'` (`export type` in `relations/index.ts` L9)
+- **Type contract guarantee:** TypeScript compilation (`npm run build`) — not runtime validation; `RelationType` does not exist at runtime
+- **C5 runtime boundary:** `Object.keys(relationsModule) === ['resolveRelationSnapshots']` only
+- **No shared registry consumers remaining** — `shared/domain/relation-type-registry.ts` deleted (R4.0)
 
 ### Marketplace Discovery — Canonical Read Ownership Rule
 
