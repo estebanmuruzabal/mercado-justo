@@ -34,6 +34,32 @@ const eslintConfig = [
               group: ["@/src/shared/*"],
               message: "Use @/shared/* instead of @/src/shared/*.",
             },
+            {
+              group: ["@/domains/marketplace/_legacy/*"],
+              message:
+                "Do not import legacy adapters directly. Use @/domains/marketplace/publication instead.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      "src/**/*.{ts,tsx}",
+      "test/**/*.{ts,tsx}",
+    ],
+    ignores: ["src/domains/marketplace/listings/**"],
+    rules: {
+      "no-restricted-imports": [
+        "warn",
+        {
+          paths: [
+            {
+              name: "@/domains/marketplace/listings/domain/listing-types",
+              message:
+                "Use @/domains/marketplace/shared/domain/publication-type-registry instead.",
+            },
           ],
         },
       ],

@@ -67,6 +67,24 @@ export type Database = {
         }
         Relationships: []
       }
+      cart: {
+        Row: {
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cart_item: {
         Row: {
           created_at: string
@@ -92,6 +110,74 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "cart_item_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "listing_variant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cart_line: {
+        Row: {
+          cart_id: string
+          created_at: string
+          id: string
+          line_kind: string
+          metadata_json: Json
+          publication_id: string | null
+          quantity: number
+          title_snapshot: string
+          unit_price: number
+          variant_id: string | null
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string
+          id?: string
+          line_kind?: string
+          metadata_json?: Json
+          publication_id?: string | null
+          quantity: number
+          title_snapshot: string
+          unit_price: number
+          variant_id?: string | null
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string
+          id?: string
+          line_kind?: string
+          metadata_json?: Json
+          publication_id?: string | null
+          quantity?: number
+          title_snapshot?: string
+          unit_price?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_line_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_line_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "cart_line_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_line_variant_id_fkey"
             columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "listing_variant"
@@ -321,6 +407,62 @@ export type Database = {
           },
         ]
       }
+      marketplace_transaction: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          delivery_price: number
+          id: string
+          kind: string
+          legacy_order_id: string | null
+          metadata_json: Json
+          payment_status: string
+          seller_id: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          delivery_price?: number
+          id?: string
+          kind?: string
+          legacy_order_id?: string | null
+          metadata_json?: Json
+          payment_status?: string
+          seller_id: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          delivery_price?: number
+          id?: string
+          kind?: string
+          legacy_order_id?: string | null
+          metadata_json?: Json
+          payment_status?: string
+          seller_id?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_transaction_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       moderation_report: {
         Row: {
           assigned_to: string | null
@@ -407,6 +549,108 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      offer: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          pricing_model: string
+          publication_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          pricing_model?: string
+          publication_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          pricing_model?: string
+          publication_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: true
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "offer_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: true
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_variant: {
+        Row: {
+          attributes_json: Json
+          created_at: string
+          id: string
+          is_default: boolean
+          legacy_variant_id: string | null
+          name: string | null
+          offer_id: string
+          price: number
+          sku: string | null
+          stock: number | null
+          updated_at: string
+        }
+        Insert: {
+          attributes_json?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          legacy_variant_id?: string | null
+          name?: string | null
+          offer_id: string
+          price?: number
+          sku?: string | null
+          stock?: number | null
+          updated_at?: string
+        }
+        Update: {
+          attributes_json?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          legacy_variant_id?: string | null
+          name?: string | null
+          offer_id?: string
+          price?: number
+          sku?: string | null
+          stock?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_variant_legacy_variant_id_fkey"
+            columns: ["legacy_variant_id"]
+            isOneToOne: true
+            referencedRelation: "listing_variant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_variant_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offer"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order: {
         Row: {
@@ -499,6 +743,458 @@ export type Database = {
             columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "listing_variant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publication: {
+        Row: {
+          archived_at: string | null
+          attributes_json: Json
+          body: string | null
+          created_at: string
+          deleted_at: string | null
+          follower_count: number
+          id: string
+          is_transactable: boolean
+          kind: string
+          latitude: number | null
+          legacy_listing_id: string | null
+          lifecycle_state: string
+          location_mode: string
+          longitude: number | null
+          media_json: Json
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          moderation_status: string
+          offer_model: string
+          owner_id: string
+          owner_type: string
+          parent_publication_id: string | null
+          publication_type: string
+          published_at: string | null
+          rating_avg: number
+          region_code: string | null
+          review_count: number
+          seo_json: Json
+          slug: string | null
+          structural_role: string
+          summary: string | null
+          taxonomy_node_id: string
+          taxonomy_path: string | null
+          title: string | null
+          updated_at: string
+          view_count: number
+          visibility: string
+        }
+        Insert: {
+          archived_at?: string | null
+          attributes_json?: Json
+          body?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          follower_count?: number
+          id?: string
+          is_transactable?: boolean
+          kind?: string
+          latitude?: number | null
+          legacy_listing_id?: string | null
+          lifecycle_state?: string
+          location_mode?: string
+          longitude?: number | null
+          media_json?: Json
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: string
+          offer_model?: string
+          owner_id: string
+          owner_type?: string
+          parent_publication_id?: string | null
+          publication_type: string
+          published_at?: string | null
+          rating_avg?: number
+          region_code?: string | null
+          review_count?: number
+          seo_json?: Json
+          slug?: string | null
+          structural_role?: string
+          summary?: string | null
+          taxonomy_node_id: string
+          taxonomy_path?: string | null
+          title?: string | null
+          updated_at?: string
+          view_count?: number
+          visibility?: string
+        }
+        Update: {
+          archived_at?: string | null
+          attributes_json?: Json
+          body?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          follower_count?: number
+          id?: string
+          is_transactable?: boolean
+          kind?: string
+          latitude?: number | null
+          legacy_listing_id?: string | null
+          lifecycle_state?: string
+          location_mode?: string
+          longitude?: number | null
+          media_json?: Json
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: string
+          offer_model?: string
+          owner_id?: string
+          owner_type?: string
+          parent_publication_id?: string | null
+          publication_type?: string
+          published_at?: string | null
+          rating_avg?: number
+          region_code?: string | null
+          review_count?: number
+          seo_json?: Json
+          slug?: string | null
+          structural_role?: string
+          summary?: string | null
+          taxonomy_node_id?: string
+          taxonomy_path?: string | null
+          title?: string | null
+          updated_at?: string
+          view_count?: number
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_parent_publication_id_fkey"
+            columns: ["parent_publication_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "publication_parent_publication_id_fkey"
+            columns: ["parent_publication_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publication_publication_type_fkey"
+            columns: ["publication_type"]
+            isOneToOne: false
+            referencedRelation: "publication_type_definition"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "publication_taxonomy_node_id_fkey"
+            columns: ["taxonomy_node_id"]
+            isOneToOne: false
+            referencedRelation: "category_taxonomy_compat"
+            referencedColumns: ["taxonomy_node_id"]
+          },
+          {
+            foreignKeyName: "publication_taxonomy_node_id_fkey"
+            columns: ["taxonomy_node_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_node"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publication_composition: {
+        Row: {
+          child_publication_id: string
+          composition_type: string
+          created_at: string
+          id: string
+          parent_publication_id: string
+          sort_order: number
+        }
+        Insert: {
+          child_publication_id: string
+          composition_type: string
+          created_at?: string
+          id?: string
+          parent_publication_id: string
+          sort_order?: number
+        }
+        Update: {
+          child_publication_id?: string
+          composition_type?: string
+          created_at?: string
+          id?: string
+          parent_publication_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_composition_child_publication_id_fkey"
+            columns: ["child_publication_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "publication_composition_child_publication_id_fkey"
+            columns: ["child_publication_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publication_composition_parent_publication_id_fkey"
+            columns: ["parent_publication_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "publication_composition_parent_publication_id_fkey"
+            columns: ["parent_publication_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publication_follow: {
+        Row: {
+          created_at: string
+          publication_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          publication_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          publication_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_follow_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "publication_follow_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publication_relation: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata_json: Json
+          relation_type: string
+          source_publication_id: string
+          target_publication_id: string
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata_json?: Json
+          relation_type: string
+          source_publication_id: string
+          target_publication_id: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata_json?: Json
+          relation_type?: string
+          source_publication_id?: string
+          target_publication_id?: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_relation_source_publication_id_fkey"
+            columns: ["source_publication_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "publication_relation_source_publication_id_fkey"
+            columns: ["source_publication_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publication_relation_target_publication_id_fkey"
+            columns: ["target_publication_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "publication_relation_target_publication_id_fkey"
+            columns: ["target_publication_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publication_review: {
+        Row: {
+          author_id: string
+          body: string | null
+          created_at: string
+          id: string
+          publication_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          publication_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          publication_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_review_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "publication_review_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publication_type_definition: {
+        Row: {
+          attribute_schema: Json
+          capabilities: string[]
+          code: string
+          created_at: string
+          default_offer_model: string
+          display_name: string
+          ecosystem: string
+          is_active: boolean
+          is_persistable: boolean
+          schema_version: number
+        }
+        Insert: {
+          attribute_schema?: Json
+          capabilities?: string[]
+          code: string
+          created_at?: string
+          default_offer_model?: string
+          display_name: string
+          ecosystem?: string
+          is_active?: boolean
+          is_persistable?: boolean
+          schema_version?: number
+        }
+        Update: {
+          attribute_schema?: Json
+          capabilities?: string[]
+          code?: string
+          created_at?: string
+          default_offer_model?: string
+          display_name?: string
+          ecosystem?: string
+          is_active?: boolean
+          is_persistable?: boolean
+          schema_version?: number
+        }
+        Relationships: []
+      }
+      publication_type_schema: {
+        Row: {
+          created_at: string
+          id: string
+          publication_type: string
+          schema_version: number
+          taxonomy_node_id: string | null
+          template_json: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          publication_type: string
+          schema_version?: number
+          taxonomy_node_id?: string | null
+          template_json?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          publication_type?: string
+          schema_version?: number
+          taxonomy_node_id?: string | null
+          template_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_type_schema_publication_type_fkey"
+            columns: ["publication_type"]
+            isOneToOne: false
+            referencedRelation: "publication_type_definition"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "publication_type_schema_taxonomy_node_id_fkey"
+            columns: ["taxonomy_node_id"]
+            isOneToOne: false
+            referencedRelation: "category_taxonomy_compat"
+            referencedColumns: ["taxonomy_node_id"]
+          },
+          {
+            foreignKeyName: "publication_type_schema_taxonomy_node_id_fkey"
+            columns: ["taxonomy_node_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_node"
             referencedColumns: ["id"]
           },
         ]
@@ -704,6 +1400,127 @@ export type Database = {
           },
         ]
       }
+      taxonomy_node: {
+        Row: {
+          allowed_types: string[]
+          created_at: string
+          id: string
+          is_visible: boolean
+          legacy_category_id: string | null
+          metadata_json: Json
+          name: string
+          parent_id: string | null
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          allowed_types?: string[]
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          legacy_category_id?: string | null
+          metadata_json?: Json
+          name: string
+          parent_id?: string | null
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          allowed_types?: string[]
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          legacy_category_id?: string | null
+          metadata_json?: Json
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_node_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "category_taxonomy_compat"
+            referencedColumns: ["taxonomy_node_id"]
+          },
+          {
+            foreignKeyName: "taxonomy_node_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_node"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_line: {
+        Row: {
+          attributes_snapshot: Json
+          created_at: string
+          fulfillment_hint: string
+          id: string
+          legacy_order_item_id: string | null
+          line_kind: string
+          publication_id: string | null
+          quantity: number
+          title_snapshot: string
+          transaction_id: string
+          unit_price_snapshot: number
+          variant_id: string | null
+        }
+        Insert: {
+          attributes_snapshot?: Json
+          created_at?: string
+          fulfillment_hint?: string
+          id?: string
+          legacy_order_item_id?: string | null
+          line_kind?: string
+          publication_id?: string | null
+          quantity: number
+          title_snapshot: string
+          transaction_id: string
+          unit_price_snapshot: number
+          variant_id?: string | null
+        }
+        Update: {
+          attributes_snapshot?: Json
+          created_at?: string
+          fulfillment_hint?: string
+          id?: string
+          legacy_order_item_id?: string | null
+          line_kind?: string
+          publication_id?: string | null
+          quantity?: number
+          title_snapshot?: string
+          transaction_id?: string
+          unit_price_snapshot?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_line_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_transaction"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_line_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "order_transaction_compat"
+            referencedColumns: ["transaction_id"]
+          },
+          {
+            foreignKeyName: "transaction_line_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "listing_variant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user: {
         Row: {
           avatar_url: string | null
@@ -833,10 +1650,111 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      category_taxonomy_compat: {
+        Row: {
+          allowed_types: string[] | null
+          category_id: string | null
+          name: string | null
+          parent_id: string | null
+          slug: string | null
+          taxonomy_node_id: string | null
+        }
+        Insert: {
+          allowed_types?: string[] | null
+          category_id?: string | null
+          name?: string | null
+          parent_id?: string | null
+          slug?: string | null
+          taxonomy_node_id?: string | null
+        }
+        Update: {
+          allowed_types?: string[] | null
+          category_id?: string | null
+          name?: string | null
+          parent_id?: string | null
+          slug?: string | null
+          taxonomy_node_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_node_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "category_taxonomy_compat"
+            referencedColumns: ["taxonomy_node_id"]
+          },
+          {
+            foreignKeyName: "taxonomy_node_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_node"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_publication_compat: {
+        Row: {
+          kind: string | null
+          lifecycle_state: string | null
+          listing_id: string | null
+          publication_id: string | null
+          publication_type: string | null
+        }
+        Insert: {
+          kind?: string | null
+          lifecycle_state?: string | null
+          listing_id?: string | null
+          publication_id?: string | null
+          publication_type?: string | null
+        }
+        Update: {
+          kind?: string | null
+          lifecycle_state?: string | null
+          listing_id?: string | null
+          publication_id?: string | null
+          publication_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_publication_type_fkey"
+            columns: ["publication_type"]
+            isOneToOne: false
+            referencedRelation: "publication_type_definition"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      order_transaction_compat: {
+        Row: {
+          kind: string | null
+          order_id: string | null
+          payment_status: string | null
+          status: string | null
+          transaction_id: string | null
+        }
+        Insert: {
+          kind?: string | null
+          order_id?: string | null
+          payment_status?: string | null
+          status?: string | null
+          transaction_id?: string | null
+        }
+        Update: {
+          kind?: string | null
+          order_id?: string | null
+          payment_status?: string | null
+          status?: string | null
+          transaction_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       current_user_role: { Args: never; Returns: string }
+      ensure_taxonomy_node_for_category: {
+        Args: { p_category_id: string }
+        Returns: string
+      }
       has_role: { Args: { target_role: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
@@ -844,7 +1762,7 @@ export type Database = {
     }
     Enums: {
       listing_status: "draft" | "published"
-      listing_type: "product" | "service" | "property"
+      listing_type: "product" | "service" | "property" | "experience"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -976,7 +1894,7 @@ export const Constants = {
   public: {
     Enums: {
       listing_status: ["draft", "published"],
-      listing_type: ["product", "service", "property"],
+      listing_type: ["product", "service", "property", "experience"],
     },
   },
 } as const

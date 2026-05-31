@@ -3,7 +3,9 @@
 import { after } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/shared/database/supabase/server'
-import { dispatchNotificationEvent } from '@/shared/events/legacy-notifications/events/dispatch'
+import { dispatchNotificationEvent } from '@/shared/events/bus/dispatch'
+import { inferTransactionKindFromPublicationTypes } from '@/domains/marketplace/transaction/domain/checkout-strategies'
+import { fetchTransactionByLegacyOrderId } from '@/domains/marketplace/transaction/application/queries/transaction.queries'
 
 const cartItemSchema = z.object({
   variantId: z.string().min(1),
@@ -105,7 +107,21 @@ export async function createOrderFromCartAction(
   if (itemsError) throw itemsError
 
   // Non-blocking: fan-out order notifications (Telegram + email, etc.).
-  after(() => dispatchNotificationEvent({ type: 'order.created', payload: { orderId } }))
+  after(async () => {
+    const transactionKind = inferTransactionKindFromPublicationTypes(['product'])
+    const transaction = await fetchTransactionByLegacyOrderId(orderId)
+
+    await dispatchNotificationEvent({ type: 'order.created', payload: { orderId } })
+    await dispatchNotificationEvent({
+      type: 'marketplace.transaction.confirmed',
+      payload: {
+        transactionId: transaction?.id ?? orderId,
+        kind: transaction?.kind ?? transactionKind,
+        buyerId: userId,
+        sellerId,
+      },
+    })
+  })
 
   return { orderId }
 }

@@ -5,12 +5,20 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { CartItem, CartListingType, CartState } from './cart-types'
 import { loadCartStateFromLocalStorage, persistCartStateToLocalStorage } from '@/domains/marketplace/checkout/presentation/stores/cart-store/storage'
 import { calcCartTotals, makeCartItemId } from './cart-types'
+import { createClient } from '@/shared/database/supabase/client'
+import {
+  clearServerCart,
+  getServerCartLines,
+  removeServerCartLine,
+  upsertServerCartLine,
+} from '@/domains/marketplace/transaction/application/actions/cart.actions'
 
 type CartAction =
   | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'id'> }
   | { type: 'REMOVE_ITEM'; payload: { listingType: CartListingType; variantId: string } }
   | { type: 'SET_QUANTITY'; payload: { listingType: CartListingType; variantId: string; quantity: number } }
   | { type: 'CLEAR_CART' }
+  | { type: 'HYDRATE'; payload: CartState }
 
 const CartStoreContext = createContext<{
   items: CartItem[]
@@ -69,17 +77,31 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case 'CLEAR_CART':
       return { ...state, items: [] }
 
+    case 'HYDRATE':
+      return action.payload
+
     default:
       return state
   }
 }
 
+async function syncItemToServer(item: CartItem): Promise<void> {
+  if (item.listingType !== 'product') return
+  await upsertServerCartLine({
+    variantId: item.variantId,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    titleSnapshot: item.title,
+  })
+}
+
 export function CartStoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] }, (initialState) => {
-    // Hydrate from localStorage on the client, otherwise keep default empty state.
+  const supabase = useMemo(() => createClient(), [])
+  const [state, dispatch] = useReducer(cartReducer, { items: [] }, () => {
     return loadCartStateFromLocalStorage()
   })
   const totals = useMemo(() => calcCartTotals(state.items), [state.items])
+  const userIdRef = useRef<string | null>(null)
 
   const hydratedRef = useRef(false)
   useEffect(() => {
@@ -87,27 +109,93 @@ export function CartStoreProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
+    let cancelled = false
+    async function hydrateFromServer() {
+      const { data } = await supabase.auth.getUser()
+      if (cancelled) return
+      userIdRef.current = data.user?.id ?? null
+      if (!data.user) return
+
+      const lines = await getServerCartLines()
+      if (cancelled || lines.length === 0) return
+
+      dispatch({
+        type: 'HYDRATE',
+        payload: {
+          items: lines
+            .filter((line) => line.variantId)
+            .map((line) => ({
+              id: makeCartItemId('product', line.variantId!),
+              listingType: 'product' as const,
+              variantId: line.variantId!,
+              storeId: '',
+              title: line.titleSnapshot,
+              image: '',
+              quantity: line.quantity,
+              unitPrice: line.unitPrice,
+            })),
+        },
+      })
+    }
+    void hydrateFromServer()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      userIdRef.current = session?.user?.id ?? null
+    })
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
+  }, [supabase])
+
+  useEffect(() => {
     if (!hydratedRef.current) return
     if (typeof window === 'undefined') return
-    persistCartStateToLocalStorage(state)
+    if (!userIdRef.current) {
+      persistCartStateToLocalStorage(state)
+    }
   }, [state])
 
   const addItem = useCallback((item: Omit<CartItem, 'id'>) => {
     dispatch({ type: 'ADD_ITEM', payload: item })
-  }, [])
+    if (userIdRef.current && item.listingType === 'product') {
+      const nextId = makeCartItemId(item.listingType, item.variantId)
+      const existing = state.items.find((i) => i.id === nextId)
+      const quantity = existing ? existing.quantity + item.quantity : item.quantity
+      void syncItemToServer({ ...item, id: nextId, quantity })
+    }
+  }, [state.items])
 
   const removeItem = useCallback((listingType: CartListingType, variantId: string) => {
     dispatch({ type: 'REMOVE_ITEM', payload: { listingType, variantId } })
+    if (userIdRef.current && listingType === 'product') {
+      void removeServerCartLine(variantId)
+    }
   }, [])
 
   const setQuantity = useCallback(
     (listingType: CartListingType, variantId: string, quantity: number) => {
       dispatch({ type: 'SET_QUANTITY', payload: { listingType, variantId, quantity } })
+      if (!userIdRef.current || listingType !== 'product') return
+      if (quantity <= 0) {
+        void removeServerCartLine(variantId)
+        return
+      }
+      const item = state.items.find((i) => i.variantId === variantId && i.listingType === 'product')
+      if (item) {
+        void syncItemToServer({ ...item, quantity })
+      }
     },
-    []
+    [state.items]
   )
 
-  const clearCart = useCallback(() => dispatch({ type: 'CLEAR_CART' }), [])
+  const clearCart = useCallback(() => {
+    dispatch({ type: 'CLEAR_CART' })
+    if (userIdRef.current) {
+      void clearServerCart()
+    }
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -130,4 +218,3 @@ export function useCartStore() {
   if (!ctx) throw new Error('useCartStore must be used within CartStoreProvider')
   return ctx
 }
-

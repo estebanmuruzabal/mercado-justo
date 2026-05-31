@@ -40,4 +40,14 @@ export const NOTIFICATION_EVENT_HANDLERS: {
     },
   ],
   'payout.sent': [],
+  'marketplace.review.created': [],
+  'marketplace.transaction.confirmed': [
+    async (payload) => {
+      await notifyVendorNewOrder(payload.transactionId)
+    },
+    async (payload) => {
+      await sendOrderCreatedEmail(payload.transactionId)
+    },
+  ],
+  'marketplace.publication.published': [],
 }

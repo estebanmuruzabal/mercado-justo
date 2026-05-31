@@ -27,6 +27,20 @@ export const PERMISSIONS = {
   LISTINGS_VIEW: 'listings:view',
   LISTINGS_MODERATE: 'listings:moderate',
 
+  // Universal publications (Marketplace BC).
+  PUBLICATIONS_READ: 'publications:read',
+  PUBLICATIONS_CREATE: 'publications:create',
+  PUBLICATIONS_EDIT_OWN: 'publications:edit:own',
+  PUBLICATIONS_PUBLISH_OWN: 'publications:publish:own',
+  PUBLICATIONS_DELETE_OWN: 'publications:delete:own',
+  PUBLICATIONS_MODERATE: 'publications:moderate',
+  PUBLICATIONS_SUSPEND: 'publications:suspend',
+  PUBLICATIONS_TYPES_MANAGE: 'publications:types:manage',
+  TAXONOMY_MANAGE: 'taxonomy:manage',
+  TRANSACTIONS_READ_OWN: 'transactions:read:own',
+  TRANSACTIONS_READ_ALL: 'transactions:read:all',
+  TRANSACTIONS_REFUND: 'transactions:refund',
+
   // Orders & shipments / logistics.
   ORDERS_VIEW: 'orders:view',
   SHIPMENTS_OVERRIDE: 'shipments:override',
@@ -66,6 +80,7 @@ const ROLE_PERMISSIONS: Partial<Record<Role, readonly Permission[]>> = {
   [ROLES.LOGISTICS_ADMIN]: [
     P.ADMIN_ACCESS,
     P.ORDERS_VIEW,
+    P.TRANSACTIONS_READ_ALL,
     P.SHIPMENTS_OVERRIDE,
     P.LOGISTICS_MANAGE,
     P.NOTIFICATIONS_VIEW,
@@ -76,6 +91,7 @@ const ROLE_PERMISSIONS: Partial<Record<Role, readonly Permission[]>> = {
     P.ADMIN_ACCESS,
     P.LISTINGS_VIEW,
     P.LISTINGS_MODERATE,
+    P.PUBLICATIONS_MODERATE,
     P.REPORTS_VIEW,
     P.REPORTS_RESOLVE,
     P.NOTIFICATIONS_VIEW,
@@ -84,7 +100,9 @@ const ROLE_PERMISSIONS: Partial<Record<Role, readonly Permission[]>> = {
   [ROLES.SUPPORT]: [
     P.ADMIN_ACCESS,
     P.ORDERS_VIEW,
+    P.TRANSACTIONS_READ_ALL,
     P.LISTINGS_VIEW,
+    P.PUBLICATIONS_READ,
     P.REPORTS_VIEW,
     P.NOTIFICATIONS_VIEW,
   ],

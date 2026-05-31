@@ -2,6 +2,8 @@ import type { ListingType } from '@/domains/marketplace/listings/domain/listing'
 
 export type MarketplaceListing = {
   id: string
+  /** Canonical publication id when sourced from discovery/publication feed */
+  publicationId?: string
   listingType: ListingType
   title: string
   price: number

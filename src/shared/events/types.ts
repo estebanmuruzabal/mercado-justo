@@ -35,6 +35,24 @@ export interface PayoutSentPayload {
   payoutUrl: string
 }
 
+export interface MarketplaceReviewCreatedPayload {
+  publicationId: string
+  reviewId: string
+  authorId: string
+}
+
+export interface MarketplaceTransactionConfirmedPayload {
+  transactionId: string
+  kind: string
+  buyerId: string
+  sellerId: string
+}
+
+export interface MarketplacePublicationPublishedPayload {
+  publicationId: string
+  ownerId: string
+}
+
 export interface AppNotificationEventMap {
   'order.created': OrderCreatedPayload
   'order.delivered': OrderDeliveredPayload
@@ -42,6 +60,9 @@ export interface AppNotificationEventMap {
   'moderation.reported': ModerationReportedPayload
   'shipment.delayed': ShipmentDelayedPayload
   'payout.sent': PayoutSentPayload
+  'marketplace.review.created': MarketplaceReviewCreatedPayload
+  'marketplace.transaction.confirmed': MarketplaceTransactionConfirmedPayload
+  'marketplace.publication.published': MarketplacePublicationPublishedPayload
 }
 
 export type AppNotificationEventType = keyof AppNotificationEventMap

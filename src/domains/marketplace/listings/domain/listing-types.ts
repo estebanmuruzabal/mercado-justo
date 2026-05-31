@@ -1,31 +1,38 @@
 /**
- * Canonical listing types — aligned with Supabase enum `listing_type`.
- * UI-only planned types (e.g. experience) live separately.
+ * @deprecated Import from `@/domains/marketplace/shared/domain/publication-type-registry` instead.
+ * Re-exports for backward compatibility during Publication migration.
  */
-export const DB_LISTING_TYPES = ['product', 'property', 'service'] as const
+import {
+  ALL_PUBLICATION_TYPE_CODES,
+  LEGACY_DB_LISTING_TYPES,
+  PERSISTABLE_PUBLICATION_TYPES,
+  UI_PUBLICATION_TYPES,
+  UI_PUBLICATION_TYPE_LABELS,
+  getPublicationTypeLabel,
+  isLegacyDbListingType,
+  type LegacyDbListingType,
+  type PublicationTypeCode,
+} from '@/domains/marketplace/shared/domain/publication-type-registry'
 
-export type DbListingType = (typeof DB_LISTING_TYPES)[number]
-
-/** Planned types shown in nav but not yet persisted in DB. */
-export const PLANNED_LISTING_TYPES = ['experience'] as const
-
-export type PlannedListingType = (typeof PLANNED_LISTING_TYPES)[number]
-
-export const LISTING_TYPES = [...DB_LISTING_TYPES, ...PLANNED_LISTING_TYPES] as const
-
-export type ListingType = (typeof LISTING_TYPES)[number]
-
-export const LISTING_TYPE_LABELS: Record<ListingType, string> = {
-  product: 'Productos',
-  property: 'Propiedades',
-  service: 'Servicios',
-  experience: 'Experiencias',
+export {
+  LEGACY_DB_LISTING_TYPES as DB_LISTING_TYPES,
+  type LegacyDbListingType as DbListingType,
+  UI_PUBLICATION_TYPES as LISTING_TYPES,
+  UI_PUBLICATION_TYPE_LABELS as LISTING_TYPE_LABELS,
+  getPublicationTypeLabel as getListingTypeLabel,
+  isLegacyDbListingType as isDbListingType,
+  PERSISTABLE_PUBLICATION_TYPES,
+  ALL_PUBLICATION_TYPE_CODES,
 }
 
-export function getListingTypeLabel(listingType: ListingType): string {
-  return LISTING_TYPE_LABELS[listingType]
-}
+/** @deprecated Use registry filter for non-persistable types instead. */
+export const PLANNED_LISTING_TYPES = ALL_PUBLICATION_TYPE_CODES.filter(
+  (code) => !PERSISTABLE_PUBLICATION_TYPES.includes(code),
+)
 
-export function isDbListingType(value: string): value is DbListingType {
-  return (DB_LISTING_TYPES as readonly string[]).includes(value)
-}
+export type PlannedListingType = Exclude<
+  PublicationTypeCode,
+  (typeof PERSISTABLE_PUBLICATION_TYPES)[number]
+>
+
+export type ListingType = PublicationTypeCode
