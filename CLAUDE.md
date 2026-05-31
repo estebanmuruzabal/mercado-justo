@@ -1,12 +1,68 @@
 # Next.js 15.3 + Supabase + TypeScript Best Practices
 
-## 🚀 Core Principles
+## Ditto Domain Architecture (obligatorio)
+
+Mercado Justo migra a Ditto. Toda contribución DEBE respetar arquitectura por dominios.
+
+### Estructura canónica
+
+- Código de negocio: `src/domains/{domain}/{submodule}/`
+- Infraestructura compartida: `src/shared/`
+- Rutas Next.js: `app/` (thin — solo composición, sin lógica de negocio)
+- Cada módulo expone API pública SOLO via `index.ts`
+
+### Capas internas (por módulo)
+
+| Capa | Contenido | Puede importar |
+|------|-----------|----------------|
+| `domain/` | entidades, policies, errores | `shared/types`, `shared/utils` |
+| `infrastructure/` | repos Supabase, adapters | `domain/`, `shared/database` |
+| `application/` | actions, queries, DTOs, events | `domain/`, `infrastructure/` |
+| `presentation/` | components, hooks, stores | `application/dto`, `shared/ui` |
+
+### Reglas de dependencia (NUNCA violar)
+
+1. `shared/` NO importa de `domains/`
+2. `domains/A` NO importa `domains/B/application` directamente — usar `shared/events` o puertos en `domain/`
+3. `app/` NO contiene queries Supabase — delegar a `domains/*/application`
+4. UI NO importa tipos desde `*.actions.ts` — usar `application/dto/`
+5. Server Actions viven en `domains/*/application/actions/`, NO en carpetas globales
+6. Supabase client: solo via `shared/database/supabase/{client,server,service}.ts`
+
+### Dominios y ownership
+
+- **auth**: sesión, login, recovery
+- **users**: perfiles, roles, admin de usuarios
+- **marketplace**: listings, categories, orders, checkout, reviews
+- **vendors**: tiendas, onboarding, storefront
+- **logistics**: shipments, delivery batches, fulfillment
+- **finance**: pagos, payouts (futuro)
+- **community**: notifications, followers, chat, channels, blogs, comments
+- **moderation**: reports, listing moderation
+- **subscriptions**: planes (futuro)
+- **dittobots**: Telegram y bots futuros
+
+### Naming
+
+- Archivos: `{verb}-{entity}.actions.ts`, `{entity}.queries.ts`, `{entity}.repository.ts`
+- DTOs: `{Entity}Dto`, `{Entity}Row` solo en `infrastructure/mappers`
+- Eventos: `{entity}.{past-tense}` (ej. `order.created`)
+- Terminología: **vendor/store** (no "seller" en código nuevo)
+
+### Prohibiciones
+
+- NO crear carpetas `server/actions`, `server/queries`, `lib/`, `components/features/` para código nuevo
+- NO duplicar tipos (ListingType, Role, Store) — buscar en `domain/` existente
+- NO hardcodear URLs — usar `shared/routing/routes.ts`
+- NO modificar DB sin migration en `supabase/migrations/`
+
+---
 
 ### 1. Type Generation is Non-Negotiable
 
 ```bash
 # After ANY schema change:
-supabase gen types --local > types/supabase.ts
+supabase gen types --local > src/shared/types/supabase.ts && cp src/shared/types/supabase.ts types/supabase.ts
 
 # Automate with git hooks:
 # .husky/pre-commit
@@ -99,7 +155,7 @@ When working with Supabase databases, **ALWAYS** use migrations for ANY schema c
 4. **After EVERY migration**:
     ```bash
     supabase db reset                          # Apply locally
-    supabase gen types --local > types/supabase.ts  # Update types
+    supabase gen types --local > src/shared/types/supabase.ts && cp src/shared/types/supabase.ts types/supabase.ts  # Update types
     ```
 5. **Example workflow for adding a field**:
     ```bash
@@ -593,7 +649,7 @@ async function PostsList() {
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "db:types": "supabase gen types --local > types/supabase.ts",
+    "db:types": "supabase gen types --local > src/shared/types/supabase.ts && cp src/shared/types/supabase.ts types/supabase.ts",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset"
   }
@@ -629,7 +685,7 @@ npm run test:coverage      # Generate coverage report
 
 # Database
 supabase db reset           # Reset + migrate
-supabase gen types --local > types/supabase.ts
+supabase gen types --local > src/shared/types/supabase.ts && cp src/shared/types/supabase.ts types/supabase.ts
 
 # UI Components
 npx shadcn@latest add       # Add components

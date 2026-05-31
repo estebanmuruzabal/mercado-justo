@@ -20,7 +20,7 @@
     "db:seed": "node scripts/db-seed.js",
     "db:seed:staging": "node scripts/db-seed-staging.js",
     "db:setup": "node scripts/db-setup.js",
-    "db:types": "supabase gen types --local > types/supabase.ts",
+    "db:types": "supabase gen types --local > src/shared/types/supabase.ts && cp src/shared/types/supabase.ts types/supabase.ts",
     "db:push": "supabase db push",
     "db:push:staging": "node scripts/db-push-staging.js",
     "env:check": "node scripts/check-env.js",

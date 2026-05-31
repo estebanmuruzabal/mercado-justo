@@ -1,0 +1,13 @@
+/** Public domain module registry. Import from `@/domains/{name}` only. */
+export * as auth from './auth'
+export * as users from './users'
+export * as vendors from './vendors'
+export * as dittobots from './dittobots'
+export * as logistics from './logistics'
+export * as moderation from './moderation'
+export * as marketplaceListings from './marketplace/listings'
+export * as marketplaceCategories from './marketplace/categories'
+export * as marketplaceOrders from './marketplace/orders'
+export * as marketplaceCheckout from './marketplace/checkout'
+export * as marketplaceReviews from './marketplace/reviews'
+export * as communityNotifications from './community/notifications'

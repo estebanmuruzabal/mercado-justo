@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatBuildTime } from '@/lib/build-info'
+import { formatBuildTime } from '@/shared/utils/build-info'
 
 describe('formatBuildTime', () => {
   it('formats ISO timestamps in UTC', () => {

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { registerUser, signIn, signOut } from '@/server/actions/auth'
-import { createClient } from '@/lib/supabase/server'
+import { registerUser, signIn, signOut } from '@/domains/auth/application/actions/auth'
+import { createClient } from '@/shared/database/supabase/server'
 
-vi.mock('@/lib/supabase/server')
+vi.mock('@/shared/database/supabase/server')
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(() => {
     throw new Error('NEXT_REDIRECT')
