@@ -181,3 +181,75 @@ export async function findRelationsByPublicationIds(
 
   return sortReadRows([...byRelationId.values()])
 }
+
+export type PublicationTypesAndOwner = {
+  id: string
+  publicationType: string
+  ownerType: string
+  ownerId: string
+}
+
+/** @internal — R5.2 create path only */
+export async function loadPublicationTypesAndOwner(
+  id: string,
+): Promise<PublicationTypesAndOwner | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('publication')
+    .select('id, publication_type, owner_type, owner_id')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return null
+
+  const row = data as Record<string, unknown>
+  return {
+    id: row.id as string,
+    publicationType: row.publication_type as string,
+    ownerType: row.owner_type as string,
+    ownerId: row.owner_id as string,
+  }
+}
+
+/** @internal — R5.2 create path only */
+export async function existsUsesRelation(
+  sourcePublicationId: string,
+  targetPublicationId: string,
+): Promise<boolean> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('publication_relation')
+    .select('id')
+    .eq('source_publication_id', sourcePublicationId)
+    .eq('target_publication_id', targetPublicationId)
+    .eq('relation_type', 'uses')
+    .maybeSingle()
+
+  if (error) throw error
+  return data !== null
+}
+
+/** @internal — R5.2 create path only */
+export async function insertUsesRelation(params: {
+  sourcePublicationId: string
+  targetPublicationId: string
+  metadata?: Record<string, unknown>
+  createdBy?: string | null
+}): Promise<PublicationRelation> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('publication_relation')
+    .insert({
+      source_publication_id: params.sourcePublicationId,
+      target_publication_id: params.targetPublicationId,
+      relation_type: 'uses',
+      metadata_json: params.metadata ?? {},
+      created_by: params.createdBy ?? null,
+    } as never)
+    .select(RELATION_SELECT)
+    .single()
+
+  if (error) throw error
+  return mapRelationRow(data as Record<string, unknown>)
+}

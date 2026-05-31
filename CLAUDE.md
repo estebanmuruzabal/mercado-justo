@@ -182,6 +182,312 @@ Pre-flight audit found zero call sites for `PublicationComposition` / `legacyCom
 - **C5 runtime boundary:** `Object.keys(relationsModule) === ['resolveRelationSnapshots']` only
 - **No shared registry consumers remaining** — `shared/domain/relation-type-registry.ts` deleted (R4.0)
 
+**R5.0 — Write model & governance audit (2026-05-31):**
+
+Read path mature (R3–R4); **zero application write paths** for `publication_relation`. Graph edges today are migration-seeded only; active commerce/hierarchy stranglers bypass Relations BC.
+
+#### A — Current write model map
+
+| Operation | Location | Used? | Classification |
+|-----------|----------|-------|----------------|
+| CREATE `publication_relation` | `supabase/migrations/20260601120000_marketplace_pragmatic_evolution.sql` L234–248 (from `publication_composition`) | One-time migration | **Legacy** (SQL-only) |
+| CREATE app path | — | No | **Missing** |
+| UPDATE app path | — | No | **Missing** |
+| DELETE app path | — | No | **Missing** |
+| SELECT app path | `relations/infrastructure/relation.repository.ts` | Yes (Relations BC internal) | **Active** (read-only) |
+| CREATE `listing_variant` | `listings/application/actions/listing-manager.actions.ts` L251–394 | Yes (seller dashboard) | **Legacy** — wrong BC for graph edges |
+| CREATE/sync `offer` / `offer_variant` | Offer migrations + triggers | Yes (read via Offer BC) | **Legacy** — canonical for commercial variants |
+| Recipe ingredients | `attributes_json` (`types/definitions/recipe.ts`) | Yes (implicit) | **Legacy** — not graph-modeled |
+| `parent_publication_id` | `publication` row / listing-adapter | Read-only mapping | **Legacy** — parallel hierarchy strangler |
+| `publication_composition` table | Migration L169–180; no app references | Orphan table post-migration | **Dead** |
+| `assertNotSelfRelation`, `isAllowedRelation` | `relation-policy.ts`, registry | Tests only | **Dead** (not wired to writes) |
+| `RelationDto` | `application/dto/relation.dto.ts` | Unused | **Dead** |
+| `isActive` on relation | Domain entity; repo hardcodes `true` | Partial | **Missing** — DB column not landed (R3.2 B3) |
+| Write RLS on `publication_relation` | — | Default deny | **Missing** |
+
+**Relations BC file inventory:** 11 files under `relations/**`; no `application/actions/` or `application/commands/`; repository has no `.insert/.update/.delete/.upsert`.
+
+#### B — Ownership audit
+
+**Read model (explicit):** private edge authority = **source publication owner** (`store`/`user` via `owner_id = auth.uid()`), plus staff (`is_staff()`) and app admin/serviceRole bypass. Target owner has **no role** in read auth.
+
+| Action | Current rule | Explicit? |
+|--------|--------------|-----------|
+| Create relation | None — RLS default deny | No |
+| Update relation | None | No |
+| Delete relation | None | No |
+| Read public edge | Visibility + endpoint lifecycle (`relation-policy.ts`) | Yes |
+| Read private edge | Source owner / admin / staff | Yes |
+| Cascade on publication delete | FK `ON DELETE CASCADE` (both endpoints) | Yes (DB) |
+| `created_by` column | Exists in schema; never set by app | Implicit only |
+
+**Implicit rules:** org-owned publications denied at read auth (no org in RLS); serviceRole allowed in app but denied at DB when using user JWT (documented R3.4 gap). Write ownership **undefined** — design assumes source owner authority for CREATE/UPDATE/DELETE.
+
+#### C — Relation invariant matrix
+
+| RelationType | Self (A→A) | Duplicate (A→B×2) | Inverse (A→B + B→A) | Cycle | Cardinality | Overall |
+|--------------|------------|-------------------|---------------------|-------|-------------|---------|
+| `uses` | Not enforced (domain fn exists, test-only) | **Enforced** (DB UNIQUE) | Blocked by type pairing (recipe→product only) | Not enforced | N:N implicit | **Partial** |
+| `hosted_at` | Not enforced | **Enforced** | Blocked (property cannot source) | Not enforced | N:N implicit | **Partial** |
+| `promotes` | Not enforced | **Enforced** | Blocked by type pairing | Not enforced | N:N implicit | **Partial** |
+| `maintains` | Not enforced | **Enforced** | Blocked by type pairing | Not enforced | N:N implicit | **Partial** |
+| `commercial_variant_of` | Not enforced | **Enforced** | **Possible** (A→B and B→A are distinct rows) | **Possible** | 1:N intended, not enforced | **Partial**; **deprecated** (Offer BC canonical) |
+
+**Enforcement layers:** DB enforces `relation_type` CHECK + UNIQUE `(source, target, type)`. Domain `isAllowedRelation()` and `assertNotSelfRelation()` exist but are **not invoked** on any write path. No cycle detection.
+
+#### D — Governance model (design only — not implemented)
+
+| Action | Source owner | Staff | Service role | Target owner |
+|--------|--------------|-------|--------------|--------------|
+| Create | Allow if `canEditPublication(source)` + `isAllowedRelation` + invariants | Allow | Allow (migrations/backfill) | Deny; optional consent for cross-vendor `uses` |
+| Update metadata/visibility/schedule | Allow | Allow | Allow | Deny |
+| Delete / soft-disable | Allow | Allow | Allow | Deny |
+| Read private | Allow | Allow (`is_staff`) | App-only (JWT gap) | Deny |
+
+**Conflicts:** (1) cross-vendor `uses` — recipe links another vendor's product; (2) `commercial_variant_of` writes must be **rejected** — Offer/listing_variant strangler owns variants; (3) org owner write should mirror read deny; (4) no relation-level moderation — staff override needed for writes.
+
+#### E — Write API pressure
+
+| Use case | Exists today? | Where | Classification |
+|----------|---------------|-------|----------------|
+| Commercial variants | Yes | `listing_variant` + Offer BC | **Unnecessary** (Relations) |
+| Recipe → product (`uses`) | No (ingredients in JSON) | `recipe.ts` attributes | **Future** — recipe editor |
+| Event → property (`hosted_at`) | No | Registry only | **Future** |
+| Channel → product (`promotes`) | No | Registry only | **Future** |
+| Service → property (`maintains`) | No | Registry only | **Future** |
+| Bundles / contains | No | Not in registry | **Future** (new type?) |
+| Discovery feed graph writes | No | R4.2 STOP | **Unnecessary** |
+
+**No Immediate write consumers.** Pressure is **Future**, gated by publication-type editors (recipe, event, channel).
+
+#### F — Proposed architecture (R5.1+ — do not create files until scoped)
+
+```text
+relations/
+├── application/
+│   ├── commands/           # create / update / deactivate-relation (internal Server Actions)
+│   ├── auth/
+│   │   ├── relation-read-authorization.service.ts   # exists
+│   │   └── relation-write-authorization.service.ts  # NEW — source-owner authority
+│   └── queries/relation.queries.ts                  # exists
+├── domain/
+│   ├── policies/relation-policy.ts                  # exists
+│   ├── policies/relation-write-policy.ts            # NEW — wire assertNotSelfRelation, isAllowedRelation
+│   └── invariants/relation-invariants.ts            # NEW — deprecated type rejection, cycle guard
+└── index.ts                                         # C5 unchanged — resolveRelationSnapshots only
+```
+
+**C5 compatibility:** write commands stay **internal** to Relations BC (called from Publication/Listings editors). Do **not** add runtime exports to `relations/index.ts`. Same pattern as Offer (no public write on boundary).
+
+#### R5.0 risks
+
+1. **YAGNI** — implementing writes without a consumer repeats R4.x premature-expansion lesson.
+2. **Cross-vendor consent** — `uses` across vendors needs product policy before commands.
+3. **Strangler overlap** — variants/ingredients must not duplicate Offer BC or JSON attributes.
+4. **C5 erosion** — leaking write exports or deep command imports breaks boundary tests.
+5. **Schema gap** — no write RLS, no `is_active` column; R5.1 needs SQL phase before app writes.
+
+#### R5.0 recommendation
+
+**Proceed to R5.1 (conditional)** — not immediate implementation.
+
+Implement write commands when the **first Future use case is scoped** (likely recipe editor `uses` edges). Until then: retain this audit, keep C5 intact, wire read path first when Discovery/detail needs graph data (R4.2′).
+
+#### H — Editor ROI ranking
+
+Prioritizes which publication-type editor should become the **first real write-model consumer** (R5.2 scope). Evidence from type registry, editor plugins, and strangler state.
+
+| Feature | Relation type | User value | Technical cost | Triggers R5.2? | Classification |
+|---------|---------------|------------|----------------|----------------|----------------|
+| **Recipe Editor** | `uses` (recipe → product) | **High** — `COMPOSABLE` capability; recipe→product commerce funnel; replaces `ingredients` JSON strangler; migration already mapped `base_recipe` → `uses` | **Medium** — `ListingManager` wired for recipe; products/Offer/checkout mature; needs recipe-specific ingredient picker + cross-vendor link policy (consent deferred MVP) | **Yes — first** | **Build Now** |
+| **Event Editor** | `hosted_at` (event/experience → property) | **Medium–High** — DittoWorld ecosystem; checkout already branches on `event`/`experience` types | **Medium–High** — `venue` still in JSON (`event.ts` placeholder); property targets persistable; generic `ListingManager` only; DittoWorld editor TBD | **Yes — second** | **Near Future** |
+| **Service Maintenance** | `maintains` (service → property) | **Low–Medium** — niche property-ops / B2B; no product surface today | **Medium** — service + property both persistable via `ListingManager`; no maintenance UX spec | **Yes — third** | **Long Term** |
+| **Channel Promotion** | `promotes` (channel → product/event/project) | **Medium** — community curation; multi-target discovery value | **High** — `channel.isPersistable = false`; `channel.editor` referenced but **no editor files exist**; needs persistable migration + full editor + multi-target picker | **No** (blocked) | **Long Term** |
+
+**Scoring rationale:**
+
+- **Recipe wins** on readiness: only candidate with explicit `COMPOSABLE` capability, active strangler to replace (`RECIPE_TYPE_DEFINITION.ingredients`), and mature target type (`product` + Offer BC). Registry type pairing (`recipe` → `product`) matches domain model.
+- **Event ranks second** on product value but **`event.ts` is a placeholder** (“Replace with full editor UI when DittoWorld event flows ship”); `hosted_at` blocked until venue moves from JSON to graph.
+- **Channel blocked** — not persistable, no editor implementation; `promotes` multi-target adds UI cost without foundation.
+- **Service maintenance** — both endpoint types exist in market but no user story or editor differentiation; lowest ROI vs recipe/event.
+
+**First real write-model consumer:**
+
+```text
+Recipe Editor → uses → product
+```
+
+Hypothesis **confirmed**. R5.2 should scope to: write RLS + `create-relation` command + recipe editor ingredient→product linking; defer `hosted_at`, `promotes`, `maintains` until their editors ship.
+
+**Sequencing:**
+
+| Phase | Scope |
+|-------|-------|
+| R5.1 | Write governance design + SQL (write RLS, optional `is_active`) — no editor |
+| R5.2 | Recipe `uses` create-only — **first write consumer** |
+| R5.2b | `uses` delete + DELETE RLS |
+| R5.3 | Grower network + protocol governance (design-only) |
+| R5.4+ | USABLE `uses`, Grower library RLS, Protocol Editor UI |
+
+**R5.2 — Recipe uses create-only MVP (2026-05-31):**
+
+Write model scoped exclusively to **INSERT `uses`** (recipe → product). Delete deferred to **R5.2b**.
+
+#### Source of truth (ingredients)
+
+| Ingredient Type | Source of Truth |
+|-----------------|-----------------|
+| Linked Product | Graph (`uses` edge) |
+| Free Ingredient | `attributes_json.ingredients[]` |
+
+Rules: linked products must **not** duplicate in JSON (`productPublicationId`, `targetPublicationId`, `linkedProductId`, `relationId` forbidden when graph-linked). Enforcement: `relations/domain/invariants/recipe-ingredient-source-of-truth.ts`.
+
+#### Stable ingredient identity
+
+| Kind | Primary identity | Prohibited |
+|------|------------------|------------|
+| Linked | `relationId` | name, array index, `sort_order` |
+| Free | uuid in JSON `id` | name, array index, `sort_order` |
+
+Contract: `relations/domain/contracts/recipe-ingredient-identity.ts`.
+
+#### Migration exit strategy
+
+| Phase | State |
+|-------|-------|
+| Phase 1 (R5.2) | JSON + Graph coexist — linked products graph-only |
+| Phase 2 | Linked: graph only; free: JSON only |
+| Phase 3 | **Recommend partial permanent coexistence** — free ingredients stay JSON; linked stay graph |
+
+#### Write surface (R5.2)
+
+| Component | Path |
+|-----------|------|
+| Create command (internal) | `application/commands/create-uses-relation.command.ts` |
+| Write auth | `application/auth/relation-write-authorization.service.ts` — `canCreateUsesRelation` |
+| Invariants | `domain/policies/uses-write-policy.ts` |
+| Repo (minimal) | `loadPublicationTypesAndOwner`, `existsUsesRelation`, `insertUsesRelation` |
+| RLS INSERT | `20260604120000_publication_relation_uses_write_rls.sql` |
+
+**Not in R5.2:** `deleteUsesRelation`, DELETE RLS, publication recipe DTO, generic write infrastructure.
+
+**C5:** `relations/index.ts` unchanged — runtime export `resolveRelationSnapshots` only. Commands are internal.
+
+**Deferred debt:** cross-vendor target consent; delete path (R5.2b).
+
+**Rollback (R5.2 INSERT policies only):**
+
+```sql
+DROP POLICY IF EXISTS publication_relation_insert_uses_source_owner ON public.publication_relation;
+DROP POLICY IF EXISTS publication_relation_insert_uses_staff ON public.publication_relation;
+```
+
+**R5.3 — Ditto Grower Network & Protocol Governance (2026-05-31, design-only):**
+
+Policy modules + docs only. **No** UI, pairing backend, SQL, Offer BC changes, or `relations/index.ts` (C5) changes.
+
+#### Fundamental principle
+
+**Ditto Grower is not a manual role.** Grower = operational membership in the Ditto network, derived from **DittoBot ownership** (≥1 registered bot). Marketplace **Seller ≠ Grower** — independent capabilities; Grower does not inherit from store/seller.
+
+```text
+Usuario → Registra DittoBot → Red Ditto → isGrowerMember → Protocolos / Biblioteca / Herramientas
+```
+
+Rejected model: `Usuario → Compra → Recetas` or `setRole('ditto-grower')`.
+
+#### WP0 — DittoBot ownership & Grower activation
+
+| Path | Role |
+|------|------|
+| `dittobots/domain/ditto-bot-ownership-port.ts` | `DittoBotOwnershipPort.countByUserId` |
+| `dittobots/domain/ditto-bot-ownership.stub.ts` | Returns `0` until pairing (R5.5+) |
+| `dittobots/domain/grower-capability.ts` | `hasDittoBot`, `canAccessGrowerFeatures`, `isGrowerMember` |
+
+| Condition | Effect |
+|-----------|--------|
+| `dittoBotCount > 0` | Grower features enabled |
+| `dittoBotCount = 0` | Create/edit suspended; existing protocols retained |
+| Super-admin | `isSuperAdmin()` bypass — **not** `is_staff()` for Grower/protocol |
+
+#### WP0.5 — Grower Network (design only)
+
+Super Admin future section: **Ditto Growers** — dashboard, approximate map, health monitoring. Policies: `canViewGrowerNetwork`, `canContactGrower`, `canSuspendGrowerAccess` (**super-admin only**). Types: `GrowerNetworkMemberSummary`, `GrowerMapPin`, `deriveGrowerHealth(signals)`.
+
+| Health | Meaning |
+|--------|---------|
+| `healthy` | OK |
+| `attention_required` | Sensors/errors need review |
+| `assistance_required` | Offline bots / failing protocols / out-of-range |
+
+**Deferred:** UI (R5.6+), real telemetry (R5.6+), pairing (R5.5+).
+
+#### WP1 — Protocol governance (`recipe-protocol-policy.ts`)
+
+Recipe publication type = **Ditto Protocol**. `owner_type = 'user'` only — never store/seller.
+
+**Visibility — community library**
+
+| State | Who can view |
+|-------|----------------|
+| Approved + `published` + `visibility = public` | All Growers + super-admin |
+| Draft / pending / rejected / non-approved | Author + super-admin only |
+| Public / normal user / seller | **No** (Discovery excludes `recipe` always) |
+
+**Moderation — `isSuperAdmin()` ONLY** (never moderator/support/`is_staff()`)
+
+```text
+Draft → Submitted (pending_review) → Approved → Published
+                 ↘ Rejected
+```
+
+| Action | Grower (with bot) | Super-admin |
+|--------|-------------------|-------------|
+| Create / edit own draft | Yes | Yes |
+| Submit for review | Yes | Yes |
+| Approve / reject / archive | No | Yes |
+| Moderate third parties | No | Yes |
+
+**Not wired in R5.3:** `relation-write-authorization` — store-owner shim remains for R5.2 `uses` INSERT.
+
+#### WP2 — Semantic reframe
+
+- `types/definitions/recipe.ts` — protocol framing; v2 attribute rename table (comments only)
+- `publication-type-registry` — `displayName: 'Protocolos'`, `ecosystem: 'bots'`
+
+#### WP3 — Relations BC (docs)
+
+Symbols `recipe-ingredient-*` unchanged until R5.4. Comments use **protocol input** language. R5.2 **product-only** `uses` shim documented; do not expand in R5.3.
+
+#### WP4 — USABLE roadmap (R5.4)
+
+```text
+recipe → uses → target
+```
+
+| Phase | Target |
+|-------|--------|
+| R5.2 (code) | `product` only |
+| R5.3 | Document transition |
+| R5.4 | `USABLE` capability — product, resource, service, dittobot, project |
+
+#### Sequencing (updated)
+
+| Phase | Scope |
+|-------|-------|
+| R5.2 | `uses` create-only (product shim) |
+| R5.2b | `uses` delete + DELETE RLS |
+| **R5.3** | Grower + protocol **policies & docs** (this section) |
+| R5.4 | USABLE `uses` + Grower library RLS + wire grower auth to writes |
+| R5.5+ | DittoBot pairing UI + Protocol Editor |
+| R5.6+ | Grower Network dashboard UI + telemetry |
+
+#### R5.3 STOP GATE
+
+**In scope:** policy modules, tests, port stub, CLAUDE/docs, comment reframe.
+
+**Out of scope:** Recipe Editor UI, pairing, telemetry, dashboard UI, SQL, Offer BC, C5 exports, `uses` target expansion, manual `ditto-grower` role.
+
 ### Marketplace Discovery — Canonical Read Ownership Rule
 
 Marketplace tiene **una sola fuente canónica por fase** (`DISCOVERY_SOURCE`):

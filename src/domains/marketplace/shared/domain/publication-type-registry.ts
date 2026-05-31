@@ -79,8 +79,9 @@ export const PUBLICATION_TYPE_REGISTRY = {
   },
   recipe: {
     code: 'recipe',
-    displayName: 'Recetas',
-    ecosystem: 'life',
+    /** Ditto Protocol — Grower network; not marketplace gastronomy. */
+    displayName: 'Protocolos',
+    ecosystem: 'bots',
     capabilities: [cap.REVIEWABLE, cap.COMPOSABLE, cap.FOLLOWABLE],
     defaultOfferModel: 'none',
     isPersistable: true,
