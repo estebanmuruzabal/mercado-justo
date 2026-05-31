@@ -1,13 +1,13 @@
 /**
  * @deprecated Strangler re-export — migrate consumers off this path.
- * TODO(R3.3): migrate publication-composition.ts (needs relationTypeFromLegacyComposition).
  * TODO(R4.0): remove this re-export once all consumers migrate.
  *
  * Active consumers (outside Relations BC — do not remove until migrated):
- * - src/domains/marketplace/publication/domain/entities/publication-composition.ts
- *   imports: RelationType, relationTypeFromLegacyComposition
  * - test/domains/marketplace/discovery/discovery-evolution.test.ts
  *   imports: isAllowedRelation, relationTypeFromLegacyComposition
+ *
+ * Removed in R3.3 (Plan A — dead code, zero call sites):
+ * - publication-composition.ts (entity + legacyCompositionToRelationType)
  *
  * Verified canonical paths (Relations BC):
  * - Registry source module:

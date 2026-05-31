@@ -1,5 +1,4 @@
 export * from './domain/entities/publication'
-export * from './domain/entities/publication-composition'
 export * from './domain/events/publication-events'
 export * from './domain/value-objects/owner-ref'
 export * from './domain/value-objects/seo-metadata'
