@@ -1,15 +1,15 @@
 import type { DittoBotOwnershipPort } from './ditto-bot-ownership-port'
-import { stubDittoBotOwnershipPort } from './ditto-bot-ownership.stub'
+import { supabaseDittoBotOwnershipRepository } from '../infrastructure/supabase-ditto-bot-ownership.repository'
 
-let ownershipPort: DittoBotOwnershipPort = stubDittoBotOwnershipPort
+let ownershipPort: DittoBotOwnershipPort = supabaseDittoBotOwnershipRepository
 
-/** Test / future DI hook — does not affect production until pairing wires a real port. */
+/** Test / DI hook. */
 export function setDittoBotOwnershipPort(port: DittoBotOwnershipPort): void {
   ownershipPort = port
 }
 
 export function resetDittoBotOwnershipPort(): void {
-  ownershipPort = stubDittoBotOwnershipPort
+  ownershipPort = supabaseDittoBotOwnershipRepository
 }
 
 export function getDittoBotOwnershipPort(): DittoBotOwnershipPort {
@@ -17,8 +17,8 @@ export function getDittoBotOwnershipPort(): DittoBotOwnershipPort {
 }
 
 /**
- * True when the user owns at least one registered DittoBot.
- * Grower membership is operational (red Ditto), not a manual role assignment.
+ * True when the user owns at least one registered DittoBot (any status).
+ * Prefer {@link hasActiveDittoBot} for grower gating.
  */
 export async function hasDittoBot(
   userId: string,
@@ -29,14 +29,25 @@ export async function hasDittoBot(
 }
 
 /**
- * Grower feature gate — requires DittoBot ownership.
+ * True when the user owns at least one activated DittoBot — canonical grower gate (R5.4).
+ */
+export async function hasActiveDittoBot(
+  userId: string,
+  port: DittoBotOwnershipPort = ownershipPort,
+): Promise<boolean> {
+  const count = await port.countActiveByUserId(userId)
+  return count > 0
+}
+
+/**
+ * Grower feature gate — requires activated DittoBot ownership.
  * Losing all bots suspends create/edit; existing protocols are retained (policy in publication BC).
  */
 export async function canAccessGrowerFeatures(
   userId: string,
   port: DittoBotOwnershipPort = ownershipPort,
 ): Promise<boolean> {
-  return hasDittoBot(userId, port)
+  return hasActiveDittoBot(userId, port)
 }
 
 /** Semantic alias: operational membership in the Ditto Grower network. */

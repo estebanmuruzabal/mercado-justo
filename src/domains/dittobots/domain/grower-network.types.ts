@@ -1,11 +1,30 @@
+import type { DittoBotInventoryStatus } from './ditto-bot-inventory-unit'
+
 export type GrowerHealthStatus = 'healthy' | 'attention_required' | 'assistance_required'
 
 /**
- * Super Admin dashboard row (R5.3 design — no UI / telemetry yet).
+ * Primary map unit — device-centric (replaces user-only GrowerMapPin for future maps).
+ */
+export type PublicDittoDeviceMapPin = {
+  deviceId: string
+  ownerUserId: string
+  model: string
+  subtype: string | null
+  friendlyName: string | null
+  location: { lat: number; lng: number; region: string }
+  status: DittoBotInventoryStatus
+  isPublicOnMap: true
+  activeProtocolId?: string
+  activeProductionId?: string
+}
+
+/**
+ * Aggregated grower summary — derived from devices, not primary map source.
  */
 export type GrowerNetworkMemberSummary = {
   userId: string
-  dittoBotCount: number
+  deviceCount: number
+  publicDeviceCount: number
   activeProtocolCount: number
   healthStatus: GrowerHealthStatus
   approximateLocation?: {
@@ -15,7 +34,10 @@ export type GrowerNetworkMemberSummary = {
   }
 }
 
-/** Administrative map pin — approximate location only (fuzzed). */
+/**
+ * @deprecated R5.3 user-centric pin — use {@link PublicDittoDeviceMapPin} for future maps.
+ * Kept for backward compatibility in tests and admin prototypes.
+ */
 export type GrowerMapPin = {
   growerUserId: string
   approximateLocation: {

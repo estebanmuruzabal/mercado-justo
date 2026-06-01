@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
+  Bot,
+  BookOpen,
   HelpCircle,
   Settings,
   User,
@@ -18,7 +20,9 @@ import { cn } from '@/shared/utils/utils'
 import { signOutClient } from '@/domains/auth/domain/auth/sign-out-client'
 import {
   BECOME_VENDOR_PATH,
+  PROFILE_DITTOBOTS_PATH,
   PROFILE_PATH,
+  RECETAS_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_SALES_PATH,
   VENDOR_INFORMATION_PATH,
@@ -66,6 +70,7 @@ export function UserMenu({
   const supabase = createClient()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSeller, setIsSeller] = useState(false)
+  const [isGrower, setIsGrower] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [checkingSeller, setCheckingSeller] = useState(true)
 
@@ -81,21 +86,23 @@ export function UserMenu({
         if (!user) {
           if (!cancelled) setIsAuthenticated(false)
           if (!cancelled) setIsSeller(false)
+          if (!cancelled) setIsGrower(false)
           if (!cancelled) setCheckingSeller(false)
           return
         }
 
         if (!cancelled) setIsAuthenticated(true)
-        const { data: storeRow } = await supabase
-          .from('store')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle()
+        const [storeResult, growerResult] = await Promise.all([
+          supabase.from('store').select('id').eq('id', user.id).maybeSingle(),
+          fetch('/api/grower-status').then((r) => r.json() as Promise<{ isGrower?: boolean }>),
+        ])
 
-        if (!cancelled) setIsSeller(Boolean(storeRow))
+        if (!cancelled) setIsSeller(Boolean(storeResult.data))
+        if (!cancelled) setIsGrower(Boolean(growerResult.isGrower))
       } catch {
         if (!cancelled) setIsAuthenticated(false)
         if (!cancelled) setIsSeller(false)
+        if (!cancelled) setIsGrower(false)
       } finally {
         if (!cancelled) setCheckingAuth(false)
         if (!cancelled) setCheckingSeller(false)
@@ -129,6 +136,16 @@ export function UserMenu({
 
     if (actionKey === 'signup') {
       router.push(signUpPathWithCallback(pathname))
+      return
+    }
+
+    if (actionKey === 'dittobots') {
+      router.push(PROFILE_DITTOBOTS_PATH)
+      return
+    }
+
+    if (actionKey === 'recetas') {
+      router.push(RECETAS_PATH)
       return
     }
 
@@ -168,6 +185,9 @@ export function UserMenu({
 
   function isActiveItem(itemId: string) {
     if (itemId === 'signin' || itemId === 'signup') return false
+    if (itemId === 'dittobots') return pathname.startsWith(PROFILE_DITTOBOTS_PATH)
+    if (itemId === 'recetas') return pathname.startsWith(RECETAS_PATH)
+
     if (itemId === 'perfil' || itemId === 'configuracion') return pathname === PROFILE_PATH
     if (itemId === 'anfitrion') return pathname === BECOME_VENDOR_PATH
 
@@ -189,8 +209,15 @@ export function UserMenu({
     { id: 'ayuda', label: 'Centro de ayuda', icon: HelpCircle },
   ]
 
+  const growerItems: Array<{ id: string; label: string; icon: LucideIcon } | { divider: true }> =
+    isGrower
+      ? [{ id: 'recetas', label: 'Recetas', icon: BookOpen }]
+      : []
+
   const authenticatedItems: Array<{ id: string; label: string; icon: LucideIcon } | { divider: true }> = [
     { id: 'perfil', label: 'Perfil', icon: User },
+    { id: 'dittobots', label: 'Mis DittoBots', icon: Bot },
+    ...growerItems,
     { divider: true },
     { id: 'configuracion', label: 'Configuración de la cuenta', icon: Settings },
     { id: 'ayuda', label: 'Centro de ayuda', icon: HelpCircle },

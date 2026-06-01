@@ -184,14 +184,24 @@ Pre-flight audit found zero call sites for `PublicationComposition` / `legacyCom
 
 **R5.0 — Write model & governance audit (2026-05-31):**
 
-Read path mature (R3–R4); **zero application write paths** for `publication_relation`. Graph edges today are migration-seeded only; active commerce/hierarchy stranglers bypass Relations BC.
+Read path mature (R3–R4). **Historical snapshot below** — updated by R5.2 (uses INSERT), R5.4 (Grower onboarding), R5.4a (activation RPC + recipe INSERT RLS).
 
-#### A — Current write model map
+#### R5.0 status after R5.2 / R5.4a (current)
+
+| Item | R5.0 said | Current (2026-06-06) |
+|------|-----------|----------------------|
+| CREATE app path (`uses`) | Missing | **Shipped** — `create-uses-relation.command.ts` (internal) |
+| Write RLS `publication_relation` | Missing | **Partial** — INSERT `uses` only ([`20260604120000`](supabase/migrations/20260604120000_publication_relation_uses_write_rls.sql)); DELETE deferred R5.2b |
+| UPDATE/DELETE app paths | Missing | **Missing** (unchanged) |
+| DittoBot activation | N/A | **RPC** [`activate_ditto_bot_unit`](supabase/migrations/20260606120000_ditto_bot_activation_rpc.sql) — no broad `select_for_activation` |
+| Recipe protocol INSERT RLS | N/A | **RESTRICTIVE** [`publication_insert_recipe_requires_grower`](supabase/migrations/20260606130000_publication_recipe_insert_grower_rls.sql) |
+
+#### A — Current write model map (historical R5.0 + annotations)
 
 | Operation | Location | Used? | Classification |
 |-----------|----------|-------|----------------|
 | CREATE `publication_relation` | `supabase/migrations/20260601120000_marketplace_pragmatic_evolution.sql` L234–248 (from `publication_composition`) | One-time migration | **Legacy** (SQL-only) |
-| CREATE app path | — | No | **Missing** |
+| CREATE app path | `relations/application/commands/create-uses-relation.command.ts` | Yes (recipe→product) | **Active** (R5.2 internal) |
 | UPDATE app path | — | No | **Missing** |
 | DELETE app path | — | No | **Missing** |
 | SELECT app path | `relations/infrastructure/relation.repository.ts` | Yes (Relations BC internal) | **Active** (read-only) |
@@ -203,7 +213,7 @@ Read path mature (R3–R4); **zero application write paths** for `publication_re
 | `assertNotSelfRelation`, `isAllowedRelation` | `relation-policy.ts`, registry | Tests only | **Dead** (not wired to writes) |
 | `RelationDto` | `application/dto/relation.dto.ts` | Unused | **Dead** |
 | `isActive` on relation | Domain entity; repo hardcodes `true` | Partial | **Missing** — DB column not landed (R3.2 B3) |
-| Write RLS on `publication_relation` | — | Default deny | **Missing** |
+| Write RLS on `publication_relation` | INSERT `uses` (owner + staff) | Partial (R5.2) | **Partial** — DELETE deferred R5.2b |
 
 **Relations BC file inventory:** 11 files under `relations/**`; no `application/actions/` or `application/commands/`; repository has no `.insert/.update/.delete/.upsert`.
 
@@ -487,6 +497,32 @@ recipe → uses → target
 **In scope:** policy modules, tests, port stub, CLAUDE/docs, comment reframe.
 
 **Out of scope:** Recipe Editor UI, pairing, telemetry, dashboard UI, SQL, Offer BC, C5 exports, `uses` target expansion, manual `ditto-grower` role.
+
+#### R5.4 — DittoBot Inventory, Activation & Grower Onboarding MVP (2026-05-31)
+
+**Shipped:** `ditto_bot_inventory_unit` table + user location columns, real `DittoBotOwnershipPort`, `hasActiveDittoBot`, admin `/admin/dittobots`, user `/profile/dittobots`, `/recetas` MVP, device geolocation (WP4.5), grower library RLS.
+
+**Grower gate:** `isGrowerMember(userId)` via `countActiveByUserId` (`status = 'activated'`) — not manual role.
+
+**Device location:** property of the **device**, not the user. Snapshot on activation when `inherits_user_location = true`; changes to user profile do not auto-propagate.
+
+**C5 unchanged:** `relations/index.ts` exports `resolveRelationSnapshots` only. `createUsesRelation` wired internally from `create-recipe-protocol.actions.ts`.
+
+**Migrations:**
+- `20260605115000_add_user_location.sql`
+- `20260605120000_create_ditto_bot_inventory.sql`
+- `20260605130000_publication_recipe_grower_rls.sql`
+
+**Routes:** `ADMIN_DITTOBOT_INVENTORY_PATH`, `PROFILE_DITTOBOTS_PATH`, `RECETAS_PATH`
+
+**UI spec:** `docs/dittobot-ui-spec.md` · Manual checklist: `docs/r5.4-manual-checklist.md`
+
+**R5.4 STOP GATE:** no community map UI, no telemetry, no pairing token, no USABLE expansion (→ R5.5), no Offer BC / C5 changes.
+
+**Rollback (inventory RLS only):**
+```sql
+DROP TABLE IF EXISTS public.ditto_bot_inventory_unit;
+```
 
 ### Marketplace Discovery — Canonical Read Ownership Rule
 

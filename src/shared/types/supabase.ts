@@ -253,6 +253,63 @@ export type Database = {
         }
         Relationships: []
       }
+      ditto_bot_inventory_unit: {
+        Row: {
+          activated_at: string | null
+          activation_code: string
+          created_at: string
+          friendly_name: string | null
+          id: string
+          inherits_user_location: boolean
+          is_public_on_map: boolean
+          location_lat: number | null
+          location_lng: number | null
+          location_region: string | null
+          model: string
+          owner_user_id: string | null
+          serial_number: string
+          status: string
+          subtype: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          activation_code: string
+          created_at?: string
+          friendly_name?: string | null
+          id?: string
+          inherits_user_location?: boolean
+          is_public_on_map?: boolean
+          location_lat?: number | null
+          location_lng?: number | null
+          location_region?: string | null
+          model: string
+          owner_user_id?: string | null
+          serial_number: string
+          status: string
+          subtype?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          activation_code?: string
+          created_at?: string
+          friendly_name?: string | null
+          id?: string
+          inherits_user_location?: boolean
+          is_public_on_map?: boolean
+          location_lat?: number | null
+          location_lng?: number | null
+          location_region?: string | null
+          model?: string
+          owner_user_id?: string | null
+          serial_number?: string
+          status?: string
+          subtype?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listing: {
         Row: {
           category_id: string
@@ -1532,6 +1589,9 @@ export type Database = {
           full_name: string | null
           id: string
           last_access_at: string | null
+          location_lat: number | null
+          location_lng: number | null
+          location_region: string | null
           role: string
           status: string
           suspended_at: string | null
@@ -1546,6 +1606,9 @@ export type Database = {
           full_name?: string | null
           id: string
           last_access_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_region?: string | null
           role?: string
           status?: string
           suspended_at?: string | null
@@ -1560,6 +1623,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_access_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_region?: string | null
           role?: string
           status?: string
           suspended_at?: string | null
@@ -1753,11 +1819,16 @@ export type Database = {
       }
     }
     Functions: {
+      activate_ditto_bot_unit: {
+        Args: { p_activation_code: string; p_serial_number: string }
+        Returns: string
+      }
       current_user_role: { Args: never; Returns: string }
       ensure_taxonomy_node_for_category: {
         Args: { p_category_id: string }
         Returns: string
       }
+      has_active_ditto_bot: { Args: { p_user_id?: string }; Returns: boolean }
       has_role: { Args: { target_role: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }

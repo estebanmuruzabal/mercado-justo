@@ -4,7 +4,7 @@ import { getSupabaseAnonKey, getSupabaseUrl, hasSupabasePublicConfig } from './c
 import { sanitizeSupabaseAuthCookies } from './sanitize-auth-cookies'
 import { HOME_PATH } from '@/shared/routing/routes'
 
-const SUPER_ADMIN_PATHS = ['/admin/users', '/admin/vendors'] as const
+const SUPER_ADMIN_PATHS = ['/admin/users', '/admin/vendors', '/admin/dittobots'] as const
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({

@@ -39,6 +39,10 @@ export const PROFILE_PATH = '/profile' as const
 export const PROFILE_SELLER_PATH = '/profile/seller' as const
 export const PROFILE_SALES_PATH = '/profile/sales' as const
 export const PROFILE_NOTIFICATIONS_PATH = '/profile/notifications' as const
+export const PROFILE_DITTOBOTS_PATH = '/profile/dittobots' as const
+
+// ——— Grower / Protocolos ———
+export const RECETAS_PATH = '/recetas' as const
 
 // ——— Vendor: onboarding ———
 export const BECOME_VENDOR_PATH = '/become-vendor' as const
@@ -69,6 +73,7 @@ export const ADMIN_MODERATION_PATH = '/admin/moderation' as const
 export const ADMIN_NOTIFICATIONS_PATH = '/admin/notifications' as const
 export const ADMIN_ANALYTICS_PATH = '/admin/analytics' as const
 export const ADMIN_CATEGORIES_PATH = '/admin/categories' as const
+export const ADMIN_DITTOBOT_INVENTORY_PATH = '/admin/dittobots' as const
 
 export function adminListingsPath(storeId?: string) {
   if (!storeId) return ADMIN_LISTINGS_PATH

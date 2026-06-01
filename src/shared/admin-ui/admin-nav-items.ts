@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Bell,
+  Bot,
   LayoutDashboard,
   Package,
   ShieldCheck,
@@ -15,6 +16,7 @@ import {
   ADMIN_ANALYTICS_PATH,
   ADMIN_CATEGORIES_PATH,
   ADMIN_DASHBOARD_PATH,
+  ADMIN_DITTOBOT_INVENTORY_PATH,
   ADMIN_LISTINGS_PATH,
   ADMIN_LOGISTICS_PATH,
   ADMIN_MODERATION_PATH,
@@ -42,6 +44,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: ADMIN_USERS_PATH, label: 'Usuarios', icon: Users, permission: PERMISSIONS.USERS_VIEW },
   { href: ADMIN_VENDORS_PATH, label: 'Vendedores', icon: Store, permission: PERMISSIONS.VENDORS_VIEW },
   { href: ADMIN_CATEGORIES_PATH, label: 'Categorías', icon: Tags, permission: PERMISSIONS.CATEGORIES_MANAGE },
+  { href: ADMIN_DITTOBOT_INVENTORY_PATH, label: 'DittoBot Inventory', icon: Bot, permission: PERMISSIONS.CATEGORIES_MANAGE },
   { href: ADMIN_LISTINGS_PATH, label: 'Productos', icon: Package, permission: PERMISSIONS.LISTINGS_VIEW },
   { href: ADMIN_ORDERS_PATH, label: 'Órdenes', icon: ShoppingBag, permission: PERMISSIONS.ORDERS_VIEW },
   { href: ADMIN_LOGISTICS_PATH, label: 'Logística', icon: Truck, permission: PERMISSIONS.LOGISTICS_MANAGE },
