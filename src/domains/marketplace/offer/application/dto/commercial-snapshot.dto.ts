@@ -1,5 +1,9 @@
 export type CommercialSnapshot = {
   publicationId: string
+  /**
+   * ADR-R6E-001: Always listing_variant.id for cart/checkout consumers when set.
+   * Never persist offer_variant.id in transactional tables.
+   */
   variantId: string | null
   price: number | null
   stock: number | null

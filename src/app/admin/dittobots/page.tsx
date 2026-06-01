@@ -1,21 +1,7 @@
-import { requireSuperAdmin } from '@/shared/auth/guards/require-staff'
-import { listDittoBotInventoryForAdmin } from '@/domains/dittobots/application/queries/admin-ditto-bot-inventory.queries'
-import { PageHeader } from '@/shared/admin-ui/ui/PageHeader'
-import { DittoBotInventoryPanel } from '@/shared/admin-ui/dittobots/DittoBotInventoryPanel'
+import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
+import { ADMIN_DITTOBOT_PRODUCTS_PATH } from '@/shared/routing/routes'
 
-export default async function AdminDittoBotsPage() {
-  await requireSuperAdmin()
-  const units = await listDittoBotInventoryForAdmin()
-
-  return (
-    <div className='mx-auto max-w-7xl'>
-      <PageHeader
-        title='DittoBot Inventory'
-        description={`${units.length} unidad${units.length === 1 ? '' : 'es'} registrada${units.length === 1 ? '' : 's'}.`}
-      />
-      <DittoBotInventoryPanel initialUnits={units} />
-    </div>
-  )
+export default function AdminDittoBotsIndexPage() {
+  redirect(ADMIN_DITTOBOT_PRODUCTS_PATH)
 }

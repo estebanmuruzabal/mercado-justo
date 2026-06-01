@@ -30,7 +30,8 @@ function applyFilters(
       (l) =>
         l.title.toLowerCase().includes(q) ||
         l.storeName.toLowerCase().includes(q) ||
-        (l.categoryName?.toLowerCase().includes(q) ?? false),
+        (l.categoryName?.toLowerCase().includes(q) ?? false) ||
+        (l.tags?.some((tag) => tag.toLowerCase().includes(q)) ?? false),
     )
   }
 

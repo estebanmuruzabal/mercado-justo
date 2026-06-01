@@ -58,6 +58,7 @@ export function vendorDashboardPathAfterStoreCreated() {
 }
 export const VENDOR_INFORMATION_PATH = '/dashboard-vendor/vendor-information' as const
 export const VENDOR_LISTINGS_PATH = '/dashboard-vendor/listings' as const
+export const VENDOR_DITTOBOTS_PATH = '/dashboard-vendor/dittobots' as const
 export const VENDOR_SALES_PATH = '/dashboard-vendor/sales' as const
 export const VENDOR_NOTIFICATIONS_PATH = '/dashboard-vendor/notifications' as const
 
@@ -73,7 +74,13 @@ export const ADMIN_MODERATION_PATH = '/admin/moderation' as const
 export const ADMIN_NOTIFICATIONS_PATH = '/admin/notifications' as const
 export const ADMIN_ANALYTICS_PATH = '/admin/analytics' as const
 export const ADMIN_CATEGORIES_PATH = '/admin/categories' as const
-export const ADMIN_DITTOBOT_INVENTORY_PATH = '/admin/dittobots' as const
+export const ADMIN_DITTOBOTS_PATH = '/admin/dittobots' as const
+export const ADMIN_DITTOBOT_PRODUCTS_PATH = '/admin/dittobots/products' as const
+export const ADMIN_DITTOBOT_INVENTORY_PATH = '/admin/dittobots/inventory' as const
+export const ADMIN_DITTOBOT_ASSIGNMENT_PATH = '/admin/dittobots/assignment' as const
+export const ADMIN_DITTOBOT_AUDIT_PATH = '/admin/dittobots/audit' as const
+/** @deprecated Use ADMIN_DITTOBOT_INVENTORY_PATH */
+export const ADMIN_DITTOBOT_LEGACY_PATH = ADMIN_DITTOBOTS_PATH
 
 export function adminListingsPath(storeId?: string) {
   if (!storeId) return ADMIN_LISTINGS_PATH

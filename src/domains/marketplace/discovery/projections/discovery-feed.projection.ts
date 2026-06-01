@@ -5,6 +5,10 @@ import type { MarketplaceListing } from '@/domains/marketplace/listings/domain/m
 import { resolveCommercialSnapshots } from '@/domains/marketplace/offer'
 import type { CommercialSnapshot } from '@/domains/marketplace/offer'
 import {
+  countDittoBotPublicStockByProductIds,
+  isDittoBotPublicationAttributes,
+} from '@/domains/dittobots/application/queries/ditto-bot-public-stock.queries'
+import {
   mapPublicationRowsToMarketplaceListings,
   type PublicationFeedRow,
   type VariantFeedRow,
@@ -95,6 +99,37 @@ async function fetchCategoryNames(categoryIds: string[]): Promise<Map<string, st
   return names
 }
 
+async function overlayDittoBotInventoryStock(
+  rows: PublicationFeedRow[],
+  snapshots: Map<string, CommercialSnapshot>,
+): Promise<Map<string, CommercialSnapshot>> {
+  const dittoBotPublicationIds = rows
+    .filter(
+      (row) =>
+        isDittoBotPublicationAttributes(row.attributes_json) ||
+        isDittoBotPublicationAttributes(
+          snapshots.get(row.id)?.attributes as Record<string, unknown> | null | undefined,
+        ),
+    )
+    .map((row) => row.id)
+
+  if (dittoBotPublicationIds.length === 0) return snapshots
+
+  const stockByProduct = await countDittoBotPublicStockByProductIds(dittoBotPublicationIds)
+  const enriched = new Map(snapshots)
+
+  for (const publicationId of dittoBotPublicationIds) {
+    const snapshot = enriched.get(publicationId)
+    if (!snapshot) continue
+    enriched.set(publicationId, {
+      ...snapshot,
+      stock: stockByProduct.get(publicationId) ?? 0,
+    })
+  }
+
+  return enriched
+}
+
 export async function buildDiscoveryFeed(
   options: BuildDiscoveryFeedOptions = {},
 ): Promise<MarketplaceListing[]> {
@@ -125,11 +160,13 @@ export async function buildDiscoveryFeed(
   const storeIds = [...new Set(rows.filter((r) => r.owner_type === 'store').map((r) => r.owner_id))]
   const categoryIds = [...new Set(rows.map((r) => r.taxonomy_node_id))]
 
-  const [commercialSnapshots, storeNames, categoryNames] = await Promise.all([
+  const [commercialSnapshotsRaw, storeNames, categoryNames] = await Promise.all([
     resolveCommercialSnapshots(publicationIds),
     fetchStoreNames(storeIds),
     fetchCategoryNames(categoryIds),
   ])
+
+  const commercialSnapshots = await overlayDittoBotInventoryStock(rows, commercialSnapshotsRaw)
 
   const variantsByListingId = buildVariantsByListingId(rows, commercialSnapshots)
 

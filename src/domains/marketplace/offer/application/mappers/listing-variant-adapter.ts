@@ -51,6 +51,10 @@ export function mapListingVariantRowToCommercialSnapshot(
   }
 }
 
+/**
+ * ADR-R6E-001: offer_variant.id must not cross transactional boundaries.
+ * CommercialSnapshot.variantId and persisted cart/order FKs use listing_variant.id.
+ */
 export function mapOfferVariantsToCommercialSnapshot(
   publicationId: string,
   variants: OfferVariant[],
@@ -60,10 +64,12 @@ export function mapOfferVariantsToCommercialSnapshot(
   if (!defaultVariant) return null
 
   const activeCount = variants.filter((v) => v.isActive).length
+  // checkoutVariantId = legacy listing row when synced from listing_variant
+  const checkoutVariantId = defaultVariant.legacyVariantId ?? defaultVariant.id
 
   return {
     publicationId,
-    variantId: defaultVariant.id,
+    variantId: checkoutVariantId,
     price: defaultVariant.price,
     stock: defaultVariant.stock,
     hasOptions: activeCount > 1,

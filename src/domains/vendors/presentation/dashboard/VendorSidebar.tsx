@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { useState } from 'react'
-import { Bell, LayoutDashboard, Package, ShoppingBag, Store } from 'lucide-react'
+import { Bell, Bot, LayoutDashboard, Package, ShoppingBag, Store } from 'lucide-react'
 
 import {
   VENDOR_DASHBOARD_PATH,
+  VENDOR_DITTOBOTS_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_NOTIFICATIONS_PATH,
   VENDOR_SALES_PATH,
@@ -21,7 +22,7 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>
 }
 
-const NAV_ITEMS: NavItem[] = [
+const BASE_NAV_ITEMS: NavItem[] = [
   { href: VENDOR_DASHBOARD_PATH, label: 'Overview', icon: LayoutDashboard },
   { href: VENDOR_INFORMATION_PATH, label: 'Info de tu Tienda', icon: Store },
   { href: VENDOR_LISTINGS_PATH, label: 'Mis Listings', icon: Package },
@@ -29,9 +30,25 @@ const NAV_ITEMS: NavItem[] = [
   { href: VENDOR_NOTIFICATIONS_PATH, label: 'Notificaciones', icon: Bell },
 ]
 
-export function VendorSidebar() {
+const DITTOBOTS_NAV_ITEM: NavItem = {
+  href: VENDOR_DITTOBOTS_PATH,
+  label: 'Mis DittoBots',
+  icon: Bot,
+}
+
+export function VendorSidebar({ showDittoBots = false }: { showDittoBots?: boolean }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const navItems = showDittoBots
+    ? [
+        BASE_NAV_ITEMS[0],
+        BASE_NAV_ITEMS[1],
+        BASE_NAV_ITEMS[2],
+        DITTOBOTS_NAV_ITEM,
+        BASE_NAV_ITEMS[3],
+        BASE_NAV_ITEMS[4],
+      ]
+    : BASE_NAV_ITEMS
 
   function isActive(href: string) {
     if (href === VENDOR_DASHBOARD_PATH) {
@@ -64,7 +81,7 @@ export function VendorSidebar() {
         </div>
 
         <nav className='flex flex-col gap-1'>
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = isActive(item.href)
             const Icon = item.icon
 

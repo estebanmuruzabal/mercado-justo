@@ -21,7 +21,10 @@ declare
     {"id":"10000000-0000-4000-8000-000000000021","email":"vendor1@test.com","full_name":"Vendedor 1","role":"seller"},
     {"id":"10000000-0000-4000-8000-000000000022","email":"vendor2@test.com","full_name":"Vendedor 2","role":"seller"},
     {"id":"10000000-0000-4000-8000-000000000023","email":"vendor3@test.com","full_name":"Vendedor 3","role":"seller"},
-    {"id":"10000000-0000-4000-8000-000000000024","email":"vendor4@test.com","full_name":"Vendedor 4","role":"seller"}
+    {"id":"10000000-0000-4000-8000-000000000024","email":"vendor4@test.com","full_name":"Vendedor 4","role":"seller"},
+    {"id":"10000000-0000-4000-8000-000000000031","email":"dittobot-resistencia@test.com","full_name":"DittoBot Resistencia","role":"seller"},
+    {"id":"10000000-0000-4000-8000-000000000032","email":"dittobot-corrientes@test.com","full_name":"DittoBot Corrientes","role":"seller"},
+    {"id":"10000000-0000-4000-8000-000000000033","email":"dittobot-formosa@test.com","full_name":"DittoBot Formosa","role":"seller"}
   ]'::jsonb;
 begin
   for u in
@@ -148,6 +151,75 @@ begin
     is_featured = excluded.is_featured,
     terms_accepted = excluded.terms_accepted,
     terms_accepted_at = excluded.terms_accepted_at;
+
+  update public.store
+  set is_official_ditto_bot_vendor = true
+  where slug = 'dittobots';
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- R6.0c: Regional DittoBot vendors (assignment targets)
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_banner text := 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1500&auto=format&fit=crop';
+  v_logo text := 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop';
+begin
+  insert into public.store (
+    id, name, slug, bio, banner_url, logo_url, allow_followers,
+    whatsapp_number, show_whatsapp,
+    address, latitude, longitude, mode, plan, product_limit,
+    terms_accepted, terms_accepted_at, status, is_featured,
+    is_official_ditto_bot_vendor, can_sell_ditto_bots
+  )
+  values
+    (
+      '10000000-0000-4000-8000-000000000031',
+      'DittoBot Resistencia',
+      'dittobot-resistencia',
+      'Distribución regional DittoBot — Resistencia y Gran Resistencia.',
+      v_banner, v_logo, true,
+      '5493624111111', true,
+      'Centro, Resistencia',
+      -27.45100, -58.98650,
+      'online', 'free', 50,
+      true, now(), 'active', false,
+      false, true
+    ),
+    (
+      '10000000-0000-4000-8000-000000000032',
+      'DittoBot Corrientes',
+      'dittobot-corrientes',
+      'Distribución regional DittoBot — Corrientes capital.',
+      v_banner, v_logo, true,
+      '5493794222222', true,
+      'Centro, Corrientes',
+      -27.46920, -58.83060,
+      'online', 'free', 50,
+      true, now(), 'active', false,
+      false, true
+    ),
+    (
+      '10000000-0000-4000-8000-000000000033',
+      'DittoBot Formosa',
+      'dittobot-formosa',
+      'Distribución regional DittoBot — Formosa.',
+      v_banner, v_logo, true,
+      '5493704333333', true,
+      'Centro, Formosa',
+      -26.18490, -58.17310,
+      'online', 'free', 50,
+      true, now(), 'active', false,
+      false, true
+    )
+  on conflict (id) do update set
+    name = excluded.name,
+    slug = excluded.slug,
+    bio = excluded.bio,
+    status = excluded.status,
+    is_official_ditto_bot_vendor = excluded.is_official_ditto_bot_vendor,
+    can_sell_ditto_bots = excluded.can_sell_ditto_bots;
 end $$;
 
 -- ---------------------------------------------------------------------------

@@ -3,9 +3,18 @@ import type {
   DeviceLocation,
   DittoBotInventoryStatus,
   DittoBotInventoryUnit,
+  DittoBotInventoryUnitAdmin,
   DittoBotInventoryUnitSummary,
   UserLocation,
 } from '../domain/ditto-bot-inventory-unit'
+import { generateActivationCode, generateDittoBotSerials } from '../domain/ditto-bot-serial'
+import { VENDOR_VISIBLE_INVENTORY_STATUSES } from '../domain/ditto-seller.policy'
+import {
+  aggregateVendorStockFromUnits,
+  filterUnitsForVendorStore,
+  type VendorStockAggregate,
+  type VendorStockUnit,
+} from '../domain/vendor-stock.aggregate'
 
 type InventoryRow = {
   id: string
@@ -24,12 +33,23 @@ type InventoryRow = {
   friendly_name: string | null
   created_at: string
   updated_at: string
+  product_id?: string | null
+  batch_id?: string | null
+  firmware_version?: string | null
+  manufacturer_vendor_id?: string | null
+  assigned_vendor_id?: string | null
+  assigned_at?: string | null
+  seller_vendor_id?: string | null
+  publication?: { title: string | null } | null
+  assigned_vendor?: { name: string | null } | null
 }
 
 const USER_SELECT =
   'id, serial_number, model, subtype, status, owner_user_id, activated_at, location_lat, location_lng, location_region, inherits_user_location, is_public_on_map, friendly_name, created_at, updated_at'
 
 const ADMIN_SELECT = `${USER_SELECT}, activation_code`
+
+const ADMIN_EXTENDED_SELECT = `${ADMIN_SELECT}, product_id, batch_id, firmware_version, manufacturer_vendor_id, assigned_vendor_id, assigned_at, seller_vendor_id, publication:product_id(title), assigned_vendor:store!ditto_bot_inventory_unit_assigned_vendor_id_fkey(name)`
 
 function mapLocation(row: Pick<InventoryRow, 'location_lat' | 'location_lng' | 'location_region'>): DeviceLocation {
   return {
@@ -55,6 +75,21 @@ function mapUnit(row: InventoryRow): DittoBotInventoryUnit {
     friendlyName: row.friendly_name,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  }
+}
+
+function mapAdminUnit(row: InventoryRow): DittoBotInventoryUnitAdmin {
+  return {
+    ...mapUnit(row),
+    productId: row.product_id ?? null,
+    productTitle: row.publication?.title ?? null,
+    batchId: row.batch_id ?? null,
+    firmwareVersion: row.firmware_version ?? null,
+    manufacturerVendorId: row.manufacturer_vendor_id ?? null,
+    assignedVendorId: row.assigned_vendor_id ?? null,
+    assignedVendorName: row.assigned_vendor?.name ?? null,
+    assignedAt: row.assigned_at ?? null,
+    sellerVendorId: row.seller_vendor_id ?? null,
   }
 }
 
@@ -323,4 +358,223 @@ export async function updateUnitStatusAdmin(
 
   if (error) throw error
   return mapUnit(data as InventoryRow)
+}
+
+export type AdminInventoryFilters = {
+  productId?: string
+  status?: DittoBotInventoryStatus
+  vendorId?: string
+  serial?: string
+}
+
+export async function listUnitsAdmin(
+  adminClient: ReturnType<typeof import('@/shared/database/admin-client').createAdminClient>,
+  filters: AdminInventoryFilters = {},
+): Promise<DittoBotInventoryUnitAdmin[]> {
+  let query = adminClient
+    .from('ditto_bot_inventory_unit')
+    .select(ADMIN_EXTENDED_SELECT)
+    .order('created_at', { ascending: false })
+
+  if (filters.productId) query = query.eq('product_id', filters.productId)
+  if (filters.status) query = query.eq('status', filters.status)
+  if (filters.vendorId) query = query.eq('assigned_vendor_id', filters.vendorId)
+  if (filters.serial?.trim()) {
+    query = query.ilike('serial_number', `%${filters.serial.trim().toUpperCase()}%`)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return (data ?? []).map((row) => mapAdminUnit(row as InventoryRow))
+}
+
+export type CreateBatchWithUnitsInput = {
+  productId: string
+  productTitle: string
+  quantity: number
+  serialPrefix?: string
+  serialStart?: number
+  manufacturerVendorId: string
+  createdBy?: string
+}
+
+export async function createBatchWithUnits(
+  adminClient: ReturnType<typeof import('@/shared/database/admin-client').createAdminClient>,
+  input: CreateBatchWithUnitsInput,
+): Promise<{ batchId: string; unitIds: string[] }> {
+  const prefix = input.serialPrefix?.trim() || 'DTB-'
+  const start = input.serialStart ?? 1
+  const serials = generateDittoBotSerials({ prefix, start, quantity: input.quantity })
+
+  const { data: batchRow, error: batchError } = await adminClient
+    .from('ditto_bot_inventory_batch')
+    .insert({
+      product_id: input.productId,
+      manufacturer_vendor_id: input.manufacturerVendorId,
+      quantity: input.quantity,
+      serial_prefix: prefix,
+      serial_start: start,
+      created_by: input.createdBy ?? null,
+    } as never)
+    .select('id')
+    .single()
+
+  if (batchError) throw batchError
+  const batchId = (batchRow as { id: string }).id
+
+  const unitsPayload = serials.map((serial) => ({
+    serial_number: serial,
+    activation_code: generateActivationCode(),
+    model: input.productTitle,
+    product_id: input.productId,
+    batch_id: batchId,
+    manufacturer_vendor_id: input.manufacturerVendorId,
+    status: 'available' as const,
+  }))
+
+  const { data: insertedUnits, error: unitsError } = await adminClient
+    .from('ditto_bot_inventory_unit')
+    .insert(unitsPayload as never)
+    .select('id')
+
+  if (unitsError) throw unitsError
+
+  return {
+    batchId,
+    unitIds: ((insertedUnits ?? []) as Array<{ id: string }>).map((u) => u.id),
+  }
+}
+
+export async function assignUnitsToVendor(
+  adminClient: ReturnType<typeof import('@/shared/database/admin-client').createAdminClient>,
+  unitIds: string[],
+  vendorId: string,
+): Promise<void> {
+  const now = new Date().toISOString()
+  const { error } = await adminClient
+    .from('ditto_bot_inventory_unit')
+    .update({
+      assigned_vendor_id: vendorId,
+      assigned_at: now,
+      status: 'assigned',
+      updated_at: now,
+    } as never)
+    .in('id', unitIds)
+    .eq('status', 'available')
+
+  if (error) throw error
+}
+
+export async function findUnitsByIdsAdmin(
+  adminClient: ReturnType<typeof import('@/shared/database/admin-client').createAdminClient>,
+  unitIds: string[],
+): Promise<AssignableUnitRow[]> {
+  if (unitIds.length === 0) return []
+
+  const { data, error } = await adminClient
+    .from('ditto_bot_inventory_unit')
+    .select('id, status')
+    .in('id', unitIds)
+
+  if (error) throw error
+  return (data ?? []) as AssignableUnitRow[]
+}
+
+export type AssignableUnitRow = {
+  id: string
+  status: string
+}
+
+export type VendorInventoryUnitRow = {
+  id: string
+  serialNumber: string
+  status: DittoBotInventoryStatus
+  productId: string | null
+  productTitle: string | null
+  createdAt: string
+}
+
+export async function listUnitsForVendor(
+  vendorStoreId: string,
+  productId?: string,
+): Promise<VendorInventoryUnitRow[]> {
+  const supabase = await createClient()
+  let query = supabase
+    .from('ditto_bot_inventory_unit')
+    .select(
+      'id, serial_number, status, product_id, assigned_vendor_id, seller_vendor_id, created_at, publication:product_id(title)',
+    )
+    .or(`assigned_vendor_id.eq.${vendorStoreId},seller_vendor_id.eq.${vendorStoreId}`)
+    .in('status', [...VENDOR_VISIBLE_INVENTORY_STATUSES])
+    .order('serial_number', { ascending: true })
+
+  if (productId) query = query.eq('product_id', productId)
+
+  const { data, error } = await query
+  if (error) throw error
+
+  const mapped = ((data ?? []) as Array<{
+    id: string
+    serial_number: string
+    status: string
+    product_id: string | null
+    assigned_vendor_id: string | null
+    seller_vendor_id: string | null
+    created_at: string
+    publication?: { title: string | null } | null
+  }>).map((row) => ({
+    id: row.id,
+    serialNumber: row.serial_number,
+    status: row.status as DittoBotInventoryStatus,
+    productId: row.product_id,
+    productTitle: row.publication?.title ?? null,
+    assignedVendorId: row.assigned_vendor_id,
+    sellerVendorId: row.seller_vendor_id,
+    createdAt: row.created_at,
+  }))
+
+  return filterUnitsForVendorStore(mapped as VendorStockUnit[], vendorStoreId).map(
+    ({ assignedVendorId, sellerVendorId, createdAt, ...unit }) => ({
+      ...unit,
+      createdAt: createdAt ?? '',
+    }),
+  )
+}
+
+export type { VendorStockAggregate }
+
+export async function aggregateVendorStock(vendorStoreId: string): Promise<VendorStockAggregate[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('ditto_bot_inventory_unit')
+    .select(
+      'id, serial_number, status, product_id, assigned_vendor_id, seller_vendor_id, publication:product_id(title)',
+    )
+    .or(`assigned_vendor_id.eq.${vendorStoreId},seller_vendor_id.eq.${vendorStoreId}`)
+    .in('status', [...VENDOR_VISIBLE_INVENTORY_STATUSES])
+
+  if (error) throw error
+
+  const units = filterUnitsForVendorStore(
+    ((data ?? []) as Array<{
+      id: string
+      serial_number: string
+      status: string
+      product_id: string | null
+      assigned_vendor_id: string | null
+      seller_vendor_id: string | null
+      publication?: { title: string | null } | null
+    }>).map((row) => ({
+      id: row.id,
+      serialNumber: row.serial_number,
+      status: row.status as DittoBotInventoryStatus,
+      productId: row.product_id,
+      productTitle: row.publication?.title ?? null,
+      assignedVendorId: row.assigned_vendor_id,
+      sellerVendorId: row.seller_vendor_id,
+    })),
+    vendorStoreId,
+  )
+
+  return aggregateVendorStockFromUnits(units)
 }

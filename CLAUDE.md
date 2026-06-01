@@ -92,6 +92,8 @@ resolveCommercialSnapshots(publicationIds: string[]): Promise<Map<string, Commer
 
 **Prohibido** fuera de `offer/**`: `OfferRepository`, `findVariants`, `findDefaultVariant`, deep imports de `offer/infrastructure/*` o `offer/domain/*`. El fallback Strangler (`listing_variant`) vive **dentro** de Offer BC y se expone opaco como `CommercialSnapshot.source: 'legacy'`.
 
+**Identidad transaccional:** `CommercialSnapshot.variantId` y FKs cart/order usan `listing_variant.id`; ver `docs/adr/ADR-R6E-001-commercial-identity-contract.md`.
+
 
 ### Marketplace Relations — Canonical Graph Boundary (B5 / C5)
 

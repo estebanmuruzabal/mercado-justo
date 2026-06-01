@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Switch } from '@/shared/ui/switch'
-import { CONTACT_PATH } from '@/shared/routing/routes'
+import { publicVendorPath } from '@/shared/routing/routes'
 
 function DeviceSettingsInline({ unit }: { unit: DittoBotInventoryUnitSummary }) {
   const router = useRouter()
@@ -124,7 +124,7 @@ export function MisDittoBotsPanel({ devices }: { devices: DittoBotInventoryUnitS
             </p>
             <div className='flex flex-wrap gap-3'>
               <Button asChild variant='outline'>
-                <Link href={CONTACT_PATH}>
+                <Link href={publicVendorPath('dittobots')}>
                   <ShoppingCart className='mr-2 h-4 w-4' />
                   Comprar DittoBot
                 </Link>

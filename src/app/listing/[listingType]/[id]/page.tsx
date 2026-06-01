@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { ProductDetailClient } from '@/domains/marketplace/listings/presentation/components/detail/ProductDetailClient'
+import { countDittoBotPublicStockByProductIds } from '@/domains/dittobots/application/queries/ditto-bot-public-stock.queries'
 import { createClient } from '@/shared/database/supabase/server'
 
 export default async function ListingDetailPage({
@@ -33,7 +34,7 @@ export default async function ListingDetailPage({
 
   const { data: listingRow, error: listingError } = await supabase
     .from('listing')
-    .select('id,title,store_id,status,characteristics,latitude,longitude,store(name)')
+    .select('id,title,store_id,status,characteristics,latitude,longitude,is_ditto_bot,store(name)')
     .eq('id', id)
     .eq('listing_type', listingType)
     .eq('status', 'published')
@@ -65,11 +66,16 @@ export default async function ListingDetailPage({
     store_id: string
     latitude: number | null
     longitude: number | null
+    is_ditto_bot?: boolean | null
     store?: { name: string | null } | null
   }
 
   const listingTyped = listingRow as ListingRow
   const storeName = listingTyped.store?.name ?? 'Vendedor'
+
+  const dittoBotInventoryStock = listingTyped.is_ditto_bot
+    ? (await countDittoBotPublicStockByProductIds([listingTyped.id])).get(listingTyped.id) ?? 0
+    : null
 
   const { data: variantRows, error: variantError } = await supabase
     .from('listing_variant')
@@ -100,7 +106,10 @@ export default async function ListingDetailPage({
       id: String(v.id),
       name: String(v.name ?? v.sku ?? 'Variante'),
       price: Number(v.price ?? 0),
-      stock: Number(v.stock ?? 0),
+      stock:
+        dittoBotInventoryStock !== null
+          ? dittoBotInventoryStock
+          : Number(v.stock ?? 0),
       isDefault: Boolean(v.is_default),
       attributes,
     }

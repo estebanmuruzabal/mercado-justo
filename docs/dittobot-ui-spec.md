@@ -1,5 +1,7 @@
 # DittoBot UI Specification (R5.4)
 
+**IDs for catalog vs purchase:** [dittobot-commercial-identity.md](./dittobot-commercial-identity.md) (`publication.id` for product/inventory; `listing_variant.id` for cart/checkout).
+
 ## Pantallas
 
 | Ruta | Actor | Estados |

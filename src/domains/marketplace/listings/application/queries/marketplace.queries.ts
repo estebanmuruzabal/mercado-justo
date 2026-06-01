@@ -34,6 +34,10 @@ function mapRowToMarketplaceListing(row: ListingRow): MarketplaceListing {
   const attrs = (defaultVariant?.attributes_json ?? {}) as Record<string, unknown>
   const titleFromAttrs = typeof attrs.name === 'string' ? attrs.name : null
   const imageFromAttrs = typeof attrs.image === 'string' ? attrs.image : null
+  const tagsRaw = attrs.tags
+  const tags = Array.isArray(tagsRaw)
+    ? tagsRaw.filter((t): t is string => typeof t === 'string')
+    : undefined
   const variantPrice = defaultVariant?.price ?? row.price ?? 0
 
   return {
@@ -51,6 +55,7 @@ function mapRowToMarketplaceListing(row: ListingRow): MarketplaceListing {
     variantId: defaultVariant ? String(defaultVariant.id) : undefined,
     hasOptions: variantRows.length > 1,
     createdAt: row.created_at,
+    tags,
   }
 }
 

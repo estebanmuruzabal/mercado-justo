@@ -1,5 +1,9 @@
 'use server'
 
+/**
+ * ADR-R6E-001: cart_line.variant_id FK → listing_variant.id.
+ * line_kind 'offer_variant' is a historical label; do not persist offer_variant.id.
+ */
 import { createClient } from '@/shared/database/supabase/server'
 
 export type CartLineDto = {

@@ -19,6 +19,8 @@ export type MarketplaceListing = {
   createdAt?: string
   deliveryAvailable?: boolean
   pickupAvailable?: boolean
+  /** From listing characteristics / variant attributes when present */
+  tags?: string[]
 }
 
 export type MarketplaceListingWithDistance = MarketplaceListing & {

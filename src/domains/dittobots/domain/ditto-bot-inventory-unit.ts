@@ -1,7 +1,11 @@
 export const DITTO_BOT_INVENTORY_STATUSES = [
   'available',
+  'assigned',
+  'reserved',
   'sold',
   'activated',
+  'warranty',
+  'repair',
   'retired',
 ] as const
 
@@ -34,6 +38,19 @@ export type DittoBotInventoryUnit = {
 
 /** Client-safe summary — excludes activation_code. */
 export type DittoBotInventoryUnitSummary = Omit<DittoBotInventoryUnit, 'activationCode'>
+
+/** Admin inventory row with R6.0c traceability fields. */
+export type DittoBotInventoryUnitAdmin = DittoBotInventoryUnit & {
+  productId: string | null
+  productTitle: string | null
+  batchId: string | null
+  firmwareVersion: string | null
+  manufacturerVendorId: string | null
+  assignedVendorId: string | null
+  assignedVendorName: string | null
+  assignedAt: string | null
+  sellerVendorId: string | null
+}
 
 export function emptyDeviceLocation(): DeviceLocation {
   return { lat: null, lng: null, region: null }

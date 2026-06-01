@@ -23,18 +23,25 @@ function offerVariant(partial: Partial<OfferVariant> & Pick<OfferVariant, 'id'>)
 }
 
 describe('mapOfferVariantsToCommercialSnapshot (A4)', () => {
-  it('maps offer_variant path with source offer', () => {
+  it('maps offer_variant path with checkout-safe variantId (legacy_variant_id)', () => {
     const snapshot = mapOfferVariantsToCommercialSnapshot('pub-1', [
-      offerVariant({ id: 'v1', isDefault: true }),
+      offerVariant({ id: 'offer-v1', legacyVariantId: 'listing-v1', isDefault: true }),
     ])
     expect(snapshot).toMatchObject({
       publicationId: 'pub-1',
-      variantId: 'v1',
+      variantId: 'listing-v1',
       price: 500,
       stock: 10,
       hasOptions: false,
       source: 'offer',
     })
+  })
+
+  it('falls back to offer id when legacy_variant_id is absent', () => {
+    const snapshot = mapOfferVariantsToCommercialSnapshot('pub-1', [
+      offerVariant({ id: 'v1', isDefault: true }),
+    ])
+    expect(snapshot?.variantId).toBe('v1')
   })
 
   it('sets hasOptions when multiple active variants', () => {

@@ -253,21 +253,94 @@ export type Database = {
         }
         Relationships: []
       }
+      ditto_bot_inventory_batch: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          manufacturer_vendor_id: string
+          metadata: Json
+          product_id: string
+          quantity: number
+          serial_prefix: string
+          serial_start: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manufacturer_vendor_id: string
+          metadata?: Json
+          product_id: string
+          quantity: number
+          serial_prefix?: string
+          serial_start?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          manufacturer_vendor_id?: string
+          metadata?: Json
+          product_id?: string
+          quantity?: number
+          serial_prefix?: string
+          serial_start?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ditto_bot_inventory_batch_manufacturer_vendor_id_fkey"
+            columns: ["manufacturer_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_batch_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_batch_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ditto_bot_inventory_unit: {
         Row: {
           activated_at: string | null
           activation_code: string
+          assigned_at: string | null
+          assigned_vendor_id: string | null
+          batch_id: string | null
           created_at: string
+          firmware_version: string | null
           friendly_name: string | null
+          hardware_revision: string | null
           id: string
           inherits_user_location: boolean
+          installer_vendor_id: string | null
           is_public_on_map: boolean
           location_lat: number | null
           location_lng: number | null
           location_region: string | null
+          manufacture_date: string | null
+          manufacturer_vendor_id: string | null
           model: string
+          order_id: string | null
+          order_item_id: string | null
           owner_user_id: string | null
+          product_id: string | null
+          reserved_at: string | null
+          seller_vendor_id: string | null
           serial_number: string
+          service_partner_id: string | null
+          sold_at: string | null
           status: string
           subtype: string | null
           updated_at: string
@@ -275,17 +348,32 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           activation_code: string
+          assigned_at?: string | null
+          assigned_vendor_id?: string | null
+          batch_id?: string | null
           created_at?: string
+          firmware_version?: string | null
           friendly_name?: string | null
+          hardware_revision?: string | null
           id?: string
           inherits_user_location?: boolean
+          installer_vendor_id?: string | null
           is_public_on_map?: boolean
           location_lat?: number | null
           location_lng?: number | null
           location_region?: string | null
+          manufacture_date?: string | null
+          manufacturer_vendor_id?: string | null
           model: string
+          order_id?: string | null
+          order_item_id?: string | null
           owner_user_id?: string | null
+          product_id?: string | null
+          reserved_at?: string | null
+          seller_vendor_id?: string | null
           serial_number: string
+          service_partner_id?: string | null
+          sold_at?: string | null
           status: string
           subtype?: string | null
           updated_at?: string
@@ -293,22 +381,108 @@ export type Database = {
         Update: {
           activated_at?: string | null
           activation_code?: string
+          assigned_at?: string | null
+          assigned_vendor_id?: string | null
+          batch_id?: string | null
           created_at?: string
+          firmware_version?: string | null
           friendly_name?: string | null
+          hardware_revision?: string | null
           id?: string
           inherits_user_location?: boolean
+          installer_vendor_id?: string | null
           is_public_on_map?: boolean
           location_lat?: number | null
           location_lng?: number | null
           location_region?: string | null
+          manufacture_date?: string | null
+          manufacturer_vendor_id?: string | null
           model?: string
+          order_id?: string | null
+          order_item_id?: string | null
           owner_user_id?: string | null
+          product_id?: string | null
+          reserved_at?: string | null
+          seller_vendor_id?: string | null
           serial_number?: string
+          service_partner_id?: string | null
+          sold_at?: string | null
           status?: string
           subtype?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_assigned_vendor_id_fkey"
+            columns: ["assigned_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "ditto_bot_inventory_batch"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_installer_vendor_id_fkey"
+            columns: ["installer_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_manufacturer_vendor_id_fkey"
+            columns: ["manufacturer_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_item"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "listing_publication_compat"
+            referencedColumns: ["publication_id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "publication"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_seller_vendor_id_fkey"
+            columns: ["seller_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ditto_bot_inventory_unit_service_partner_id_fkey"
+            columns: ["service_partner_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listing: {
         Row: {
@@ -317,7 +491,9 @@ export type Database = {
           condition: string | null
           created_at: string
           description: string | null
+          ditto_bot_settings: Json | null
           id: string
+          is_ditto_bot: boolean
           latitude: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           longitude: number | null
@@ -326,6 +502,7 @@ export type Database = {
           moderation_reason: string | null
           moderation_status: string
           price: number | null
+          price_mode: string
           status: Database["public"]["Enums"]["listing_status"]
           stock: number
           store_id: string
@@ -337,7 +514,9 @@ export type Database = {
           condition?: string | null
           created_at?: string
           description?: string | null
+          ditto_bot_settings?: Json | null
           id?: string
+          is_ditto_bot?: boolean
           latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           longitude?: number | null
@@ -346,6 +525,7 @@ export type Database = {
           moderation_reason?: string | null
           moderation_status?: string
           price?: number | null
+          price_mode?: string
           status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
           store_id: string
@@ -357,7 +537,9 @@ export type Database = {
           condition?: string | null
           created_at?: string
           description?: string | null
+          ditto_bot_settings?: Json | null
           id?: string
+          is_ditto_bot?: boolean
           latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           longitude?: number | null
@@ -366,6 +548,7 @@ export type Database = {
           moderation_reason?: string | null
           moderation_status?: string
           price?: number | null
+          price_mode?: string
           status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
           store_id?: string
@@ -1332,11 +1515,13 @@ export type Database = {
           allow_followers: boolean
           banner_url: string | null
           bio: string | null
+          can_sell_ditto_bots: boolean
           created_at: string
           follower_count: number
           id: string
           instagram: string | null
           is_featured: boolean
+          is_official_ditto_bot_vendor: boolean
           last_active_at: string | null
           latitude: number | null
           logo_url: string | null
@@ -1361,11 +1546,13 @@ export type Database = {
           allow_followers?: boolean
           banner_url?: string | null
           bio?: string | null
+          can_sell_ditto_bots?: boolean
           created_at?: string
           follower_count?: number
           id: string
           instagram?: string | null
           is_featured?: boolean
+          is_official_ditto_bot_vendor?: boolean
           last_active_at?: string | null
           latitude?: number | null
           logo_url?: string | null
@@ -1390,11 +1577,13 @@ export type Database = {
           allow_followers?: boolean
           banner_url?: string | null
           bio?: string | null
+          can_sell_ditto_bots?: boolean
           created_at?: string
           follower_count?: number
           id?: string
           instagram?: string | null
           is_featured?: boolean
+          is_official_ditto_bot_vendor?: boolean
           last_active_at?: string | null
           latitude?: number | null
           logo_url?: string | null
@@ -1824,6 +2013,13 @@ export type Database = {
         Returns: string
       }
       current_user_role: { Args: never; Returns: string }
+      ditto_bot_public_stock_by_product: {
+        Args: { p_product_ids: string[] }
+        Returns: {
+          product_id: string
+          stock_count: number
+        }[]
+      }
       ensure_taxonomy_node_for_category: {
         Args: { p_category_id: string }
         Returns: string

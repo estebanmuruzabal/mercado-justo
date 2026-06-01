@@ -5,6 +5,12 @@ import {
   findVariantsByPublicationIds,
 } from '../../infrastructure/offer.repository'
 
+/**
+ * Offer BC public read API (ADR-R6E-001).
+ *
+ * offer_variant.id must not cross transactional boundaries; snapshot.variantId
+ * is listing_variant.id for downstream cart/checkout/order persistence.
+ */
 export async function resolveCommercialSnapshots(
   publicationIds: string[],
 ): Promise<Map<string, CommercialSnapshot>> {

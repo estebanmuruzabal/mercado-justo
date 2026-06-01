@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 
 import { VendorSidebar } from '@/domains/vendors/presentation/dashboard/VendorSidebar'
+import { vendorHasDittoSellerAccess } from '@/domains/dittobots/application/queries/vendor-ditto-bots.queries'
 import { createClient } from '@/shared/database/supabase/server'
 import { getUserRoleByUserId } from '@/domains/users/application/queries/user.queries'
 import { isStaff } from '@/domains/users/domain/roles'
@@ -21,10 +22,15 @@ export default async function DashboardVendorLayout({ children }: { children: Re
     }
   }
 
+  let showDittoBots = false
+  if (user) {
+    showDittoBots = await vendorHasDittoSellerAccess(user.id)
+  }
+
   return (
     <div className='min-h-screen bg-background'>
       <div className='flex'>
-        <VendorSidebar />
+        <VendorSidebar showDittoBots={showDittoBots} />
         <div className='flex-1'>{children}</div>
       </div>
     </div>
