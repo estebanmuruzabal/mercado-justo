@@ -1,14 +1,14 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { after } from 'next/server'
 import { z } from 'zod'
 
 import {
-  aggregateCheckoutQuantitiesByListing,
-  DittoBotCheckoutStockError,
-  validateDittoBotCheckoutStock,
-} from '@/domains/dittobots/domain/ditto-bot-checkout-stock'
-import { countDittoBotPublicStockByProductIds } from '@/domains/dittobots/application/queries/ditto-bot-public-stock.queries'
+  buildDittoBotSaleLines,
+  completeDittoBotSaleForOrder,
+} from '@/domains/dittobots/application/commands/complete-ditto-bot-sale.command'
+import { countDittoBotSellableStockForVendor } from '@/domains/dittobots/application/queries/ditto-bot-sale-stock.queries'
 import {
   assertResolvedCheckoutVariantsForOrder,
   buildOrderItemsPayloadFromResolved,
@@ -62,7 +62,7 @@ export async function createOrderFromCartAction(
 
   assertResolvedCheckoutVariantsForOrder(resolvedLines)
 
-  await validateDittoBotStockForCheckout(resolvedLines)
+  const dittoBotListingIds = await validateDittoBotStockForCheckout(resolvedLines, sellerId)
 
   const subtotal = parsed.data.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
 
@@ -86,10 +86,20 @@ export async function createOrderFromCartAction(
 
   const orderId = (orderRow as { id: string }).id
 
-  const orderItemsPayload = buildOrderItemsPayloadFromResolved(orderId, resolvedLines)
+  const orderItemsPayload = buildOrderItemsPayloadFromResolved(orderId, resolvedLines).map((item) => ({
+    id: randomUUID(),
+    ...item,
+  }))
 
   const { error: itemsError } = await supabase.from('order_item').insert(orderItemsPayload as never[])
   if (itemsError) throw itemsError
+
+  await completeDittoBotSaleForOrder({
+    orderId,
+    buyerUserId: userId,
+    sellerVendorId: sellerId,
+    lines: buildDittoBotSaleLines(orderItemsPayload, dittoBotListingIds),
+  })
 
   after(async () => {
     const transactionKind = inferTransactionKindFromPublicationTypes(['product'])
@@ -115,7 +125,11 @@ async function validateDittoBotStockForCheckout(
     item: z.infer<typeof cartItemSchema>
     variantInfo: { listingId: string }
   }>,
-): Promise<void> {
+  sellerVendorId: string,
+): Promise<Set<string>> {
+  console.log('resolvedLines', resolvedLines)
+  console.log('sellerVendorId', sellerVendorId)
+  
   const listingIds = [...new Set(resolvedLines.map((line) => line.variantInfo.listingId))]
   const supabase = await createClient()
 
@@ -132,29 +146,21 @@ async function validateDittoBotStockForCheckout(
       .map((row) => row.id),
   )
 
-  if (dittoBotListingIds.size === 0) return
+  if (dittoBotListingIds.size === 0) return dittoBotListingIds
 
-  const quantitiesByListingId = aggregateCheckoutQuantitiesByListing(
-    resolvedLines.map(({ item, variantInfo }) => ({
-      listingId: variantInfo.listingId,
-      quantity: item.quantity,
-    })),
-  )
+  const requestedDittoBotUnits = resolvedLines.reduce((total, { item, variantInfo }) => {
+    return total + item.quantity
+  }, 0)
 
-  const stockByProductId = await countDittoBotPublicStockByProductIds([...dittoBotListingIds])
-
-  try {
-    validateDittoBotCheckoutStock({
-      dittoBotListingIds,
-      quantitiesByListingId,
-      stockByProductId,
-    })
-  } catch (err) {
-    if (err instanceof DittoBotCheckoutStockError) {
-      throw new Error(err.message)
-    }
-    throw err
+  const availableDittoBotUnits = await countDittoBotSellableStockForVendor({ sellerVendorId })
+  if (availableDittoBotUnits <= 0) {
+    throw new Error('No hay stock DittoBot disponible para este vendedor.')
   }
+  if (requestedDittoBotUnits > availableDittoBotUnits) {
+    throw new Error(`Stock insuficiente. Disponible: ${availableDittoBotUnits}.`)
+  }
+
+  return dittoBotListingIds
 }
 
 async function getCurrentUserId(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string> {

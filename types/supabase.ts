@@ -990,6 +990,143 @@ export type Database = {
           },
         ]
       }
+      product_base: {
+        Row: {
+          base_image_url: string | null
+          category_id: string
+          created_at: string
+          description: string | null
+          id: string
+          image_strategy: string
+          name: string
+          slug: string
+          status: string
+          subcategory_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          base_image_url?: string | null
+          category_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_strategy?: string
+          name: string
+          slug: string
+          status?: string
+          subcategory_id?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          base_image_url?: string | null
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_strategy?: string
+          name?: string
+          slug?: string
+          status?: string
+          subcategory_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_base_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_base_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "category"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_base_attribute: {
+        Row: {
+          allow_variant_pricing: boolean
+          created_at: string
+          default_value: Json | null
+          description: string | null
+          id: string
+          is_filterable: boolean
+          is_searchable: boolean
+          is_variant_dimension: boolean
+          is_visible: boolean
+          key: string
+          label: string
+          options: Json | null
+          placeholder: string | null
+          product_base_id: string
+          required: boolean
+          score_contribution: Json | null
+          sort_order: number
+          type: string
+          updated_at: string
+          validation: Json | null
+        }
+        Insert: {
+          allow_variant_pricing?: boolean
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          is_filterable?: boolean
+          is_searchable?: boolean
+          is_variant_dimension?: boolean
+          is_visible?: boolean
+          key: string
+          label: string
+          options?: Json | null
+          placeholder?: string | null
+          product_base_id: string
+          required?: boolean
+          score_contribution?: Json | null
+          sort_order?: number
+          type: string
+          updated_at?: string
+          validation?: Json | null
+        }
+        Update: {
+          allow_variant_pricing?: boolean
+          created_at?: string
+          default_value?: Json | null
+          description?: string | null
+          id?: string
+          is_filterable?: boolean
+          is_searchable?: boolean
+          is_variant_dimension?: boolean
+          is_visible?: boolean
+          key?: string
+          label?: string
+          options?: Json | null
+          placeholder?: string | null
+          product_base_id?: string
+          required?: boolean
+          score_contribution?: Json | null
+          sort_order?: number
+          type?: string
+          updated_at?: string
+          validation?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_base_attribute_product_base_id_fkey"
+            columns: ["product_base_id"]
+            isOneToOne: false
+            referencedRelation: "product_base"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       publication: {
         Row: {
           archived_at: string | null

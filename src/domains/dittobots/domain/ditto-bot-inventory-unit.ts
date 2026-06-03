@@ -27,6 +27,7 @@ export type DittoBotInventoryUnit = {
   subtype: string | null
   status: DittoBotInventoryStatus
   ownerUserId: string | null
+  soldAt: string | null
   activatedAt: string | null
   location: DeviceLocation
   inheritsUserLocation: boolean

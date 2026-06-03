@@ -1,7 +1,7 @@
 'use server'
 
 import { ROLES, isStaff } from '@/domains/users/domain/roles'
-import { mapAuthErrorMessage } from '@/domains/auth/domain/auth/errors'
+import { mapAuthActionFailure, mapAuthErrorMessage } from '@/domains/auth/domain/auth/errors'
 import { getPostAuthRedirectPath } from '@/domains/auth/domain/auth/callback-url'
 import { createClient } from '@/shared/database/supabase/server'
 import { getUserRoleByUserId } from '@/domains/users/application/queries/user.queries'
@@ -67,14 +67,18 @@ async function ensureSessionAfterSignUp(
 
 /** Sign up + silent sign-in + session cookies in one step (checkout/home UX). */
 export async function registerUser(data: SignUpData): Promise<AuthActionResult> {
-  const supabase = await createClient()
-  const redirectTo = getPostAuthRedirectPath(data.callbackUrl, '/')
+  try {
+    const supabase = await createClient()
+    const redirectTo = getPostAuthRedirectPath(data.callbackUrl, '/')
 
-  const earlyResult = await ensureSessionAfterSignUp(supabase, data)
-  if (earlyResult) return earlyResult
+    const earlyResult = await ensureSessionAfterSignUp(supabase, data)
+    if (earlyResult) return earlyResult
 
-  revalidateAuthSurfaces()
-  return { ok: true, redirectTo }
+    revalidateAuthSurfaces()
+    return { ok: true, redirectTo }
+  } catch (error) {
+    return { error: mapAuthActionFailure(error) }
+  }
 }
 
 /** @deprecated Prefer registerUser — kept for tests and legacy callers. */
@@ -83,31 +87,35 @@ export async function signUp(data: SignUpData): Promise<AuthActionResult> {
 }
 
 export async function signIn(data: SignInData): Promise<AuthActionResult> {
-  const supabase = await createClient()
-  const requestedRedirect = getPostAuthRedirectPath(data.callbackUrl, '/')
+  try {
+    const supabase = await createClient()
+    const requestedRedirect = getPostAuthRedirectPath(data.callbackUrl, '/')
 
-  const { data: signInData, error } = await supabase.auth.signInWithPassword({
-    email: data.email,
-    password: data.password,
-  })
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
 
-  if (error) {
-    return { error: mapAuthErrorMessage(error.message) }
-  }
-
-  revalidateAuthSurfaces()
-
-  // Platform staff land in the admin panel by default, unless they were
-  // following an explicit internal deep link elsewhere.
-  const userId = signInData.user?.id
-  if (userId && (!data.callbackUrl || requestedRedirect === '/')) {
-    const role = await getUserRoleByUserId(userId)
-    if (isStaff(role)) {
-      return { ok: true, redirectTo: ADMIN_DASHBOARD_PATH }
+    if (error) {
+      return { error: mapAuthErrorMessage(error.message) }
     }
-  }
 
-  return { ok: true, redirectTo: requestedRedirect }
+    revalidateAuthSurfaces()
+
+    // Platform staff land in the admin panel by default, unless they were
+    // following an explicit internal deep link elsewhere.
+    const userId = signInData.user?.id
+    if (userId && (!data.callbackUrl || requestedRedirect === '/')) {
+      const role = await getUserRoleByUserId(userId)
+      if (isStaff(role)) {
+        return { ok: true, redirectTo: ADMIN_DASHBOARD_PATH }
+      }
+    }
+
+    return { ok: true, redirectTo: requestedRedirect }
+  } catch (error) {
+    return { error: mapAuthActionFailure(error) }
+  }
 }
 
 export async function signOut() {

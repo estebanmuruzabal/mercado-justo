@@ -2,6 +2,7 @@ import {
   BarChart3,
   Bell,
   Bot,
+  Layers,
   LayoutDashboard,
   Package,
   ShieldCheck,
@@ -22,6 +23,7 @@ import {
   ADMIN_MODERATION_PATH,
   ADMIN_NOTIFICATIONS_PATH,
   ADMIN_ORDERS_PATH,
+  ADMIN_PRODUCT_BASES_PATH,
   ADMIN_USERS_PATH,
   ADMIN_VENDORS_PATH,
 } from '@/shared/routing/routes'
@@ -44,6 +46,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: ADMIN_USERS_PATH, label: 'Usuarios', icon: Users, permission: PERMISSIONS.USERS_VIEW },
   { href: ADMIN_VENDORS_PATH, label: 'Vendedores', icon: Store, permission: PERMISSIONS.VENDORS_VIEW },
   { href: ADMIN_CATEGORIES_PATH, label: 'Categorías', icon: Tags, permission: PERMISSIONS.CATEGORIES_MANAGE },
+  {
+    href: ADMIN_PRODUCT_BASES_PATH,
+    label: 'Productos Base',
+    icon: Layers,
+    permission: PERMISSIONS.PRODUCT_BASES_MANAGE,
+  },
   { href: ADMIN_DITTOBOTS_PATH, label: 'DittoBots', icon: Bot, permission: PERMISSIONS.CATEGORIES_MANAGE },
   { href: ADMIN_LISTINGS_PATH, label: 'Productos', icon: Package, permission: PERMISSIONS.LISTINGS_VIEW },
   { href: ADMIN_ORDERS_PATH, label: 'Órdenes', icon: ShoppingBag, permission: PERMISSIONS.ORDERS_VIEW },

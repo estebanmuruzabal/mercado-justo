@@ -24,6 +24,7 @@ type InventoryRow = {
   subtype: string | null
   status: string
   owner_user_id: string | null
+  sold_at: string | null
   activated_at: string | null
   location_lat: number | null
   location_lng: number | null
@@ -45,7 +46,7 @@ type InventoryRow = {
 }
 
 const USER_SELECT =
-  'id, serial_number, model, subtype, status, owner_user_id, activated_at, location_lat, location_lng, location_region, inherits_user_location, is_public_on_map, friendly_name, created_at, updated_at'
+  'id, serial_number, model, subtype, status, owner_user_id, sold_at, activated_at, location_lat, location_lng, location_region, inherits_user_location, is_public_on_map, friendly_name, created_at, updated_at'
 
 const ADMIN_SELECT = `${USER_SELECT}, activation_code`
 
@@ -68,6 +69,7 @@ function mapUnit(row: InventoryRow): DittoBotInventoryUnit {
     subtype: row.subtype,
     status: row.status as DittoBotInventoryStatus,
     ownerUserId: row.owner_user_id,
+    soldAt: row.sold_at,
     activatedAt: row.activated_at,
     location: mapLocation(row),
     inheritsUserLocation: row.inherits_user_location,

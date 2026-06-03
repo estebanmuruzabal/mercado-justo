@@ -16,6 +16,7 @@ function unit(overrides: Partial<DittoBotInventoryUnit> = {}): DittoBotInventory
     subtype: null,
     status: 'activated',
     ownerUserId: 'owner-1',
+    soldAt: '2026-01-01T00:00:00Z',
     activatedAt: '2026-01-01T00:00:00Z',
     location: { lat: -34.6, lng: -58.4, region: 'Granja' },
     inheritsUserLocation: false,

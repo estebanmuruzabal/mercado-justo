@@ -80,12 +80,19 @@ function DeviceSettingsInline({ unit }: { unit: DittoBotInventoryUnitSummary }) 
   )
 }
 
+function getDeviceStatusLabel(status: DittoBotInventoryUnitSummary['status']): string {
+  if (status === 'sold') return 'Pendiente de Activación'
+  if (status === 'activated') return 'Activado'
+  return status
+}
+
 export function MisDittoBotsPanel({ devices }: { devices: DittoBotInventoryUnitSummary[] }) {
   const router = useRouter()
   const [serial, setSerial] = useState('')
   const [code, setCode] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const hasPendingPurchasedDevice = devices.some((device) => device.status === 'sold')
 
   async function handleActivate(e: FormEvent) {
     e.preventDefault()
@@ -193,11 +200,23 @@ export function MisDittoBotsPanel({ devices }: { devices: DittoBotInventoryUnitS
                     {device.friendlyName ? ` · ${device.friendlyName}` : ''}
                   </p>
                 </div>
-                <span className='rounded-full bg-neutral-100 px-2 py-0.5 text-xs capitalize'>
-                  {device.status}
+                <span className='rounded-full bg-neutral-100 px-2 py-0.5 text-xs'>
+                  {getDeviceStatusLabel(device.status)}
                 </span>
               </div>
+              {device.status === 'sold' ? (
+                <p className='mt-2 text-sm text-muted-foreground'>
+                  Este DittoBot ya está asociado a tu compra. No necesitás cargar el serial
+                  manualmente.
+                </p>
+              ) : null}
               <dl className='mt-2 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2'>
+                <div>
+                  <dt className='inline font-medium'>Vendido: </dt>
+                  <dd className='inline'>
+                    {device.soldAt ? new Date(device.soldAt).toLocaleString('es-AR') : '—'}
+                  </dd>
+                </div>
                 <div>
                   <dt className='inline font-medium'>Activado: </dt>
                   <dd className='inline'>
@@ -217,37 +236,48 @@ export function MisDittoBotsPanel({ devices }: { devices: DittoBotInventoryUnitS
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Activar otro dispositivo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className='grid max-w-md gap-4' onSubmit={(e) => void handleActivate(e)}>
-            <div className='grid gap-2'>
-              <Label htmlFor='serial2'>Número de serie</Label>
-              <Input
-                id='serial2'
-                required
-                value={serial}
-                onChange={(e) => setSerial(e.target.value)}
-              />
-            </div>
-            <div className='grid gap-2'>
-              <Label htmlFor='code2'>Código de activación</Label>
-              <Input id='code2' required value={code} onChange={(e) => setCode(e.target.value)} />
-            </div>
-            {error ? (
-              <p className='text-sm text-destructive' role='alert'>
-                {error}
-              </p>
-            ) : null}
-            <Button type='submit' disabled={pending}>
-              {pending ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : null}
-              Activar
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      {hasPendingPurchasedDevice ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Activación pendiente</CardTitle>
+            <CardDescription>
+              La activación manual por serial no es necesaria para los DittoBots comprados.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Activar otro dispositivo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form className='grid max-w-md gap-4' onSubmit={(e) => void handleActivate(e)}>
+              <div className='grid gap-2'>
+                <Label htmlFor='serial2'>Número de serie</Label>
+                <Input
+                  id='serial2'
+                  required
+                  value={serial}
+                  onChange={(e) => setSerial(e.target.value)}
+                />
+              </div>
+              <div className='grid gap-2'>
+                <Label htmlFor='code2'>Código de activación</Label>
+                <Input id='code2' required value={code} onChange={(e) => setCode(e.target.value)} />
+              </div>
+              {error ? (
+                <p className='text-sm text-destructive' role='alert'>
+                  {error}
+                </p>
+              ) : null}
+              <Button type='submit' disabled={pending}>
+                {pending ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : null}
+                Activar
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

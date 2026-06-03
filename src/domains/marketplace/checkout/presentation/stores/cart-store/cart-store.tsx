@@ -34,8 +34,9 @@ function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_ITEM': {
       const nextId = makeCartItemId(action.payload.listingType, action.payload.variantId)
+      console.log('nextId', nextId)
       const existing = state.items.find((i) => i.id === nextId)
-
+      console.log('existing', existing)
       if (existing) {
         return {
           ...state,

@@ -49,6 +49,7 @@ export function MarketplaceFeedCard({
       navigateToDetail()
       return
     }
+    console.log('listing', listing)
     addItem({
       listingType: 'product',
       variantId: listing.variantId,

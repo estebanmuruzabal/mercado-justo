@@ -44,7 +44,7 @@ export function SignInForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const isDev = process.env.NODE_ENV === 'development'
-  const devEmail = 'admin@admin.com'
+  const devEmail = 'admin@test.com'
   const devPassword = '123456'
 
   const form = useForm<FormData>({

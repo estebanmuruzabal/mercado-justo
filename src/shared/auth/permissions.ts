@@ -59,6 +59,9 @@ export const PERMISSIONS = {
   // Category taxonomy (super-admin only).
   CATEGORIES_MANAGE: 'categories:manage',
 
+  // Product Base registry (super-admin only).
+  PRODUCT_BASES_MANAGE: 'product_bases:manage',
+
   // Audit log.
   AUDIT_VIEW: 'audit:view',
 } as const

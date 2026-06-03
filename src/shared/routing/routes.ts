@@ -74,6 +74,7 @@ export const ADMIN_MODERATION_PATH = '/admin/moderation' as const
 export const ADMIN_NOTIFICATIONS_PATH = '/admin/notifications' as const
 export const ADMIN_ANALYTICS_PATH = '/admin/analytics' as const
 export const ADMIN_CATEGORIES_PATH = '/admin/categories' as const
+export const ADMIN_PRODUCT_BASES_PATH = '/admin/product-bases' as const
 export const ADMIN_DITTOBOTS_PATH = '/admin/dittobots' as const
 export const ADMIN_DITTOBOT_PRODUCTS_PATH = '/admin/dittobots/products' as const
 export const ADMIN_DITTOBOT_INVENTORY_PATH = '/admin/dittobots/inventory' as const
