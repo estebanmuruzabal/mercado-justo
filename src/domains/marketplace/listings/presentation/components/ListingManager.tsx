@@ -14,10 +14,11 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { createClient } from '@/shared/database/supabase/client'
 import { cn } from '@/shared/utils/utils'
 import {
-  createDraftListingAction,
+  createProductBaseDraftListingAction,
   deleteListingAction,
   getListingsManagerDataAction,
   getListingVariantsAction,
+  getProductBaseForListingFormAction,
   publishListingAction,
   setListingDraftStatusAction,
   upsertListingVariantsAction,
@@ -27,6 +28,7 @@ import {
 import { getListingTemplateForCategoryAction } from '@/domains/marketplace/listings/application/actions/listing-catalog.actions'
 import type { ListingType } from '@/domains/marketplace/listings/domain/listing'
 import type { CharacteristicMap, TemplateDef } from '@/domains/marketplace/listings/domain/product'
+import type { SellerProductBaseDetailDto } from '@/domains/marketplace/product-base/application/dto/seller-product-base.dto'
 import { VariantEditor } from '@/domains/marketplace/listings/presentation/components/variants/VariantEditor'
 import type { VariantEditorValue } from '@/domains/marketplace/listings/presentation/components/variants/VariantCard'
 import { ListingManagerModal } from '@/domains/marketplace/listings/presentation/components/listing-manager/ListingManagerModal'
@@ -59,7 +61,10 @@ type DraftFormState = {
   listingId: string | null
   listingType: ListingType | null
   categoryId: string | null
+  subcategoryId: string | null
   categoryPath: string[]
+  productBaseId: string | null
+  productBase: SellerProductBaseDetailDto | null
 
   // Base fields
   title: string
@@ -71,6 +76,7 @@ type DraftFormState = {
 
   // Category-specific
   characteristics: CharacteristicMap
+  images: string[]
 
   // Variants toggle
   enableVariants: boolean
@@ -88,7 +94,10 @@ const EMPTY_FORM: DraftFormState = {
   listingId: null,
   listingType: null,
   categoryId: null,
+  subcategoryId: null,
   categoryPath: [],
+  productBaseId: null,
+  productBase: null,
   title: '',
   description: '',
   condition: 'new',
@@ -96,6 +105,7 @@ const EMPTY_FORM: DraftFormState = {
   latitude: null,
   longitude: null,
   characteristics: {},
+  images: [],
   enableVariants: false,
   simplePrice: null,
   simpleSku: null,
@@ -363,14 +373,18 @@ export function ListingManager() {
     setModalOpen(true)
   }
 
-  function openEditModal(row: ListingManagerRow) {
+  async function openEditModal(row: ListingManagerRow) {
     const characteristics = (row.characteristics ?? {}) as CharacteristicMap
+    const productBase = row.productBaseId ? await getProductBaseForListingFormAction(row.productBaseId) : null
 
     setForm({
       listingId: row.id,
       listingType: row.listingType,
       categoryId: row.categoryId,
+      subcategoryId: null,
       categoryPath: [],
+      productBaseId: row.productBaseId,
+      productBase,
       title: (row.title ?? '') as string,
       description: (row.description ?? '') as string,
       condition: (row.condition ?? 'new') as 'new' | 'used',
@@ -378,6 +392,7 @@ export function ListingManager() {
       latitude: row.latitude ?? null,
       longitude: row.longitude ?? null,
       characteristics,
+      images: row.images ?? [],
       // Legacy price is treated as simple mode price by default.
       // If the listing has variants, the UI will let the seller enable variants.
       enableVariants: false,
@@ -417,18 +432,57 @@ export function ListingManager() {
       ...current,
       categoryPath: nextPath,
       categoryId,
+      subcategoryId: nextPath.length > 1 ? nextPath[nextPath.length - 1] : null,
+      productBaseId: null,
+      productBase: null,
     }))
   }
 
+  function handleProductBaseChange(productBaseId: string) {
+    setForm((current) => ({ ...current, productBaseId }))
+  }
+
   async function handleStep1Next() {
-    if (!form.listingType || !form.categoryId || !deepestSelectedOk) return
+    if (!form.listingType || !form.categoryId || !deepestSelectedOk || !form.productBaseId) return
 
     setFormBusy(true)
     setFormError(null)
     try {
       if (!form.listingId) {
-        const { id } = await createDraftListingAction(form.categoryId)
-        setForm((current) => ({ ...current, listingId: id, status: 'draft' }))
+        const rootCategoryId = form.categoryPath[0] ?? form.categoryId
+        const subcategoryId = form.categoryPath.length > 1 ? form.categoryPath[form.categoryPath.length - 1] : null
+        const { id, productBase, publicationType } = await createProductBaseDraftListingAction({
+          categoryId: rootCategoryId,
+          subcategoryId,
+          productBaseId: form.productBaseId,
+        })
+        setForm((current) => ({
+          ...current,
+          listingId: id,
+          productBase,
+          listingType: publicationType as ListingType,
+          status: 'draft',
+        }))
+      }
+
+      const productBase = form.productBaseId
+        ? await getProductBaseForListingFormAction(form.productBaseId)
+        : null
+      if (productBase) {
+        setForm((current) => ({
+          ...current,
+          productBase,
+          characteristics: {
+            ...Object.fromEntries(
+              productBase.attributes
+                .filter((attr) => attr.defaultValue !== null && attr.defaultValue !== undefined)
+                .map((attr) => [attr.key, attr.defaultValue]),
+            ),
+            ...current.characteristics,
+          } as CharacteristicMap,
+        }))
+        setStep(2)
+        return
       }
 
       const tpl = await getListingTemplateForCategoryAction(form.listingType, form.categoryId)
@@ -1080,7 +1134,7 @@ export function ListingManager() {
   void _renderStep1
   void _renderStep2
   void _renderStep3
-
+console.log('form', published)
   return (
     <div className='space-y-6'>
       <div className='flex items-start justify-between gap-4'>
@@ -1198,7 +1252,7 @@ export function ListingManager() {
                 {published.map((row) => (
                   <tr key={row.id} className='border-t'>
                     <td className='px-4 py-3'>
-                      <span className='font-medium'>{row.title ?? '(Sin título)'}</span>
+                      <span className='font-medium'>{row.productBase?.name ?? row.title ?? '(Sin título)'}</span>
                     </td>
                     <td className='px-4 py-3 text-sm text-muted-foreground'>
                       {row.categoryId ? byId.get(row.categoryId)?.name ?? row.categoryId : '—'}
@@ -1240,6 +1294,7 @@ export function ListingManager() {
         setCategoryAtLevel={setCategoryAtLevel}
         deepestSelectedOk={deepestSelectedOk}
         listingTypeLabel={(lt) => (lt ? listingTypeLabel(lt) : '')}
+        onProductBaseChange={handleProductBaseChange}
         formBusy={formBusy}
         formError={formError}
         handleStep1Next={handleStep1Next}

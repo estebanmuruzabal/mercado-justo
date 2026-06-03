@@ -1,7 +1,5 @@
 import type { AdminCategoryRow } from '@/domains/marketplace/categories/application/queries/admin-categories.queries'
 
-import { normalizeDittoBotSettings, type DittoBotSettings } from './ditto-bot-settings'
-
 export class DittoBotProductValidationError extends Error {
   constructor(message: string) {
     super(message)
@@ -15,7 +13,6 @@ export type DittoBotProductInput = {
   categoryId: string
   price: number
   tags: string[]
-  dittoBotSettings: DittoBotSettings
 }
 
 export function normalizeTags(raw: string[] | string): string[] {
@@ -94,7 +91,6 @@ export function parseDittoBotProductInput(input: {
   categoryId: string
   price: number
   tags: string[] | string
-  dittoBotSettings?: unknown
 }): DittoBotProductInput {
   const title = input.title.trim()
   const description = input.description.trim()
@@ -115,6 +111,5 @@ export function parseDittoBotProductInput(input: {
     categoryId: input.categoryId,
     price: input.price,
     tags: normalizeTags(input.tags),
-    dittoBotSettings: normalizeDittoBotSettings(input.dittoBotSettings),
   }
 }

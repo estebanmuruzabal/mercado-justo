@@ -5,13 +5,9 @@ import {
   DITTO_BOT_STOCK_INFO_MESSAGE,
 } from '@/domains/dittobots/domain/ditto-bot-product-stock'
 import {
-  isDittoBotPublicationAttributes,
-} from '@/domains/dittobots/application/queries/ditto-bot-public-stock.queries'
-import {
   parseDittoBotProductInput,
   DittoBotProductValidationError,
 } from '@/domains/dittobots/domain/ditto-bot-product'
-import { DEFAULT_DITTO_BOT_SETTINGS } from '@/domains/dittobots/domain/ditto-bot-settings'
 import { aggregateVendorStockFromUnits } from '@/domains/dittobots/domain/vendor-stock.aggregate'
 
 describe('DittoBot catalog stock constants', () => {
@@ -32,7 +28,6 @@ describe('parseDittoBotProductInput', () => {
       categoryId: '10000000-0000-4000-8000-000000000001',
       price: 1000,
       tags: ['dittobot'],
-      dittoBotSettings: DEFAULT_DITTO_BOT_SETTINGS,
     })
 
     expect(parsed).not.toHaveProperty('stock')
@@ -49,14 +44,6 @@ describe('parseDittoBotProductInput', () => {
         tags: ['dittobot'],
       }),
     ).toThrow(DittoBotProductValidationError)
-  })
-})
-
-describe('isDittoBotPublicationAttributes', () => {
-  it('detects DittoBot publications via attributes_json', () => {
-    expect(isDittoBotPublicationAttributes({ isDittoBot: true })).toBe(true)
-    expect(isDittoBotPublicationAttributes({ tags: ['x'] })).toBe(false)
-    expect(isDittoBotPublicationAttributes(null)).toBe(false)
   })
 })
 

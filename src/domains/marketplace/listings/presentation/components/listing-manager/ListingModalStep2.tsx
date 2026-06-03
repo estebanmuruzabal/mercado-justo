@@ -12,6 +12,7 @@ import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 
 import { ListingModalCharacteristicFields } from './ListingModalCharacteristicFields'
+import { ProductBaseAttributeFields } from './product-base/ProductBaseAttributeFields'
 import { ListingLocationPicker } from '@/domains/vendors/presentation/shared/location/listing-location-picker'
 
 export function ListingModalStep2({
@@ -55,14 +56,23 @@ export function ListingModalStep2({
         />
       ) : null}
 
-      <ListingModalCharacteristicFields
-        template={template}
-        form={form}
-        setForm={setForm}
-        variants={variants}
-        variantsLoading={variantsLoading}
-        setVariants={setVariants}
-      />
+      {form.productBase ? (
+        <ProductBaseAttributeFields
+          productBase={form.productBase}
+          values={form.characteristics}
+          disabled={formBusy}
+          onChange={(characteristics) => setForm((current) => ({ ...current, characteristics }))}
+        />
+      ) : (
+        <ListingModalCharacteristicFields
+          template={template}
+          form={form}
+          setForm={setForm}
+          variants={variants}
+          variantsLoading={variantsLoading}
+          setVariants={setVariants}
+        />
+      )}
 
       {!form.enableVariants ? (
         <div className='space-y-2 rounded-xl border bg-background p-4'>

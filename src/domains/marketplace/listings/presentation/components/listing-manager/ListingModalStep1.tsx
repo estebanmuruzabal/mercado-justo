@@ -1,5 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
+import { listActiveProductBasesForSellerAction } from '@/domains/marketplace/listings/application/actions/listing-manager.actions'
+import type { SellerProductBaseSummaryDto } from '@/domains/marketplace/product-base/application/dto/seller-product-base.dto'
 import type { DraftFormState } from './types'
 
 import { Badge } from '@/shared/ui/badge'
@@ -9,6 +13,13 @@ import { Label } from '@/shared/ui/label'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/utils/utils'
 import { BadgeCheck } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 export function ListingModalStep1({
   form,
@@ -21,6 +32,7 @@ export function ListingModalStep1({
   categoryOptionsAtLevel,
   setCategoryAtLevel,
   listingTypeLabel,
+  onProductBaseChange,
   onContinue,
 }: {
   form: DraftFormState
@@ -33,8 +45,39 @@ export function ListingModalStep1({
   categoryOptionsAtLevel: (level: number) => Array<{ id: string; name: string }>
   setCategoryAtLevel: (level: number, categoryId: string) => void
   listingTypeLabel: (listingType: DraftFormState['listingType']) => string
+  onProductBaseChange: (productBaseId: string) => void
   onContinue: () => void
 }) {
+  const [productBases, setProductBases] = useState<SellerProductBaseSummaryDto[]>([])
+  const [basesLoading, setBasesLoading] = useState(false)
+  const [basesError, setBasesError] = useState<string | null>(null)
+  const rootCategoryId = form.categoryPath[0] ?? null
+  const subcategoryId = form.categoryPath.length > 1 ? form.categoryPath[form.categoryPath.length - 1] : null
+
+  useEffect(() => {
+    if (!deepestSelectedOk || !rootCategoryId) {
+      setProductBases([])
+      return
+    }
+
+    void (async () => {
+      setBasesLoading(true)
+      setBasesError(null)
+      try {
+        const rows = await listActiveProductBasesForSellerAction({
+          categoryId: rootCategoryId,
+          subcategoryId,
+        })
+        setProductBases(rows)
+      } catch (err) {
+        setBasesError(err instanceof Error ? err.message : 'No se pudieron cargar plantillas.')
+        setProductBases([])
+      } finally {
+        setBasesLoading(false)
+      }
+    })()
+  }, [deepestSelectedOk, rootCategoryId, subcategoryId])
+
   return (
     <div className='space-y-5'>
       <div className='space-y-1'>
@@ -115,12 +158,38 @@ export function ListingModalStep1({
         <p className='text-sm text-muted-foreground'>Elegí una categoría para continuar.</p>
       )}
 
+      {deepestSelectedOk ? (
+        <div className='space-y-2'>
+          <Label>Plantilla (Product Base)</Label>
+          <Select
+            value={form.productBaseId ?? undefined}
+            disabled={formBusy || basesLoading || productBases.length === 0}
+            onValueChange={onProductBaseChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={basesLoading ? 'Cargando plantillas…' : 'Seleccionar plantilla'} />
+            </SelectTrigger>
+            <SelectContent>
+              {productBases.map((base) => (
+                <SelectItem key={base.id} value={base.id}>
+                  {base.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {basesError ? <p className='text-sm text-destructive'>{basesError}</p> : null}
+          {!basesLoading && productBases.length === 0 ? (
+            <p className='text-sm text-muted-foreground'>No hay plantillas activas para esta categoría.</p>
+          ) : null}
+        </div>
+      ) : null}
+
       {formError ? <p className='text-sm text-destructive'>{formError}</p> : null}
 
       <DialogFooter className='pt-2'>
         <Button
           type='button'
-          disabled={!form.listingType || !deepestSelectedOk || formBusy}
+          disabled={!form.listingType || !deepestSelectedOk || !form.productBaseId || formBusy}
           onClick={() => onContinue()}
         >
           {formBusy ? 'Creando borrador…' : 'Continuar'}

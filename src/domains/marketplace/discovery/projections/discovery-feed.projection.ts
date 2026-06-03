@@ -4,10 +4,7 @@ import type { ListingType } from '@/domains/marketplace/listings/domain/listing'
 import type { MarketplaceListing } from '@/domains/marketplace/listings/domain/marketplace'
 import { resolveCommercialSnapshots } from '@/domains/marketplace/offer'
 import type { CommercialSnapshot } from '@/domains/marketplace/offer'
-import {
-  countDittoBotPublicStockByProductIds,
-  isDittoBotPublicationAttributes,
-} from '@/domains/dittobots/application/queries/ditto-bot-public-stock.queries'
+import { countDittoBotPublicStockByProductIds } from '@/domains/dittobots/application/queries/ditto-bot-public-stock.queries'
 import {
   mapPublicationRowsToMarketplaceListings,
   type PublicationFeedRow,
@@ -104,13 +101,7 @@ async function overlayDittoBotInventoryStock(
   snapshots: Map<string, CommercialSnapshot>,
 ): Promise<Map<string, CommercialSnapshot>> {
   const dittoBotPublicationIds = rows
-    .filter(
-      (row) =>
-        isDittoBotPublicationAttributes(row.attributes_json) ||
-        isDittoBotPublicationAttributes(
-          snapshots.get(row.id)?.attributes as Record<string, unknown> | null | undefined,
-        ),
-    )
+    .filter((row) => row.publication_type === 'dittobot')
     .map((row) => row.id)
 
   if (dittoBotPublicationIds.length === 0) return snapshots

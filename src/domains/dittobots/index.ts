@@ -47,7 +47,6 @@ export type { GrowerNetworkActor } from './domain/grower-network-policy'
 export type { DittoCommunityMapLayer, DittoCommunityMapQuery } from './domain/device-map.hooks'
 export {
   countDittoBotPublicStockByProductIds,
-  isDittoBotPublicationAttributes,
 } from './application/queries/ditto-bot-public-stock.queries'
 export {
   DITTO_BOT_CATALOG_LISTING_STOCK,

@@ -11,7 +11,7 @@ export default async function ListingDetailPage({
 }) {
   const { listingType, id } = await params
 
-  if (listingType !== 'product') {
+  if (listingType !== 'product' && listingType !== 'dittobot') {
     return (
       <main className='min-h-screen bg-background px-6 py-10'>
         <div className='mx-auto max-w-3xl space-y-6'>
@@ -34,7 +34,7 @@ export default async function ListingDetailPage({
 
   const { data: listingRow, error: listingError } = await supabase
     .from('listing')
-    .select('id,title,store_id,status,characteristics,latitude,longitude,is_ditto_bot,store(name)')
+    .select('id,title,store_id,status,characteristics,latitude,longitude,listing_type,store(name)')
     .eq('id', id)
     .eq('listing_type', listingType)
     .eq('status', 'published')
@@ -66,14 +66,14 @@ export default async function ListingDetailPage({
     store_id: string
     latitude: number | null
     longitude: number | null
-    is_ditto_bot?: boolean | null
+    listing_type: string
     store?: { name: string | null } | null
   }
 
   const listingTyped = listingRow as ListingRow
   const storeName = listingTyped.store?.name ?? 'Vendedor'
 
-  const dittoBotInventoryStock = listingTyped.is_ditto_bot
+  const dittoBotInventoryStock = listingTyped.listing_type === 'dittobot'
     ? (await countDittoBotPublicStockByProductIds([listingTyped.id])).get(listingTyped.id) ?? 0
     : null
 

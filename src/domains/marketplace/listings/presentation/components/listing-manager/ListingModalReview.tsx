@@ -9,6 +9,13 @@ import { Button } from '@/shared/ui/button'
 import { DialogFooter } from '@/shared/ui/dialog'
 import { Label } from '@/shared/ui/label'
 
+function formatAttributeValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—'
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (Array.isArray(value)) return value.length ? value.map(formatAttributeValue).join(', ') : '—'
+  return JSON.stringify(value)
+}
+
 export function ListingModalReview({
   form,
   variants,
@@ -32,7 +39,9 @@ export function ListingModalReview({
   const imageFromVariant = typeof defaultVariant?.attributes?.['image'] === 'string' ? defaultVariant.attributes['image'] : null
   const imageFromLegacy = typeof form.characteristics?.['image'] === 'string' ? form.characteristics['image'] : null
   const reviewImage = imageFromVariant ?? imageFromLegacy
-
+  const reviewTitle = form.productBase?.name ?? form.title
+  const productBaseAttributes = form.productBase?.attributes ?? []
+console.log('reviewImage', form)
   return (
     <div className='space-y-5'>
       <div className='space-y-1'>
@@ -52,14 +61,14 @@ export function ListingModalReview({
 
         <div className='space-y-1'>
           <Label>Title</Label>
-          <p className='text-sm font-semibold'>{form.title || '—'}</p>
+          <p className='text-sm font-semibold'>{reviewTitle || '—'}</p>
         </div>
 
         {reviewImage ? (
           <div className='space-y-2'>
             <Label>Preview</Label>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={reviewImage} alt={form.title || 'preview'} className='h-40 w-full rounded-md object-cover' />
+            <img src={reviewImage} alt={reviewTitle || 'preview'} className='h-40 w-full rounded-md object-cover' />
           </div>
         ) : null}
 
@@ -70,17 +79,28 @@ export function ListingModalReview({
 
         <div className='space-y-2'>
           <Label>Characteristics</Label>
-          <div className='flex flex-wrap gap-2'>
-            {Object.entries(form.characteristics)
-              .slice(0, 12)
-              .map(([k, v]) => (
+          {productBaseAttributes.length > 0 ? (
+            <div className='grid gap-2 sm:grid-cols-2'>
+              {productBaseAttributes.map((attr) => (
+                <div key={attr.id} className='rounded-md border bg-muted/10 px-3 py-2'>
+                  <p className='text-xs font-medium text-foreground'>{attr.label}</p>
+                  <p className='break-words text-sm text-muted-foreground'>
+                    {formatAttributeValue(form.characteristics[attr.key] ?? attr.defaultValue)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className='flex flex-wrap gap-2'>
+              {Object.entries(form.characteristics).map(([k, v]) => (
                 <span key={k} className='rounded-md border bg-muted/10 px-2 py-1 text-xs text-muted-foreground'>
-                  {k}: {typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? String(v) : JSON.stringify(v)}
+                  {k}: {formatAttributeValue(v)}
                 </span>
               ))}
 
-            {Object.keys(form.characteristics).length === 0 ? <span className='text-sm text-muted-foreground'>—</span> : null}
-          </div>
+              {Object.keys(form.characteristics).length === 0 ? <span className='text-sm text-muted-foreground'>—</span> : null}
+            </div>
+          )}
         </div>
 
         {form.enableVariants ? (

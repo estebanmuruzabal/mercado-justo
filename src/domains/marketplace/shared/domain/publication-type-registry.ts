@@ -161,7 +161,7 @@ export const PERSISTABLE_PUBLICATION_TYPES = ALL_PUBLICATION_TYPE_CODES.filter(
 )
 
 /** Types backed by legacy Postgres listing_type enum today. */
-export const LEGACY_DB_LISTING_TYPES = ['product', 'property', 'service'] as const
+export const LEGACY_DB_LISTING_TYPES = ['product', 'property', 'service', 'experience', 'dittobot'] as const
 
 export type LegacyDbListingType = (typeof LEGACY_DB_LISTING_TYPES)[number]
 

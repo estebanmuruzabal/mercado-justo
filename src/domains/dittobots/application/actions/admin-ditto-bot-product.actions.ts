@@ -20,7 +20,6 @@ import {
   DittoBotProductValidationError,
   parseDittoBotProductInput,
 } from '../../domain/ditto-bot-product'
-import { DEFAULT_DITTO_BOT_SETTINGS } from '../../domain/ditto-bot-settings'
 import {
   deactivateDittoBotProduct,
   findOfficialDittoBotVendor,
@@ -33,16 +32,6 @@ export type DittoBotProductActionResult =
   | { success: true; productId?: string }
   | { success: false; error: string }
 
-const settingsSchema = z.object({
-  requiresActivation: z.boolean().optional(),
-  autoGenerateSerial: z.boolean().optional(),
-  autoGenerateActivationCode: z.boolean().optional(),
-  supportsOta: z.boolean().optional(),
-  requiresOwner: z.boolean().optional(),
-  requiresVendorAssignment: z.boolean().optional(),
-  requiresDeviceLink: z.boolean().optional(),
-})
-
 const productSchema = z.object({
   title: z.string().trim().min(3).max(120),
   description: z.string().trim().min(10).max(5000),
@@ -51,7 +40,6 @@ const productSchema = z.object({
   tags: z.union([z.array(z.string()), z.string()]),
   image: z.string().trim().url('La imagen principal debe ser una URL válida.'),
   images: z.array(z.string().url()).optional().default([]),
-  dittoBotSettings: settingsSchema.optional(),
 })
 
 const updateProductSchema = productSchema.partial().extend({
@@ -84,10 +72,7 @@ export async function createDittoBotProductAction(
     }
 
     const categories = await listCategoriesForAdmin()
-    const productInput = parseDittoBotProductInput({
-      ...parsed.data,
-      dittoBotSettings: parsed.data.dittoBotSettings ?? DEFAULT_DITTO_BOT_SETTINGS,
-    })
+    const productInput = parseDittoBotProductInput(parsed.data)
 
     assertDittoBotCategory(productInput.categoryId, categories)
     const tags = assertDittoBotTags(productInput.tags)
@@ -116,7 +101,6 @@ export async function createDittoBotProductAction(
           categoryId: productInput.categoryId,
           price: productInput.price,
           characteristics,
-          dittoBotSettings: productInput.dittoBotSettings,
           latitude: official.latitude,
           longitude: official.longitude,
           actorUserId: actor.userId,
@@ -148,7 +132,7 @@ export async function updateDittoBotProductAction(
   try {
     const actor = await assertSuperAdmin()
     const admin = createAdminClient()
-    const { productId, tags, dittoBotSettings, image, images, ...rest } = parsed.data
+    const { productId, tags, image, images, ...rest } = parsed.data
 
     const updatePayload: Parameters<typeof updateDittoBotProduct>[2] = {}
 
@@ -176,13 +160,6 @@ export async function updateDittoBotProductAction(
         images: images !== undefined ? images : existing.images,
       })
     }
-    if (dittoBotSettings !== undefined) {
-      updatePayload.dittoBotSettings = {
-        ...DEFAULT_DITTO_BOT_SETTINGS,
-        ...dittoBotSettings,
-      }
-    }
-
     await withAudit(
       actor,
       {

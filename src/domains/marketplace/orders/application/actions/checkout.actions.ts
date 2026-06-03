@@ -135,14 +135,14 @@ async function validateDittoBotStockForCheckout(
 
   const { data: listingRows, error } = await supabase
     .from('listing')
-    .select('id, is_ditto_bot')
+    .select('id, listing_type')
     .in('id', listingIds)
 
   if (error) throw error
 
   const dittoBotListingIds = new Set(
-    ((listingRows ?? []) as Array<{ id: string; is_ditto_bot: boolean }>)
-      .filter((row) => row.is_ditto_bot)
+    ((listingRows ?? []) as Array<{ id: string; listing_type: string }>)
+      .filter((row) => row.listing_type === 'dittobot')
       .map((row) => row.id),
   )
 

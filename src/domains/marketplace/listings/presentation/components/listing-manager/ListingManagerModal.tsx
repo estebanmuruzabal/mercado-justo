@@ -29,6 +29,7 @@ export function ListingManagerModal({
   setCategoryAtLevel,
   deepestSelectedOk,
   listingTypeLabel,
+  onProductBaseChange,
   formBusy,
   formError,
   handleStep1Next,
@@ -58,6 +59,7 @@ export function ListingManagerModal({
   setCategoryAtLevel: (level: number, categoryId: string) => void
   deepestSelectedOk: boolean
   listingTypeLabel: (listingType: DraftFormState['listingType']) => string
+  onProductBaseChange: (productBaseId: string) => void
   formBusy: boolean
   formError: string | null
   handleStep1Next: () => Promise<void> | void
@@ -96,6 +98,7 @@ export function ListingManagerModal({
               categoryOptionsAtLevel={categoryOptionsAtLevel}
               setCategoryAtLevel={setCategoryAtLevel}
               listingTypeLabel={(lt) => listingTypeLabel(lt)}
+              onProductBaseChange={onProductBaseChange}
               onContinue={() => void handleStep1Next()}
             />
           ) : step === 2 ? (

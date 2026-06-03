@@ -5,9 +5,20 @@ import { getStoreByUserId } from '@/domains/vendors/infrastructure/store.service
 import { getUserRoleByUserId } from '@/domains/users/application/queries/user.queries'
 import { ROLES, type Role } from '@/domains/users/domain/roles'
 import type { ListingType } from '@/domains/marketplace/listings/domain/listing'
+import {
+  getProductBaseForListingForm,
+  listActiveProductBasesForSeller,
+} from '@/domains/marketplace/product-base/application/queries/seller-product-base.queries'
+import {
+  publicationTypeFromProductBaseType,
+  resolveListingDbTypeFromProductBaseType,
+} from '@/domains/marketplace/product-base/domain/product-base-listing-bridge'
+import type { ProductBaseType } from '@/domains/marketplace/product-base/domain/product-base'
 import { z } from 'zod'
 
 type ListingAttributesPayload = Record<string, unknown>
+
+const TITLE_ATTRIBUTE_KEYS = ['nombre_producto', 'product_name', 'title', 'name', 'nombre', 'modelo', 'model']
 
 function assertSellerOrAdmin(role: Role | null) {
   if (
@@ -24,15 +35,18 @@ export type ListingManagerRow = {
   status: 'draft' | 'published'
   listingType: ListingType
   categoryId: string
+  productBaseId: string | null
   title: string | null
   description: string | null
   price: number | null
   stock: number | null
   condition: 'new' | 'used' | null
   characteristics: ListingAttributesPayload
+  images: string[]
   latitude: number | null
   longitude: number | null
   createdAt: string
+  isLegacyReadOnly: boolean
 }
 
 export type ListingVariantRow = {
@@ -76,6 +90,28 @@ async function assertListingOwnership(supabase: Awaited<ReturnType<typeof create
   if (typedListingRow.store_id !== storeId) throw new Error('Forbidden')
 }
 
+function resolveTitleFromProductBaseAttributes(
+  attributes: NonNullable<Awaited<ReturnType<typeof getProductBaseForListingForm>>>['attributes'],
+  values: ListingAttributesPayload,
+): string | null {
+  for (const key of TITLE_ATTRIBUTE_KEYS) {
+    const attr = attributes.find((candidate) => candidate.key === key)
+    const value = attr ? values[attr.key] : undefined
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+
+  const fallbackAttr = attributes.find(
+    (attr) =>
+      attr.required &&
+      !attr.isVariantDimension &&
+      (attr.type === 'TEXT' || attr.type === 'TEXTAREA') &&
+      typeof values[attr.key] === 'string' &&
+      String(values[attr.key]).trim().length > 0,
+  )
+
+  return fallbackAttr ? String(values[fallbackAttr.key]).trim() : null
+}
+
 export async function getListingsManagerDataAction() {
   const { supabase, store } = await getSellerContext()
 
@@ -91,15 +127,18 @@ export async function getListingsManagerDataAction() {
     status: row.status as 'draft' | 'published',
     listingType: row.listing_type as ListingType,
     categoryId: row.category_id as string,
+    productBaseId: (row.product_base_id as string | null) ?? null,
     title: (row.title as string | null) ?? null,
     description: (row.description as string | null) ?? null,
     price: (row.price as number | null) ?? null,
     stock: (row.stock as number | null) ?? null,
     condition: (row.condition as 'new' | 'used' | null) ?? null,
     characteristics: (row.characteristics as ListingAttributesPayload) ?? {},
+    images: Array.isArray(row.images) ? row.images.filter((item): item is string => typeof item === 'string') : [],
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),
     createdAt: row.created_at as string,
+    isLegacyReadOnly: row.product_base_id == null,
   }))
 
   return {
@@ -111,6 +150,70 @@ export async function getListingsManagerDataAction() {
       latitude: store.latitude,
       longitude: store.longitude,
     },
+  }
+}
+
+export async function listActiveProductBasesForSellerAction(input: {
+  categoryId: string
+  subcategoryId?: string | null
+}) {
+  await getSellerContext()
+  return listActiveProductBasesForSeller(input)
+}
+
+export async function getProductBaseForListingFormAction(productBaseId: string) {
+  await getSellerContext()
+  return getProductBaseForListingForm(productBaseId)
+}
+
+export async function createProductBaseDraftListingAction(input: {
+  categoryId: string
+  subcategoryId?: string | null
+  productBaseId: string
+}) {
+  const { supabase, store } = await getSellerContext()
+  const productBase = await getProductBaseForListingForm(input.productBaseId)
+
+  if (!productBase) throw new Error('La plantilla seleccionada no está disponible.')
+  if (productBase.categoryId !== input.categoryId) {
+    throw new Error('La plantilla no corresponde a la categoría seleccionada.')
+  }
+  if ((productBase.subcategoryId ?? null) !== (input.subcategoryId ?? null)) {
+    throw new Error('La plantilla no corresponde a la subcategoría seleccionada.')
+  }
+
+  const listingDbType = resolveListingDbTypeFromProductBaseType(productBase.type as ProductBaseType)
+
+  const { data, error } = await supabase
+    .from('listing')
+    .insert({
+      store_id: store.id,
+      category_id: input.subcategoryId ?? input.categoryId,
+      product_base_id: input.productBaseId,
+      listing_type: listingDbType,
+      price_mode: 'centralized',
+      status: 'draft',
+      characteristics: {},
+      images: [],
+      condition: 'new',
+      ...(listingDbType === 'product' || listingDbType === 'dittobot'
+        ? {
+            latitude: store.latitude,
+            longitude: store.longitude,
+          }
+        : {}),
+    } as never)
+    .select('id')
+    .single()
+
+  if (error) throw error
+  const created = data as { id: string } | null
+  if (!created?.id) throw new Error('Failed to create draft listing.')
+
+  return {
+    id: created.id,
+    productBase,
+    publicationType: publicationTypeFromProductBaseType(productBase.type as ProductBaseType),
   }
 }
 
@@ -165,12 +268,24 @@ export async function updateListingDraftAction(id: string, payload: Partial<{
   latitude: number | null
   longitude: number | null
 }>) {
-  const { supabase } = await getSellerContext()
+  const { supabase, store } = await getSellerContext()
 
   const { categoryId, ...rest } = payload
 
+  const { data: listingRow, error: listingError } = await supabase
+    .from('listing')
+    .select('id, store_id, product_base_id')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (listingError) throw listingError
+  if (!listingRow) throw new Error('Listing not found.')
+
+  const listingTyped = listingRow as { store_id: string; product_base_id: string | null }
+  if (listingTyped.store_id !== store.id) throw new Error('Forbidden')
+
   let listing_typePatch: string | undefined
-  if (categoryId) {
+  if (categoryId && !listingTyped.product_base_id) {
     const { data } = await supabase
       .from('category')
       .select('listing_type')
@@ -180,15 +295,26 @@ export async function updateListingDraftAction(id: string, payload: Partial<{
     listing_typePatch = dataTyped?.listing_type
   }
 
+  const updatePayload: Record<string, unknown> = {
+    ...(categoryId ? { category_id: categoryId } : {}),
+    ...(listing_typePatch ? { listing_type: listing_typePatch } : {}),
+    ...(rest as Record<string, unknown>),
+  }
+
+  if (listingTyped.product_base_id && payload.characteristics) {
+    const productBase = await getProductBaseForListingForm(listingTyped.product_base_id)
+    const titleFromAttributes = productBase
+      ? resolveTitleFromProductBaseAttributes(productBase.attributes, payload.characteristics)
+      : null
+
+    if (titleFromAttributes) {
+      updatePayload.title = titleFromAttributes
+    }
+  }
+
   const { error } = await supabase
     .from('listing')
-    .update(
-      {
-        ...(categoryId ? { category_id: categoryId } : {}),
-        ...(listing_typePatch ? { listing_type: listing_typePatch } : {}),
-        ...(rest as Record<string, unknown>),
-      } as never
-    )
+    .update(updatePayload as never)
     .eq('id', id)
 
   if (error) throw error

@@ -20,8 +20,3 @@ export async function countDittoBotPublicStockByProductIds(
   return result
 }
 
-export function isDittoBotPublicationAttributes(
-  attributes: Record<string, unknown> | null | undefined,
-): boolean {
-  return attributes?.isDittoBot === true
-}

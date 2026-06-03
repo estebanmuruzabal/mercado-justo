@@ -1,7 +1,6 @@
 import type { createAdminClient } from '@/shared/database/admin-client'
 
 import { DITTO_BOT_CATALOG_LISTING_STOCK } from '../domain/ditto-bot-product-stock'
-import { normalizeDittoBotSettings, type DittoBotSettings } from '../domain/ditto-bot-settings'
 
 type AdminClient = ReturnType<typeof createAdminClient>
 
@@ -55,7 +54,6 @@ export type DittoBotProductRow = {
   tags: string[]
   image: string | null
   images: string[]
-  dittoBotSettings: DittoBotSettings
   createdAt: string
 }
 
@@ -69,7 +67,6 @@ type ListingRow = {
   status: string
   moderation_status: string
   characteristics: { tags?: unknown; image?: unknown; images?: unknown } | null
-  ditto_bot_settings: unknown
   created_at: string
   category?: { name: string | null } | null
 }
@@ -109,7 +106,6 @@ function mapProductRow(row: ListingRow): DittoBotProductRow {
     tags,
     image,
     images,
-    dittoBotSettings: normalizeDittoBotSettings(row.ditto_bot_settings),
     createdAt: row.created_at,
   }
 }
@@ -121,10 +117,10 @@ export async function listDittoBotProductsAdmin(admin: AdminClient): Promise<Dit
   const { data, error } = await admin
     .from('listing')
     .select(
-      'id, title, description, price, stock, category_id, status, moderation_status, characteristics, ditto_bot_settings, created_at, category(name)',
+      'id, title, description, price, stock, category_id, status, moderation_status, characteristics, created_at, category(name)',
     )
     .eq('store_id', official.id)
-    .eq('is_ditto_bot', true)
+    .eq('listing_type', 'dittobot')
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -141,11 +137,11 @@ export async function getDittoBotProductByIdAdmin(
   const { data, error } = await admin
     .from('listing')
     .select(
-      'id, title, description, price, stock, category_id, status, moderation_status, characteristics, ditto_bot_settings, created_at, category(name)',
+      'id, title, description, price, stock, category_id, status, moderation_status, characteristics, created_at, category(name)',
     )
     .eq('id', productId)
     .eq('store_id', official.id)
-    .eq('is_ditto_bot', true)
+    .eq('listing_type', 'dittobot')
     .maybeSingle()
 
   if (error) throw error
@@ -159,7 +155,6 @@ export type CreateDittoBotProductRepoInput = {
   categoryId: string
   price: number
   characteristics: Record<string, unknown>
-  dittoBotSettings: DittoBotSettings
   latitude: number | null
   longitude: number | null
   actorUserId: string
@@ -179,14 +174,12 @@ export async function insertDittoBotProduct(
       price: input.price,
       stock: DITTO_BOT_CATALOG_LISTING_STOCK,
       condition: 'new',
-      listing_type: 'product',
+      listing_type: 'dittobot',
       status: 'published',
       moderation_status: 'approved',
       moderated_by: input.actorUserId,
       moderated_at: new Date().toISOString(),
-      is_ditto_bot: true,
       price_mode: 'centralized',
-      ditto_bot_settings: input.dittoBotSettings,
       characteristics: input.characteristics,
       latitude: input.latitude,
       longitude: input.longitude,
@@ -218,7 +211,6 @@ export type UpdateDittoBotProductRepoInput = {
   categoryId?: string
   price?: number
   characteristics?: Record<string, unknown>
-  dittoBotSettings?: DittoBotSettings
 }
 
 export async function updateDittoBotProduct(
@@ -232,7 +224,6 @@ export async function updateDittoBotProduct(
   if (input.categoryId !== undefined) updatePayload.category_id = input.categoryId
   if (input.price !== undefined) updatePayload.price = input.price
   if (input.characteristics !== undefined) updatePayload.characteristics = input.characteristics
-  if (input.dittoBotSettings !== undefined) updatePayload.ditto_bot_settings = input.dittoBotSettings
   updatePayload.stock = DITTO_BOT_CATALOG_LISTING_STOCK
 
   const { error } = await admin.from('listing').update(updatePayload as never).eq('id', productId)

@@ -10,7 +10,6 @@ import {
   updateDittoBotProductAction,
 } from '@/domains/dittobots/application/actions/admin-ditto-bot-product.actions'
 import type { DittoBotProductRow } from '@/domains/dittobots/application/queries/admin-ditto-bot-products.queries'
-import { DEFAULT_DITTO_BOT_SETTINGS, type DittoBotSettings } from '@/domains/dittobots/domain/ditto-bot-settings'
 import { DITTO_BOT_STOCK_INFO_MESSAGE } from '@/domains/dittobots/domain/ditto-bot-product-stock'
 import type { AdminCategoryRow } from '@/domains/marketplace/categories/application/queries/admin-categories.queries'
 import { Badge } from '@/shared/ui/badge'
@@ -33,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select'
-import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 import { DittoBotProductImagesEditor } from '@/shared/admin-ui/dittobots/DittoBotProductImagesEditor'
 
@@ -45,7 +43,6 @@ type ProductForm = {
   tags: string
   image: string | null
   images: string[]
-  dittoBotSettings: DittoBotSettings
 }
 
 const EMPTY_FORM: ProductForm = {
@@ -56,7 +53,6 @@ const EMPTY_FORM: ProductForm = {
   tags: '',
   image: null,
   images: [],
-  dittoBotSettings: DEFAULT_DITTO_BOT_SETTINGS,
 }
 
 function productToForm(product: DittoBotProductRow): ProductForm {
@@ -68,7 +64,6 @@ function productToForm(product: DittoBotProductRow): ProductForm {
     tags: product.tags.join(', '),
     image: product.image,
     images: product.images,
-    dittoBotSettings: product.dittoBotSettings,
   }
 }
 
@@ -117,7 +112,6 @@ export function DittoBotProductsPanel({
       tags,
       image: form.image,
       images: form.images,
-      dittoBotSettings: form.dittoBotSettings,
       createdAt: new Date().toISOString(),
     }
   }
@@ -149,7 +143,6 @@ export function DittoBotProductsPanel({
       tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
       image: form.image ?? '',
       images: form.images,
-      dittoBotSettings: form.dittoBotSettings,
     }
 
     const result = editingId
@@ -284,7 +277,7 @@ export function DittoBotProductsPanel({
             <DialogHeader>
               <DialogTitle>{editingId ? 'Editar producto' : 'Nuevo producto DittoBot'}</DialogTitle>
               <DialogDescription>
-                listing_type=product, is_ditto_bot=true, price_mode=centralized
+                listing_type=dittobot, price_mode=centralized. Los atributos operativos viven en Product Base.
               </DialogDescription>
             </DialogHeader>
             <div className='grid gap-4 py-4'>
@@ -356,34 +349,6 @@ export function DittoBotProductsPanel({
                   value={form.tags}
                   onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
                 />
-              </div>
-              <div className='space-y-2 rounded-lg border p-3'>
-                <p className='text-sm font-medium'>ditto_bot_settings</p>
-                {(
-                  [
-                    ['requiresActivation', 'Requiere activación'],
-                    ['autoGenerateSerial', 'Auto serial'],
-                    ['autoGenerateActivationCode', 'Auto código activación'],
-                    ['supportsOta', 'Soporta OTA'],
-                    ['requiresOwner', 'Requiere owner'],
-                    ['requiresVendorAssignment', 'Requiere asignación vendor'],
-                    ['requiresDeviceLink', 'Requiere link dispositivo'],
-                  ] as const
-                ).map(([key, label]) => (
-                  <div key={key} className='flex items-center justify-between gap-4'>
-                    <Label htmlFor={key}>{label}</Label>
-                    <Switch
-                      id={key}
-                      checked={form.dittoBotSettings[key]}
-                      onCheckedChange={(checked) =>
-                        setForm((f) => ({
-                          ...f,
-                          dittoBotSettings: { ...f.dittoBotSettings, [key]: checked },
-                        }))
-                      }
-                    />
-                  </div>
-                ))}
               </div>
             </div>
             <DialogFooter>

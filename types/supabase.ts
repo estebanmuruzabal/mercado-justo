@@ -491,9 +491,8 @@ export type Database = {
           condition: string | null
           created_at: string
           description: string | null
-          ditto_bot_settings: Json | null
           id: string
-          is_ditto_bot: boolean
+          images: Json
           latitude: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           longitude: number | null
@@ -503,6 +502,7 @@ export type Database = {
           moderation_status: string
           price: number | null
           price_mode: string
+          product_base_id: string | null
           status: Database["public"]["Enums"]["listing_status"]
           stock: number
           store_id: string
@@ -514,9 +514,8 @@ export type Database = {
           condition?: string | null
           created_at?: string
           description?: string | null
-          ditto_bot_settings?: Json | null
           id?: string
-          is_ditto_bot?: boolean
+          images?: Json
           latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           longitude?: number | null
@@ -526,6 +525,7 @@ export type Database = {
           moderation_status?: string
           price?: number | null
           price_mode?: string
+          product_base_id?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
           store_id: string
@@ -537,9 +537,8 @@ export type Database = {
           condition?: string | null
           created_at?: string
           description?: string | null
-          ditto_bot_settings?: Json | null
           id?: string
-          is_ditto_bot?: boolean
+          images?: Json
           latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           longitude?: number | null
@@ -549,6 +548,7 @@ export type Database = {
           moderation_status?: string
           price?: number | null
           price_mode?: string
+          product_base_id?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           stock?: number
           store_id?: string
@@ -560,6 +560,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_product_base_id_fkey"
+            columns: ["product_base_id"]
+            isOneToOne: false
+            referencedRelation: "product_base"
             referencedColumns: ["id"]
           },
           {
@@ -2169,7 +2176,12 @@ export type Database = {
     }
     Enums: {
       listing_status: "draft" | "published"
-      listing_type: "product" | "service" | "property" | "experience"
+      listing_type:
+        | "product"
+        | "service"
+        | "property"
+        | "experience"
+        | "dittobot"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2301,7 +2313,13 @@ export const Constants = {
   public: {
     Enums: {
       listing_status: ["draft", "published"],
-      listing_type: ["product", "service", "property", "experience"],
+      listing_type: [
+        "product",
+        "service",
+        "property",
+        "experience",
+        "dittobot",
+      ],
     },
   },
 } as const

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 
 import type { ProductBaseAttributeDto } from '@/domains/marketplace/product-base/application/dto/product-base.dto'
@@ -45,6 +46,7 @@ export function ProductBaseAttributeEditor({
   onChange: (next: ProductBaseAttributeDto[]) => void
 }) {
   const variantDimensionIndex = attributes.findIndex((attr) => attr.isVariantDimension)
+  const [optionDrafts, setOptionDrafts] = useState<Record<string, string>>({})
 
   function updateAttribute(index: number, patch: Partial<ProductBaseAttributeDto>) {
     onChange(
@@ -86,11 +88,12 @@ export function ProductBaseAttributeEditor({
       ) : null}
 
       {attributes.map((attr, index) => {
-        const optionsText = (attr.options ?? []).join(', ')
+        const rowKey = attributeRowKey(attr, index)
+        const optionsText = optionDrafts[rowKey] ?? (attr.options ?? []).join(', ')
         const canMarkVariant = variantDimensionIndex === -1 || variantDimensionIndex === index
 
         return (
-          <div key={attributeRowKey(attr, index)} className='space-y-3 rounded-lg border p-4'>
+          <div key={rowKey} className='space-y-3 rounded-lg border p-4'>
             <div className='flex items-start justify-between gap-3'>
               <p className='text-sm font-medium'>Atributo #{index + 1}</p>
               <Button
@@ -158,12 +161,21 @@ export function ProductBaseAttributeEditor({
                 <Label>Opciones (separadas por coma)</Label>
                 <Textarea
                   value={optionsText}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const nextText = e.target.value
+                    setOptionDrafts((current) => ({ ...current, [rowKey]: nextText }))
                     updateAttribute(index, {
-                      options: e.target.value
+                      options: nextText
                         .split(',')
                         .map((option) => option.trim())
                         .filter(Boolean),
+                    })
+                  }}
+                  onBlur={() =>
+                    setOptionDrafts((current) => {
+                      const next = { ...current }
+                      delete next[rowKey]
+                      return next
                     })
                   }
                   placeholder='XS, S, M, L'
