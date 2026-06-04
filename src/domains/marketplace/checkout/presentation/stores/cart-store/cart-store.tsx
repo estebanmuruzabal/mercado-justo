@@ -12,6 +12,11 @@ import {
   removeServerCartLine,
   upsertServerCartLine,
 } from '@/domains/marketplace/transaction/application/actions/cart.actions'
+import { createLogger, LogScopes } from '@/shared/lib/logger/logger'
+
+const logAddItem = createLogger(LogScopes.cart.addItem)
+const logRemoveItem = createLogger(LogScopes.cart.removeItem)
+const logUpdateQuantity = createLogger(LogScopes.cart.updateQuantity)
 
 type CartAction =
   | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'id'> }
@@ -34,9 +39,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_ITEM': {
       const nextId = makeCartItemId(action.payload.listingType, action.payload.variantId)
-      console.log('nextId', nextId)
       const existing = state.items.find((i) => i.id === nextId)
-      console.log('existing', existing)
       if (existing) {
         return {
           ...state,
@@ -159,16 +162,27 @@ export function CartStoreProvider({ children }: { children: React.ReactNode }) {
   }, [state])
 
   const addItem = useCallback((item: Omit<CartItem, 'id'>) => {
+    const nextId = makeCartItemId(item.listingType, item.variantId)
+    const existing = state.items.find((i) => i.id === nextId)
+    logAddItem.debug(existing ? 'incrementing item quantity' : 'adding item', {
+      cartItemId: nextId,
+      variantId: item.variantId,
+      quantity: item.quantity,
+      nextQuantity: existing ? existing.quantity + item.quantity : item.quantity,
+    })
     dispatch({ type: 'ADD_ITEM', payload: item })
     if (userIdRef.current && item.listingType === 'product') {
-      const nextId = makeCartItemId(item.listingType, item.variantId)
-      const existing = state.items.find((i) => i.id === nextId)
       const quantity = existing ? existing.quantity + item.quantity : item.quantity
       void syncItemToServer({ ...item, id: nextId, quantity })
     }
   }, [state.items])
 
   const removeItem = useCallback((listingType: CartListingType, variantId: string) => {
+    logRemoveItem.debug('removing item', {
+      cartItemId: makeCartItemId(listingType, variantId),
+      listingType,
+      variantId,
+    })
     dispatch({ type: 'REMOVE_ITEM', payload: { listingType, variantId } })
     if (userIdRef.current && listingType === 'product') {
       void removeServerCartLine(variantId)
@@ -177,6 +191,12 @@ export function CartStoreProvider({ children }: { children: React.ReactNode }) {
 
   const setQuantity = useCallback(
     (listingType: CartListingType, variantId: string, quantity: number) => {
+      logUpdateQuantity.debug('updating item quantity', {
+        cartItemId: makeCartItemId(listingType, variantId),
+        listingType,
+        variantId,
+        quantity,
+      })
       dispatch({ type: 'SET_QUANTITY', payload: { listingType, variantId, quantity } })
       if (!userIdRef.current || listingType !== 'product') return
       if (quantity <= 0) {

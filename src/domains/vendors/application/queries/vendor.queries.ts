@@ -103,6 +103,7 @@ type ListingRow = {
   listing_variant?: Array<{
     id: string
     price: number | null
+    stock?: number | null
     is_default: boolean
     attributes_json?: unknown
   }> | null
@@ -121,6 +122,7 @@ function mapListingRow(row: ListingRow, storeName: string): MarketplaceListing {
     listingType: row.listing_type as ListingType,
     title: titleFromAttrs ?? row.title ?? '',
     price: Number(variantPrice),
+    stock: defaultVariant?.stock ?? null,
     image: imageFromAttrs,
     storeId: String(row.store_id),
     storeName: row.store?.name ?? storeName,
@@ -147,7 +149,7 @@ export async function getVendorListings(options: {
   let query = supabase
     .from('listing')
     .select(
-      'id,title,price,latitude,longitude,listing_type,category_id,store_id,created_at,store(name),category(name),listing_variant(id,price,is_default,attributes_json)',
+      'id,title,price,latitude,longitude,listing_type,category_id,store_id,created_at,store(name),category(name),listing_variant(id,price,stock,is_default,attributes_json)',
     )
     .eq('store_id', storeId)
     .eq('status', 'published')

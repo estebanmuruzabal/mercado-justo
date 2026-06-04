@@ -2,6 +2,9 @@ import { isEmailConfigured } from '@/shared/events/legacy-notifications/email/co
 import { emailElement, sendEmail } from '@/shared/events/legacy-notifications/email/send'
 import type { DeliveryResult } from '@/shared/events/legacy-notifications/channels/types'
 import { PasswordResetEmail } from '@/emails/password-reset'
+import { createLogger } from '@/shared/lib/logger/logger'
+
+const logAuthEmail = createLogger('email.auth')
 
 export type PasswordResetFallbackInput = {
   to: string
@@ -16,7 +19,10 @@ export type PasswordResetFallbackInput = {
 export async function sendPasswordResetFallbackEmail(
   input: PasswordResetFallbackInput,
 ): Promise<DeliveryResult> {
-  console.log('sendPasswordResetFallbackEmail()', input)
+  logAuthEmail.debug('sending password reset fallback email', {
+    configured: isEmailConfigured(),
+    expiresInMinutes: input.expiresInMinutes ?? 60,
+  })
 
   if (!isEmailConfigured()) return { delivered: false, reason: 'not_configured' }
   return sendEmail({

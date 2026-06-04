@@ -18,8 +18,6 @@ import { z } from 'zod'
 
 type ListingAttributesPayload = Record<string, unknown>
 
-const TITLE_ATTRIBUTE_KEYS = ['nombre_producto', 'product_name', 'title', 'name', 'nombre', 'modelo', 'model']
-
 function assertSellerOrAdmin(role: Role | null) {
   if (
     role !== ROLES.SUPER_ADMIN &&
@@ -88,28 +86,6 @@ async function assertListingOwnership(supabase: Awaited<ReturnType<typeof create
 
   const typedListingRow = listingRow as { store_id: string }
   if (typedListingRow.store_id !== storeId) throw new Error('Forbidden')
-}
-
-function resolveTitleFromProductBaseAttributes(
-  attributes: NonNullable<Awaited<ReturnType<typeof getProductBaseForListingForm>>>['attributes'],
-  values: ListingAttributesPayload,
-): string | null {
-  for (const key of TITLE_ATTRIBUTE_KEYS) {
-    const attr = attributes.find((candidate) => candidate.key === key)
-    const value = attr ? values[attr.key] : undefined
-    if (typeof value === 'string' && value.trim()) return value.trim()
-  }
-
-  const fallbackAttr = attributes.find(
-    (attr) =>
-      attr.required &&
-      !attr.isVariantDimension &&
-      (attr.type === 'TEXT' || attr.type === 'TEXTAREA') &&
-      typeof values[attr.key] === 'string' &&
-      String(values[attr.key]).trim().length > 0,
-  )
-
-  return fallbackAttr ? String(values[fallbackAttr.key]).trim() : null
 }
 
 export async function getListingsManagerDataAction() {
@@ -191,6 +167,7 @@ export async function createProductBaseDraftListingAction(input: {
       category_id: input.subcategoryId ?? input.categoryId,
       product_base_id: input.productBaseId,
       listing_type: listingDbType,
+      title: productBase.name,
       price_mode: 'centralized',
       status: 'draft',
       characteristics: {},
@@ -265,6 +242,7 @@ export async function updateListingDraftAction(id: string, payload: Partial<{
   stock: number
   condition: 'new' | 'used'
   characteristics: ListingAttributesPayload
+  images: string[]
   latitude: number | null
   longitude: number | null
 }>) {
@@ -301,14 +279,10 @@ export async function updateListingDraftAction(id: string, payload: Partial<{
     ...(rest as Record<string, unknown>),
   }
 
-  if (listingTyped.product_base_id && payload.characteristics) {
+  if (listingTyped.product_base_id) {
     const productBase = await getProductBaseForListingForm(listingTyped.product_base_id)
-    const titleFromAttributes = productBase
-      ? resolveTitleFromProductBaseAttributes(productBase.attributes, payload.characteristics)
-      : null
-
-    if (titleFromAttributes) {
-      updatePayload.title = titleFromAttributes
+    if (productBase) {
+      updatePayload.title = productBase.name
     }
   }
 

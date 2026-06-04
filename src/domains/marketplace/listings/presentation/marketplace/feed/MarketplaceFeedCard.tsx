@@ -6,6 +6,9 @@ import { Heart, MapPin, Minus, Plus, Truck, Store } from 'lucide-react'
 
 import { getListingTypeLabel } from '@/domains/marketplace/listings/domain/listing'
 import { useCartStore } from '@/domains/marketplace/checkout/presentation/stores/cart-store/cart-store'
+import { createLogger, LogScopes } from '@/shared/lib/logger/logger'
+
+const logCartAddItem = createLogger(LogScopes.cart.addItem)
 import type { MarketplaceListingWithDistance } from '@/domains/marketplace/listings/domain/marketplace'
 
 const FALLBACK_IMAGE =
@@ -49,7 +52,11 @@ export function MarketplaceFeedCard({
       navigateToDetail()
       return
     }
-    console.log('listing', listing)
+    logCartAddItem.debug('adding listing from feed card', {
+      listingId: listing.id,
+      variantId: listing.variantId,
+      storeId: listing.storeId,
+    })
     addItem({
       listingType: 'product',
       variantId: listing.variantId,

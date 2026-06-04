@@ -1,4 +1,6 @@
 import type { createAdminClient } from '@/shared/database/admin-client'
+import type { Json } from '@/shared/types/supabase'
+import { randomUUID } from 'node:crypto'
 
 import type { ProductBaseImageStrategy, ProductBaseStatus, ProductBaseType } from '../domain/product-base'
 import type { ProductBaseAttributeInput } from '../domain/product-base-attribute'
@@ -29,6 +31,7 @@ export type ProductBaseFilters = {
 }
 
 export type CreateProductBaseRepoInput = {
+  id: string
   name: string
   slug: string
   description?: string | null
@@ -42,7 +45,7 @@ export type CreateProductBaseRepoInput = {
 }
 
 export type UpdateProductBaseRepoInput = Partial<
-  Omit<CreateProductBaseRepoInput, 'attributes' | 'status'>
+  Omit<CreateProductBaseRepoInput, 'id' | 'attributes' | 'status'>
 > & {
   status?: ProductBaseStatus
   attributes?: ProductBaseAttributeInput[]
@@ -67,6 +70,27 @@ function attributeInsertPayload(productBaseId: string, attr: ProductBaseAttribut
     is_variant_dimension: attr.isVariantDimension,
     allow_variant_pricing: attr.allowVariantPricing,
     score_contribution: attr.scoreContribution ?? null,
+  }
+}
+
+function attributeRpcPayload(attr: ProductBaseAttributeInput, index: number): Json {
+  return {
+    key: attr.key.trim(),
+    label: attr.label.trim(),
+    description: attr.description?.trim() ?? null,
+    type: attr.type,
+    required: attr.required,
+    default_value: attr.defaultValue as Json,
+    placeholder: attr.placeholder?.trim() ?? null,
+    options: attr.options as Json,
+    validation: attr.validation as Json,
+    sort_order: attr.sortOrder ?? index,
+    is_visible: attr.isVisible,
+    is_filterable: attr.isFilterable,
+    is_searchable: attr.isSearchable,
+    is_variant_dimension: attr.isVariantDimension,
+    allow_variant_pricing: attr.allowVariantPricing,
+    score_contribution: attr.scoreContribution as Json,
   }
 }
 
@@ -131,33 +155,22 @@ export async function insertProductBaseAdmin(
   admin: AdminClient,
   input: CreateProductBaseRepoInput,
 ): Promise<string> {
-  const { data, error } = await admin
-    .from('product_base')
-    .insert({
-      name: input.name.trim(),
-      slug: input.slug.trim(),
-      description: input.description?.trim() ?? null,
-      category_id: input.categoryId,
-      subcategory_id: input.subcategoryId ?? null,
-      type: input.type,
-      status: input.status ?? 'DRAFT',
-      base_image_url: input.baseImageUrl?.trim() || null,
-      image_strategy: input.imageStrategy,
-    } as never)
-    .select('id')
-    .single()
-
+  const { error } = await admin.schema('public').rpc('create_product_base_with_attributes', {
+    p_product_base_id: input.id,
+    p_name: input.name,
+    p_slug: input.slug,
+    p_description: input.description ?? null,
+    p_category_id: input.categoryId,
+    p_subcategory_id: input.subcategoryId ?? null,
+    p_type: input.type,
+    p_status: input.status ?? 'DRAFT',
+    p_base_image_url: input.baseImageUrl ?? null,
+    p_image_strategy: input.imageStrategy,
+    p_attributes: input.attributes.map(attributeRpcPayload),
+  })
   if (error) throw error
-  const productBaseId = (data as { id: string }).id
 
-  if (input.attributes.length > 0) {
-    const { error: attrError } = await admin.from('product_base_attribute').insert(
-      input.attributes.map((attr, index) => attributeInsertPayload(productBaseId, attr, index)) as never[],
-    )
-    if (attrError) throw attrError
-  }
-
-  return productBaseId
+  return input.id
 }
 
 export async function updateProductBaseAdmin(
@@ -208,6 +221,7 @@ export async function duplicateProductBaseAdmin(
   if (!source) throw new Error('Product Base no encontrado.')
 
   return insertProductBaseAdmin(admin, {
+    id: randomUUID(),
     name: `${source.name} (copia)`,
     slug: newSlug,
     description: source.description,

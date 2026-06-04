@@ -18,6 +18,9 @@ import {
   slugifyProductBaseName,
 } from '@/domains/marketplace/product-base/domain/product-base'
 import { Button } from '@/shared/ui/button'
+import { createLogger } from '@/shared/lib/logger/logger'
+
+const logProductBaseForm = createLogger('admin.productBaseForm')
 import {
   Dialog,
   DialogContent,
@@ -126,7 +129,11 @@ export function ProductBaseFormDialog({
     event.preventDefault()
     setPending(true)
     setError(null)
-
+    logProductBaseForm.debug('submitting product base form', {
+      mode: initial?.id ? 'update' : 'create',
+      name: form.name,
+      attributeCount: form.attributes.length,
+    })
     const payload: ProductBaseFormDto = {
       ...form,
       slug: form.slug.trim() || slugifyProductBaseName(form.name),

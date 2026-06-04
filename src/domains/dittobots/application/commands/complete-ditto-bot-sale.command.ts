@@ -1,4 +1,7 @@
 import { createServiceClient } from '@/shared/database/supabase/service'
+import { createLogger } from '@/shared/lib/logger/logger'
+
+const logDittoBotSale = createLogger('dittobots.completeSale')
 
 export type DittoBotSaleLine = {
   orderItemId: string
@@ -43,7 +46,7 @@ export async function completeDittoBotSaleForOrder(
   const service = createServiceClient()
   const soldAt = new Date().toISOString()
   const soldUnitIds: string[] = []
-
+  logDittoBotSale.debug('completing ditto bot sale', { orderId: input.orderId, lineCount: lines.length })
   for (const line of lines) {
     const { data: candidateRows, error: candidateError } = await service
       .from('ditto_bot_inventory_unit')
@@ -56,7 +59,11 @@ export async function completeDittoBotSaleForOrder(
       .limit(line.quantity)
 
     if (candidateError) throw candidateError
-
+    logDittoBotSale.trace('candidate inventory units loaded', {
+      productId: line.productId,
+      requested: line.quantity,
+      found: (candidateRows ?? []).length,
+    })
     const unitIds = ((candidateRows ?? []) as Array<{ id: string }>).map((unit) => unit.id)
     if (unitIds.length < line.quantity) {
       throw new Error('Stock DittoBot insuficiente para completar la venta.')

@@ -77,7 +77,6 @@ export default async function VendorProfilePage({
     getVendorReviews({ storeId: profile.id, limit: INITIAL_REVIEWS }),
     getViewerVendorState(profile.id),
   ])
-
   return (
     <main className='min-h-screen bg-neutral-50 pb-16'>
       <VendorHero

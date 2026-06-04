@@ -15,6 +15,7 @@ import { createClient } from '@/shared/database/supabase/client'
 import { cn } from '@/shared/utils/utils'
 import {
   createProductBaseDraftListingAction,
+  createDraftListingAction,
   deleteListingAction,
   getListingsManagerDataAction,
   getListingVariantsAction,
@@ -373,9 +374,8 @@ export function ListingManager() {
     setModalOpen(true)
   }
 
-  async function openEditModal(row: ListingManagerRow) {
+  function openEditModal(row: ListingManagerRow) {
     const characteristics = (row.characteristics ?? {}) as CharacteristicMap
-    const productBase = row.productBaseId ? await getProductBaseForListingFormAction(row.productBaseId) : null
 
     setForm({
       listingId: row.id,
@@ -384,7 +384,7 @@ export function ListingManager() {
       subcategoryId: null,
       categoryPath: [],
       productBaseId: row.productBaseId,
-      productBase,
+      productBase: null,
       title: (row.title ?? '') as string,
       description: (row.description ?? '') as string,
       condition: (row.condition ?? 'new') as 'new' | 'used',
@@ -438,8 +438,16 @@ export function ListingManager() {
     }))
   }
 
-  function handleProductBaseChange(productBaseId: string) {
-    setForm((current) => ({ ...current, productBaseId }))
+  function handleProductBaseChange(productBase: { id: string; name: string }) {
+    setForm((current) => ({
+      ...current,
+      productBaseId: productBase.id,
+      title: productBase.name,
+    }))
+  }
+
+  function listingSupportsLocation() {
+    return form.listingType === 'product' || form.listingType === 'dittobot'
   }
 
   async function handleStep1Next() {
@@ -464,14 +472,15 @@ export function ListingManager() {
           status: 'draft',
         }))
       }
-
       const productBase = form.productBaseId
         ? await getProductBaseForListingFormAction(form.productBaseId)
         : null
+
       if (productBase) {
         setForm((current) => ({
           ...current,
           productBase,
+          title: productBase.name,
           characteristics: {
             ...Object.fromEntries(
               productBase.attributes
@@ -523,7 +532,8 @@ export function ListingManager() {
         // Legacy: in simple mode, price lives on `listing.price`.
         price: form.enableVariants ? undefined : form.simplePrice ?? undefined,
         characteristics: form.characteristics,
-        ...(form.listingType === 'product'
+        images: form.images,
+        ...(listingSupportsLocation()
           ? { latitude: form.latitude, longitude: form.longitude }
           : {}),
       })
@@ -578,7 +588,8 @@ export function ListingManager() {
         stock: form.enableVariants ? 0 : form.stock,
         price: form.enableVariants ? undefined : form.simplePrice ?? undefined,
         characteristics: form.characteristics,
-        ...(form.listingType === 'product'
+        images: form.images,
+        ...(listingSupportsLocation()
           ? { latitude: form.latitude, longitude: form.longitude }
           : {}),
       })
@@ -645,7 +656,8 @@ export function ListingManager() {
         stock: form.enableVariants ? 0 : form.stock,
         price: form.enableVariants ? undefined : form.simplePrice ?? undefined,
         characteristics: form.characteristics,
-        ...(form.listingType === 'product'
+        images: form.images,
+        ...(listingSupportsLocation()
           ? { latitude: form.latitude, longitude: form.longitude }
           : {}),
       })
@@ -689,7 +701,6 @@ export function ListingManager() {
       setDeleteBusy(false)
     }
   }
-
   function _renderStep1() {
     return (
       <div className='space-y-5'>
@@ -1134,7 +1145,6 @@ export function ListingManager() {
   void _renderStep1
   void _renderStep2
   void _renderStep3
-console.log('form', published)
   return (
     <div className='space-y-6'>
       <div className='flex items-start justify-between gap-4'>
@@ -1252,7 +1262,7 @@ console.log('form', published)
                 {published.map((row) => (
                   <tr key={row.id} className='border-t'>
                     <td className='px-4 py-3'>
-                      <span className='font-medium'>{row.productBase?.name ?? row.title ?? '(Sin título)'}</span>
+                      <span className='font-medium'>{row.title ?? '(Sin título)'}</span>
                     </td>
                     <td className='px-4 py-3 text-sm text-muted-foreground'>
                       {row.categoryId ? byId.get(row.categoryId)?.name ?? row.categoryId : '—'}

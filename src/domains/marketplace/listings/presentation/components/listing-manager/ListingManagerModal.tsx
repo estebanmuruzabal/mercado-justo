@@ -59,7 +59,7 @@ export function ListingManagerModal({
   setCategoryAtLevel: (level: number, categoryId: string) => void
   deepestSelectedOk: boolean
   listingTypeLabel: (listingType: DraftFormState['listingType']) => string
-  onProductBaseChange: (productBaseId: string) => void
+  onProductBaseChange: (productBase: { id: string; name: string }) => void
   formBusy: boolean
   formError: string | null
   handleStep1Next: () => Promise<void> | void

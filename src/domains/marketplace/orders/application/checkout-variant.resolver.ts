@@ -7,9 +7,13 @@
  */
 import { createClient } from '@/shared/database/supabase/server'
 
+import { createLogger, LogScopes } from '@/shared/lib/logger/logger'
+
 import {
   recordCheckoutVariantFallbackHit,
 } from './checkout-variant-fallback.metrics'
+
+const logResolveVariants = createLogger(LogScopes.checkout.resolveVariants)
 
 export type ResolvedCheckoutVariant = {
   cartVariantId: string
@@ -96,9 +100,10 @@ export async function resolveCheckoutVariants(
   if (fallbackResolvedCartIds.length > 0) {
     recordCheckoutVariantFallbackHit(fallbackResolvedCartIds.length)
     if (process.env.NODE_ENV !== 'test') {
-      console.info(
-        `[commercial-identity] checkout_variant_fallback_hits=${fallbackResolvedCartIds.length} cart_ids=[${fallbackResolvedCartIds.join(',')}]`,
-      )
+      logResolveVariants.info('legacy offer_variant cart ids resolved via listing_variant', {
+        fallbackHits: fallbackResolvedCartIds.length,
+        cartIds: fallbackResolvedCartIds,
+      })
     }
   }
 

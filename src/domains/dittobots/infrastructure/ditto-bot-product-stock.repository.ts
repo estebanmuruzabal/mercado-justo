@@ -1,4 +1,7 @@
 import { createClient } from '@/shared/database/supabase/server'
+import { createLogger } from '@/shared/lib/logger/logger'
+
+const logDittoBotStock = createLogger('dittobots.stock')
 
 export async function countDittoBotPublicStockByProductIds(
   productIds: string[],
@@ -12,7 +15,10 @@ export async function countDittoBotPublicStockByProductIds(
   })
 
   if (error) throw error
-
+  logDittoBotStock.debug('public stock by product resolved', {
+    productCount: productIds.length,
+    rowCount: (data ?? []).length,
+  })
   for (const row of (data ?? []) as Array<{ product_id: string; stock_count: number }>) {
     result.set(row.product_id, Number(row.stock_count))
   }

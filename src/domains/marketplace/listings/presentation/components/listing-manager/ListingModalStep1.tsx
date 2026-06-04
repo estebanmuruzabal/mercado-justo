@@ -45,7 +45,7 @@ export function ListingModalStep1({
   categoryOptionsAtLevel: (level: number) => Array<{ id: string; name: string }>
   setCategoryAtLevel: (level: number, categoryId: string) => void
   listingTypeLabel: (listingType: DraftFormState['listingType']) => string
-  onProductBaseChange: (productBaseId: string) => void
+  onProductBaseChange: (productBase: { id: string; name: string }) => void
   onContinue: () => void
 }) {
   const [productBases, setProductBases] = useState<SellerProductBaseSummaryDto[]>([])
@@ -164,7 +164,10 @@ export function ListingModalStep1({
           <Select
             value={form.productBaseId ?? undefined}
             disabled={formBusy || basesLoading || productBases.length === 0}
-            onValueChange={onProductBaseChange}
+            onValueChange={(productBaseId) => {
+              const selected = productBases.find((base) => base.id === productBaseId)
+              if (selected) onProductBaseChange({ id: selected.id, name: selected.name })
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder={basesLoading ? 'Cargando plantillas…' : 'Seleccionar plantilla'} />

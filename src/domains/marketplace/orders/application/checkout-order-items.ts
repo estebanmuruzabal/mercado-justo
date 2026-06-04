@@ -1,4 +1,8 @@
+import { createLogger, LogScopes } from '@/shared/lib/logger/logger'
+
 import type { ResolvedCheckoutVariant } from './checkout-variant.resolver'
+
+const logResolveVariants = createLogger(LogScopes.checkout.resolveVariants)
 
 export type CheckoutOrderItemPayload = {
   order_id: string
@@ -55,9 +59,10 @@ export function assertResolvedCheckoutVariantsForOrder(
       process.env.NODE_ENV === 'development' &&
       item.variantId !== variantInfo.listingVariantId
     ) {
-      console.info(
-        `[commercial-identity] legacy cart variantId=${item.variantId} → order variant_id=${variantInfo.listingVariantId}`,
-      )
+      logResolveVariants.info('legacy cart variant mapped to listing_variant for order insert', {
+        cartVariantId: item.variantId,
+        listingVariantId: variantInfo.listingVariantId,
+      })
     }
   }
 }

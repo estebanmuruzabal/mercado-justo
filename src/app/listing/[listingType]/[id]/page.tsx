@@ -1,8 +1,10 @@
 import Link from 'next/link'
 
 import { ProductDetailClient } from '@/domains/marketplace/listings/presentation/components/detail/ProductDetailClient'
-import { countDittoBotPublicStockByProductIds } from '@/domains/dittobots/application/queries/ditto-bot-public-stock.queries'
 import { createClient } from '@/shared/database/supabase/server'
+import { createLogger } from '@/shared/lib/logger/logger'
+
+const logListingDetail = createLogger('listing.detail')
 
 export default async function ListingDetailPage({
   params,
@@ -32,15 +34,43 @@ export default async function ListingDetailPage({
 
   const supabase = await createClient()
 
-  const { data: listingRow, error: listingError } = await supabase
+  const listingSelect = 'id,title,store_id,status,characteristics,latitude,longitude,listing_type,store(name)'
+
+  let { data: listingRow, error: listingError } = await supabase
     .from('listing')
-    .select('id,title,store_id,status,characteristics,latitude,longitude,listing_type,store(name)')
+    .select(listingSelect)
     .eq('id', id)
     .eq('listing_type', listingType)
     .eq('status', 'published')
     .maybeSingle()
 
   if (listingError) throw listingError
+
+  if (!listingRow && id !== 'undefined') {
+    const { data: publicationRow, error: publicationError } = await supabase
+      .from('publication')
+      .select('legacy_listing_id')
+      .eq('id', id)
+      .eq('publication_type', listingType)
+      .maybeSingle()
+
+    if (publicationError) throw publicationError
+
+    const legacyListingId = (publicationRow as { legacy_listing_id: string | null } | null)?.legacy_listing_id
+    if (legacyListingId) {
+      const legacyResult = await supabase
+        .from('listing')
+        .select(listingSelect)
+        .eq('id', legacyListingId)
+        .eq('listing_type', listingType)
+        .eq('status', 'published')
+        .maybeSingle()
+
+      if (legacyResult.error) throw legacyResult.error
+      listingRow = legacyResult.data
+    }
+  }
+
   if (!listingRow) {
     return (
       <main className='min-h-screen bg-background px-6 py-10'>
@@ -73,10 +103,6 @@ export default async function ListingDetailPage({
   const listingTyped = listingRow as ListingRow
   const storeName = listingTyped.store?.name ?? 'Vendedor'
 
-  const dittoBotInventoryStock = listingTyped.listing_type === 'dittobot'
-    ? (await countDittoBotPublicStockByProductIds([listingTyped.id])).get(listingTyped.id) ?? 0
-    : null
-
   const { data: variantRows, error: variantError } = await supabase
     .from('listing_variant')
     .select('id,name,sku,price,stock,is_default,attributes_json')
@@ -84,7 +110,7 @@ export default async function ListingDetailPage({
     .order('is_default', { ascending: false })
 
   if (variantError) throw variantError
-
+  logListingDetail.debug('variant rows loaded', { listingId: id, count: (variantRows ?? []).length })
   type VariantRow = {
     id: string
     name?: string | null
@@ -106,10 +132,7 @@ export default async function ListingDetailPage({
       id: String(v.id),
       name: String(v.name ?? v.sku ?? 'Variante'),
       price: Number(v.price ?? 0),
-      stock:
-        dittoBotInventoryStock !== null
-          ? dittoBotInventoryStock
-          : Number(v.stock ?? 0),
+      stock: Number(v.stock ?? 0),
       isDefault: Boolean(v.is_default),
       attributes,
     }

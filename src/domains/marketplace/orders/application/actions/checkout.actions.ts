@@ -1,23 +1,30 @@
 'use server'
 
-import { randomUUID } from 'node:crypto'
 import { after } from 'next/server'
 import { z } from 'zod'
 
 import {
-  buildDittoBotSaleLines,
-  completeDittoBotSaleForOrder,
-} from '@/domains/dittobots/application/commands/complete-ditto-bot-sale.command'
-import { countDittoBotSellableStockForVendor } from '@/domains/dittobots/application/queries/ditto-bot-sale-stock.queries'
-import {
   assertResolvedCheckoutVariantsForOrder,
-  buildOrderItemsPayloadFromResolved,
 } from '@/domains/marketplace/orders/application/checkout-order-items'
+import {
+  aggregateCheckoutQuantitiesByListing,
+  assertCheckoutListingStock,
+  assertNoOwnListings,
+  buildCheckoutRpcLines,
+  groupCheckoutLinesByVendor,
+  type CheckoutListingStockRow,
+} from '@/domains/marketplace/orders/application/checkout-multivendor'
 import { resolveCheckoutVariants } from '@/domains/marketplace/orders/application/checkout-variant.resolver'
 import { inferTransactionKindFromPublicationTypes } from '@/domains/marketplace/transaction/domain/checkout-strategies'
 import { fetchTransactionByLegacyOrderId } from '@/domains/marketplace/transaction/application/queries/transaction.queries'
 import { createClient } from '@/shared/database/supabase/server'
 import { dispatchNotificationEvent } from '@/shared/events/bus/dispatch'
+import { createLogger, LogScopes } from '@/shared/lib/logger/logger'
+
+const logCreateOrder = createLogger(LogScopes.checkout.createOrder)
+const logResolveVariants = createLogger(LogScopes.checkout.resolveVariants)
+const logStock = createLogger(LogScopes.checkout.stock)
+const logOrders = createLogger(LogScopes.checkout.orders)
 
 const cartItemSchema = z.object({
   variantId: z.string().min(1),
@@ -29,28 +36,23 @@ const cartItemSchema = z.object({
 
 export async function createOrderFromCartAction(
   items: Array<z.infer<typeof cartItemSchema>>,
-): Promise<{ orderId: string }> {
+): Promise<{ orderId: string; orderIds: string[] }> {
+  logCreateOrder.debug('items received', { count: items.length, items })
   const parsed = z.array(cartItemSchema).safeParse(items)
-  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid cart payload')
+  if (!parsed?.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid cart payload')
 
   const { supabase } = await createSellerBuyerContext()
   const userId = await getCurrentUserId(supabase)
 
   if (parsed.data.length === 0) throw new Error('Cart is empty.')
 
-  const storeIds = new Set(parsed.data.map((i) => i.storeId))
-  if (storeIds.size !== 1) {
-    throw new Error('El carrito debe pertenecer a un único vendedor.')
-  }
-  const sellerId = Array.from(storeIds)[0] as string
-
-  if (sellerId === userId) {
-    throw new Error('No podés comprar tus propios productos.')
-  }
-
   // ADR-R6E-001: resolve cart ids → listing_variant.id before order_item insert.
   const variantIds = parsed.data.map((i) => i.variantId)
   const resolvedVariants = await resolveCheckoutVariants(supabase, variantIds)
+  logResolveVariants.debug('variants resolved', {
+    requested: variantIds.length,
+    resolved: resolvedVariants.size,
+  })
 
   const resolvedLines = parsed.data.map((item) => {
     const variantInfo = resolvedVariants.get(item.variantId)
@@ -62,105 +64,128 @@ export async function createOrderFromCartAction(
 
   assertResolvedCheckoutVariantsForOrder(resolvedLines)
 
-  const dittoBotListingIds = await validateDittoBotStockForCheckout(resolvedLines, sellerId)
-
-  const subtotal = parsed.data.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
-
-  const { data: orderRow, error: orderError } = await supabase
-    .from('order')
-    .insert({
-      buyer_id: userId,
-      seller_id: sellerId,
-      status: 'pending',
-      payment_status: 'unpaid',
-      subtotal,
-      delivery_price: 0,
-      total: subtotal,
-    } as never)
-    .select('id')
-    .single()
-
-  if (orderError || !orderRow) {
-    throw orderError ?? new Error('No se pudo crear la orden.')
-  }
-
-  const orderId = (orderRow as { id: string }).id
-
-  const orderItemsPayload = buildOrderItemsPayloadFromResolved(orderId, resolvedLines).map((item) => ({
-    id: randomUUID(),
-    ...item,
-  }))
-
-  const { error: itemsError } = await supabase.from('order_item').insert(orderItemsPayload as never[])
-  if (itemsError) throw itemsError
-
-  await completeDittoBotSaleForOrder({
-    orderId,
-    buyerUserId: userId,
-    sellerVendorId: sellerId,
-    lines: buildDittoBotSaleLines(orderItemsPayload, dittoBotListingIds),
-  })
-
-  after(async () => {
-    const transactionKind = inferTransactionKindFromPublicationTypes(['product'])
-    const transaction = await fetchTransactionByLegacyOrderId(orderId)
-
-    await dispatchNotificationEvent({ type: 'order.created', payload: { orderId } })
-    await dispatchNotificationEvent({
-      type: 'marketplace.transaction.confirmed',
-      payload: {
-        transactionId: transaction?.id ?? orderId,
-        kind: transaction?.kind ?? transactionKind,
-        buyerId: userId,
-        sellerId,
-      },
-    })
-  })
-
-  return { orderId }
-}
-
-async function validateDittoBotStockForCheckout(
-  resolvedLines: Array<{
-    item: z.infer<typeof cartItemSchema>
-    variantInfo: { listingId: string }
-  }>,
-  sellerVendorId: string,
-): Promise<Set<string>> {
-  console.log('resolvedLines', resolvedLines)
-  console.log('sellerVendorId', sellerVendorId)
-  
   const listingIds = [...new Set(resolvedLines.map((line) => line.variantInfo.listingId))]
-  const supabase = await createClient()
-
   const { data: listingRows, error } = await supabase
     .from('listing')
-    .select('id, listing_type')
+    .select('id, store_id, stock, title')
     .in('id', listingIds)
 
   if (error) throw error
 
-  const dittoBotListingIds = new Set(
-    ((listingRows ?? []) as Array<{ id: string; listing_type: string }>)
-      .filter((row) => row.listing_type === 'dittobot')
-      .map((row) => row.id),
+  const listingsById = new Map(((listingRows ?? []) as CheckoutListingStockRow[]).map((row) => [row.id, row]))
+
+  const missingListingId = listingIds.find((id) => !listingsById.has(id))
+  if (missingListingId) throw new Error(`Listing no encontrado: ${missingListingId}.`)
+
+  assertNoOwnListings(userId, listingsById)
+
+  const groups = groupCheckoutLinesByVendor(resolvedLines, listingsById)
+  logResolveVariants.debug('resolved checkout lines', {
+    lines: resolvedLines.map((line) => {
+      const listing = listingsById.get(line.variantInfo.listingId)
+      return {
+        cartVariantId: line.item.variantId,
+        listingVariantId: line.variantInfo.listingVariantId,
+        listingId: line.variantInfo.listingId,
+        sellerId: listing?.store_id,
+        payloadStoreId: line.item.storeId,
+      }
+    }),
+  })
+
+  logCreateOrder.debug('vendor groups', {
+    groups: [...groups.entries()].map(([sellerId, lines]) => ({ sellerId, lineCount: lines.length })),
+  })
+
+  const requestedByListing = aggregateCheckoutQuantitiesByListing(resolvedLines)
+
+  for (const [listingId, quantity] of requestedByListing.entries()) {
+    const listing = listingsById.get(listingId)
+    const stockBefore = listing?.stock ?? 0
+    logStock.debug('stock before debit', {
+      listingId,
+      title: listing?.title,
+      stockBefore,
+      quantity,
+    })
+
+    assertCheckoutListingStock(new Map([[listingId, quantity]]), listingsById)
+  }
+
+  const checkoutLines = buildCheckoutRpcLines(resolvedLines)
+
+  const checkoutRpcClient = supabase as unknown as {
+    rpc: (
+      fn: 'create_orders_from_cart',
+      args: { p_buyer_id: string; p_lines: unknown },
+    ) => Promise<{ data: string[] | null; error: Error | null }>
+  }
+  const { data: createdOrderIds, error: createOrdersError } = await checkoutRpcClient.rpc(
+    'create_orders_from_cart',
+    {
+      p_buyer_id: userId,
+      p_lines: checkoutLines,
+    },
   )
 
-  if (dittoBotListingIds.size === 0) return dittoBotListingIds
+  if (createOrdersError) throw createOrdersError
 
-  const requestedDittoBotUnits = resolvedLines.reduce((total, { item, variantInfo }) => {
-    return total + item.quantity
-  }, 0)
+  const orderIds = Array.isArray(createdOrderIds) ? createdOrderIds.map(String) : []
+  if (orderIds.length === 0) throw new Error('No se pudo crear la orden.')
 
-  const availableDittoBotUnits = await countDittoBotSellableStockForVendor({ sellerVendorId })
-  if (availableDittoBotUnits <= 0) {
-    throw new Error('No hay stock DittoBot disponible para este vendedor.')
+  const { data: stockAfterRows, error: stockAfterError } = await supabase
+    .from('listing')
+    .select('id, stock')
+    .in('id', listingIds)
+  if (stockAfterError) throw stockAfterError
+
+  const stockAfterByListingId = new Map(
+    ((stockAfterRows ?? []) as Array<{ id: string; stock: number | null }>).map((row) => [row.id, row.stock ?? 0]),
+  )
+
+  for (const [listingId, quantity] of requestedByListing.entries()) {
+    logStock.debug('stock after debit', {
+      listingId,
+      quantity,
+      stockAfter: stockAfterByListingId.get(listingId),
+    })
   }
-  if (requestedDittoBotUnits > availableDittoBotUnits) {
-    throw new Error(`Stock insuficiente. Disponible: ${availableDittoBotUnits}.`)
-  }
 
-  return dittoBotListingIds
+  logOrders.debug('orders created', { orderIds, count: orderIds.length })
+
+  const { data: orderSellerRows, error: orderSellerError } = await supabase
+    .from('order')
+    .select('id, seller_id')
+    .in('id', orderIds)
+  if (orderSellerError) throw orderSellerError
+
+  const orderSellers = ((orderSellerRows ?? []) as Array<{ id: string; seller_id: string }>).map((row) => ({
+    orderId: row.id,
+    sellerId: row.seller_id,
+  }))
+
+  after(async () => {
+    const transactionKind = inferTransactionKindFromPublicationTypes(['product'])
+
+    await Promise.all(
+      orderSellers.map(async ({ orderId, sellerId }) => {
+        const transaction = await fetchTransactionByLegacyOrderId(orderId)
+
+        await dispatchNotificationEvent({ type: 'order.created', payload: { orderId } })
+        await dispatchNotificationEvent({
+          type: 'marketplace.transaction.confirmed',
+          payload: {
+            transactionId: transaction?.id ?? orderId,
+            kind: transaction?.kind ?? transactionKind,
+            buyerId: userId,
+            sellerId,
+          },
+        })
+      }),
+    )
+  })
+
+  return { orderId: orderIds[0] as string, orderIds }
 }
 
 async function getCurrentUserId(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string> {

@@ -1,5 +1,6 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -102,6 +103,14 @@ function revalidateProductBaseSurfaces() {
   revalidatePath(ADMIN_PRODUCT_BASES_PATH)
 }
 
+function getActionErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error) return err.message
+  if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
+    return err.message
+  }
+  return fallback
+}
+
 function mapAttributes(attributes: z.infer<typeof attributeSchema>[]): ProductBaseAttributeInput[] {
   return attributes.map((attr) => ({
     id: attr.id,
@@ -174,19 +183,19 @@ export async function createProductBaseAction(
     const admin = createAdminClient()
     const { slug, attributes } = await validateFormInput(parsed.data)
     const uniqueSlug = await resolveUniqueSlug(slug)
-
-    let productBaseId = ''
+    const productBaseId = randomUUID()
 
     await withAudit(
       actor,
       {
         action: 'product_base.create',
         entityType: 'product_base',
-        entityId: uniqueSlug,
-        metadata: { type: parsed.data.type },
+        entityId: productBaseId,
+        metadata: { slug: uniqueSlug, type: parsed.data.type },
       },
       async () => {
-        productBaseId = await insertProductBaseAdmin(admin, {
+        await insertProductBaseAdmin(admin, {
+          id: productBaseId,
           name: parsed.data.name,
           slug: uniqueSlug,
           description: parsed.data.description,
@@ -209,7 +218,7 @@ export async function createProductBaseAction(
     }
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'No se pudo crear el Product Base.',
+      error: getActionErrorMessage(err, 'No se pudo crear el Product Base.'),
     }
   }
 }
@@ -258,7 +267,7 @@ export async function updateProductBaseAction(
     }
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'No se pudo actualizar el Product Base.',
+      error: getActionErrorMessage(err, 'No se pudo actualizar el Product Base.'),
     }
   }
 }
@@ -297,7 +306,7 @@ export async function duplicateProductBaseAction(
   } catch (err) {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'No se pudo duplicar el Product Base.',
+      error: getActionErrorMessage(err, 'No se pudo duplicar el Product Base.'),
     }
   }
 }
@@ -334,7 +343,7 @@ export async function setProductBaseStatusAction(
   } catch (err) {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'No se pudo cambiar el estado.',
+      error: getActionErrorMessage(err, 'No se pudo cambiar el estado.'),
     }
   }
 }
@@ -380,7 +389,7 @@ export async function deleteProductBaseAction(
   } catch (err) {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'No se pudo eliminar el Product Base.',
+      error: getActionErrorMessage(err, 'No se pudo eliminar el Product Base.'),
     }
   }
 }

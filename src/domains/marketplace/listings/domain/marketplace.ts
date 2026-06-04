@@ -7,6 +7,7 @@ export type MarketplaceListing = {
   listingType: ListingType
   title: string
   price: number
+  stock?: number | null
   image: string | null
   storeId: string
   storeName: string

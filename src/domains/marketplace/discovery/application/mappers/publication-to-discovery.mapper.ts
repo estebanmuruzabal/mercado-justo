@@ -19,6 +19,7 @@ export type VariantFeedRow = {
   id: string
   listing_id: string
   price: number | null
+  stock?: number | null
   is_default: boolean
   attributes_json?: Record<string, unknown> | null
   /** When set, overrides length-based hasOptions (from CommercialSnapshot) */
@@ -49,6 +50,7 @@ export function mapPublicationRowToMarketplaceListing(
     listingType: row.publication_type as ListingType,
     title: titleFromAttrs ?? row.title ?? '',
     price: Number(defaultVariant?.price ?? 0),
+    stock: defaultVariant?.stock ?? null,
     image: imageFromAttrs,
     storeId: String(row.owner_id),
     storeName: storeNames.get(row.owner_id) ?? 'Vendedor',

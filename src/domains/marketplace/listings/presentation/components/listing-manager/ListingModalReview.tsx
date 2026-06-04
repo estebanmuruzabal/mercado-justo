@@ -8,6 +8,9 @@ import { Upload } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { DialogFooter } from '@/shared/ui/dialog'
 import { Label } from '@/shared/ui/label'
+import { createLogger } from '@/shared/lib/logger/logger'
+
+const logListingReview = createLogger('listingManager.review')
 
 function formatAttributeValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—'
@@ -41,7 +44,11 @@ export function ListingModalReview({
   const reviewImage = imageFromVariant ?? imageFromLegacy
   const reviewTitle = form.productBase?.name ?? form.title
   const productBaseAttributes = form.productBase?.attributes ?? []
-console.log('reviewImage', form)
+  logListingReview.trace('review step rendered', {
+    reviewTitle,
+    hasReviewImage: Boolean(reviewImage),
+    attributeCount: productBaseAttributes.length,
+  })
   return (
     <div className='space-y-5'>
       <div className='space-y-1'>

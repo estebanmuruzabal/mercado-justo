@@ -16,6 +16,7 @@ function formatMoney(amount: number) {
 export function VendorProductCard({ listing, index = 0 }: { listing: MarketplaceListing; index?: number }) {
   const src = listingImageSrc(listing.image)
   const unoptimized = !isConfiguredRemoteImage(src)
+  const detailId = listing.id ?? listing.publicationId
 
   return (
     <motion.div
@@ -24,7 +25,7 @@ export function VendorProductCard({ listing, index = 0 }: { listing: Marketplace
       transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
     >
       <Link
-        href={listingDetailPath(listing.listingType, listing.id)}
+        href={detailId ? listingDetailPath(listing.listingType, detailId) : '#'}
         className='group block overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md'
       >
         <div className='relative aspect-square overflow-hidden bg-neutral-100'>
@@ -48,6 +49,9 @@ export function VendorProductCard({ listing, index = 0 }: { listing: Marketplace
             <p className='line-clamp-1 text-xs text-neutral-500'>{listing.categoryName}</p>
           ) : null}
           <p className='pt-0.5 text-base font-bold text-neutral-900'>{formatMoney(listing.price)}</p>
+          {listing.stock !== null && listing.stock !== undefined ? (
+            <p className='text-xs text-neutral-500'>Stock: {listing.stock}</p>
+          ) : null}
         </div>
       </Link>
     </motion.div>

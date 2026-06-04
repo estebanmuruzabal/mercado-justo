@@ -87,9 +87,6 @@ export function CheckoutClient() {
   const deliveryPrice = 0
   const total = subtotal + deliveryPrice
 
-  const multiVendorError =
-    storeIds.length > 1 ? 'El checkout por ahora solo admite un vendedor por pedido.' : null
-
   const handleSectionToggle = (section: CheckoutSectionId) => {
     if (flow.sectionState[section] === 'editing') {
       flow.revalidateSection(section, false)
@@ -175,7 +172,7 @@ export function CheckoutClient() {
         <CartSection
           items={items}
           storeNames={storeNames}
-          multiVendorError={multiVendorError}
+          multiVendorError={null}
           setQuantity={setQuantity}
           removeItem={removeItem}
           onContinue={flow.completeCartIfValid}

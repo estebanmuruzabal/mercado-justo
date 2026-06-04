@@ -24,9 +24,6 @@ export function isCartSectionValid(input: CheckoutCartInput): string[] {
   if (input.itemCount === 0) {
     errors.push('Tu carrito está vacío.')
   }
-  if (input.storeIds.length > 1) {
-    errors.push('El checkout por ahora solo admite un vendedor por pedido.')
-  }
   return errors
 }
 

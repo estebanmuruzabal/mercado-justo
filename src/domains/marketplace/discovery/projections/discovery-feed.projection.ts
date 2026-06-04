@@ -10,6 +10,9 @@ import {
   type PublicationFeedRow,
   type VariantFeedRow,
 } from '../application/mappers/publication-to-discovery.mapper'
+import { createLogger } from '@/shared/lib/logger/logger'
+
+const logDiscoveryFeed = createLogger('discovery.feed')
 
 export type BuildDiscoveryFeedOptions = {
   listingTypes?: ListingType[]
@@ -28,6 +31,7 @@ function commercialSnapshotToVariantFeedRow(
     id: snapshot.variantId,
     listing_id: listingKey,
     price: snapshot.price,
+    stock: snapshot.stock,
     is_default: true,
     attributes_json: snapshot.attributes ?? {},
     hasOptions: snapshot.hasOptions,
@@ -157,10 +161,15 @@ export async function buildDiscoveryFeed(
     fetchCategoryNames(categoryIds),
   ])
 
-  const commercialSnapshots = await overlayDittoBotInventoryStock(rows, commercialSnapshotsRaw)
+  // const commercialSnapshots = await overlayDittoBotInventoryStock(rows, )
 
-  const variantsByListingId = buildVariantsByListingId(rows, commercialSnapshots)
-
+  const variantsByListingId = buildVariantsByListingId(rows, commercialSnapshotsRaw)
+  logDiscoveryFeed.debug('discovery feed projection built', {
+    publicationCount: rows.length,
+    listingCount: variantsByListingId.size,
+    storeCount: storeNames.size,
+    categoryCount: categoryNames.size,
+  })
   return mapPublicationRowsToMarketplaceListings(
     rows,
     variantsByListingId,
