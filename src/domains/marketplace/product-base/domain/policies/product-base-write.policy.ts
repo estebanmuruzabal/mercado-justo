@@ -55,15 +55,23 @@ export function assertSubcategoryBelongsToCategory(input: {
 }): void {
   if (!input.subcategoryId) return
 
-  const subcategory = input.categories.find((c) => c.id === input.subcategoryId)
+  const byId = new Map(input.categories.map((category) => [category.id, category]))
+  const subcategory = byId.get(input.subcategoryId)
   if (!subcategory) {
     throw new ProductBaseValidationError('La subcategoría no existe.')
   }
-  if (subcategory.parentId !== input.categoryId) {
-    throw new ProductBaseValidationError(
-      'La subcategoría debe ser hija de la categoría seleccionada.',
-    )
+
+  let current = subcategory
+  while (current.parentId) {
+    if (current.parentId === input.categoryId) {
+      return
+    }
+    const parent = byId.get(current.parentId)
+    if (!parent) break
+    current = parent
   }
+
+  throw new ProductBaseValidationError('La subcategoría debe pertenecer a la categoría seleccionada.')
 }
 
 function assertValidationRules(

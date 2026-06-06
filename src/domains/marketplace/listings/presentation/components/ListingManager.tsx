@@ -161,6 +161,19 @@ function listingTypeLabel(listingType: ListingType) {
   return 'Property'
 }
 
+function buildCategoryPath(categoryId: string, byId: Map<string, CategoryRow>) {
+  const path: string[] = []
+  let current = byId.get(categoryId) ?? null
+
+  while (current) {
+    path.push(current.id)
+    if (!current.parent_id) break
+    current = byId.get(current.parent_id) ?? null
+  }
+
+  return path.length > 0 ? path.reverse() : []
+}
+
 export function ListingManager() {
   const [categories, setCategories] = useState<CategoryRow[]>([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
@@ -376,13 +389,14 @@ export function ListingManager() {
 
   function openEditModal(row: ListingManagerRow) {
     const characteristics = (row.characteristics ?? {}) as CharacteristicMap
+    const categoryPath = buildCategoryPath(row.categoryId, byId)
 
     setForm({
       listingId: row.id,
       listingType: row.listingType,
       categoryId: row.categoryId,
       subcategoryId: null,
-      categoryPath: [],
+      categoryPath,
       productBaseId: row.productBaseId,
       productBase: null,
       title: (row.title ?? '') as string,
@@ -422,6 +436,27 @@ export function ListingManager() {
     if (!parentId) return []
     return childrenByParent.get(parentId) ?? []
   }
+
+  useEffect(() => {
+    if (!modalOpen) return
+    if (!form.listingId) return
+    if (!form.categoryId) return
+
+    const derivedPath = buildCategoryPath(form.categoryId, byId)
+    if (!derivedPath.length) return
+
+    const samePath =
+      derivedPath.length === form.categoryPath.length &&
+      derivedPath.every((categoryId, index) => form.categoryPath[index] === categoryId)
+
+    if (samePath) return
+
+    setForm((current) => ({
+      ...current,
+      categoryPath: derivedPath,
+      subcategoryId: derivedPath.length > 1 ? derivedPath[derivedPath.length - 1] : null,
+    }))
+  }, [modalOpen, form.listingId, form.categoryId, form.categoryPath, byId])
 
   function setCategoryAtLevel(level: number, categoryId: string) {
     const nextPath = [...form.categoryPath]

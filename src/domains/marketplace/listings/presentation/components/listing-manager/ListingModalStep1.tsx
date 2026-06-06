@@ -77,7 +77,6 @@ export function ListingModalStep1({
       }
     })()
   }, [deepestSelectedOk, rootCategoryId, subcategoryId])
-
   return (
     <div className='space-y-5'>
       <div className='space-y-1'>

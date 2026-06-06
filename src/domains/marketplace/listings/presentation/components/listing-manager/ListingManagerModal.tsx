@@ -79,7 +79,7 @@ export function ListingManagerModal({
   return (
     <>
       <Dialog open={modalOpen} onOpenChange={(open) => setModalOpen(open)}>
-        <DialogContent className='max-w-2xl'>
+        <DialogContent className='max-w-2xl max-h-[90vh] overflow-hidden'>
           <DialogHeader>
             <DialogTitle>
               {form.listingId ? 'Edit Listing' : 'Create Listing'} — Step {step}/3

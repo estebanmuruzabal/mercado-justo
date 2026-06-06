@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Loader2 } from 'lucide-react'
+import { BadgeCheck, Loader2 } from 'lucide-react'
 
 import type { AdminCategoryRow } from '@/domains/marketplace/categories/application/queries/admin-categories.queries'
 import {
@@ -39,6 +39,8 @@ import {
   SelectValue,
 } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
+import { Separator } from '@/shared/ui/separator'
+import { cn } from '@/shared/utils/utils'
 
 import {
   createEmptyAttribute,
@@ -46,7 +48,9 @@ import {
 } from './ProductBaseAttributeEditor'
 import { ProductBaseImageUploader } from './ProductBaseImageUploader'
 
-type FormState = ProductBaseFormDto
+type FormState = ProductBaseFormDto & {
+  categoryPath: string[]
+}
 
 function withAttributeClientKeys(
   attributes: ProductBaseFormDto['attributes'],
@@ -58,7 +62,36 @@ function withAttributeClientKeys(
   }))
 }
 
-function buildInitialForm(initial?: ProductBaseDetailDto | null): FormState {
+function buildCategoryPath(
+  categories: AdminCategoryRow[],
+  categoryId: string,
+  subcategoryId?: string | null,
+): string[] {
+  if (!categoryId) return []
+
+  if (!subcategoryId) {
+    return [categoryId]
+  }
+
+  const byId = new Map(categories.map((category) => [category.id, category]))
+  const path = [subcategoryId]
+  let currentId: string | null | undefined = byId.get(subcategoryId)?.parentId ?? null
+
+  while (currentId) {
+    path.push(currentId)
+    if (currentId === categoryId) {
+      return path.reverse()
+    }
+    currentId = byId.get(currentId)?.parentId ?? null
+  }
+
+  return [categoryId, subcategoryId]
+}
+
+function buildInitialForm(
+  initial?: ProductBaseDetailDto | null,
+  categories: AdminCategoryRow[] = [],
+): FormState {
   if (!initial) {
     return {
       name: '',
@@ -66,6 +99,7 @@ function buildInitialForm(initial?: ProductBaseDetailDto | null): FormState {
       description: '',
       categoryId: '',
       subcategoryId: null,
+      categoryPath: [],
       type: 'PRODUCT',
       baseImageUrl: '',
       imageStrategy: 'BASE_OR_LISTING',
@@ -79,6 +113,7 @@ function buildInitialForm(initial?: ProductBaseDetailDto | null): FormState {
     description: initial.description ?? '',
     categoryId: initial.categoryId,
     subcategoryId: initial.subcategoryId,
+    categoryPath: buildCategoryPath(categories, initial.categoryId, initial.subcategoryId),
     type: initial.type,
     baseImageUrl: initial.baseImageUrl ?? '',
     imageStrategy: initial.imageStrategy,
@@ -99,7 +134,7 @@ export function ProductBaseFormDialog({
   initial?: ProductBaseDetailDto | null
   onSaved: () => void
 }) {
-  const [form, setForm] = useState<FormState>(() => buildInitialForm(initial))
+  const [form, setForm] = useState<FormState>(() => buildInitialForm(initial, categories))
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [slugTouched, setSlugTouched] = useState(false)
@@ -109,21 +144,70 @@ export function ProductBaseFormDialog({
 
   useEffect(() => {
     if (open) {
-      setForm(buildInitialForm(initial))
+      setForm(buildInitialForm(initial, categories))
       setSlugTouched(Boolean(initial))
       setError(null)
     }
-  }, [open, initial])
+  }, [open, initial, categories])
+
+  const byId = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories])
+
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, AdminCategoryRow[]>()
+    for (const category of categories) {
+      if (!category.parentId) continue
+      const current = map.get(category.parentId) ?? []
+      current.push(category)
+      map.set(category.parentId, current)
+    }
+    return map
+  }, [categories])
 
   const rootCategories = useMemo(
     () => categories.filter((category) => !category.parentId),
     [categories],
   )
 
-  const subcategories = useMemo(
-    () => categories.filter((category) => category.parentId === form.categoryId),
-    [categories, form.categoryId],
-  )
+  const levels = useMemo(() => {
+    if (!rootCategories.length) return []
+
+    const memo = new Map<string, number>()
+    const depth = (id: string): number => {
+      if (memo.has(id)) return memo.get(id) as number
+      const children = childrenByParent.get(id) ?? []
+      const value = children.length === 0 ? 1 : 1 + Math.max(...children.map((child) => depth(child.id)))
+      memo.set(id, value)
+      return value
+    }
+
+    const maxDepth = Math.max(...rootCategories.map((root) => depth(root.id)))
+    return Array.from({ length: Math.max(maxDepth, 1) }).map((_, index) => index)
+  }, [childrenByParent, rootCategories])
+
+  const categoryOptionsAtLevel = (level: number) => {
+    if (level === 0) return rootCategories
+    const parentId = form.categoryPath[level - 1]
+    if (!parentId) return []
+    return childrenByParent.get(parentId) ?? []
+  }
+
+  const selectedCategoryLabel = form.categoryPath
+    .map((categoryId) => byId.get(categoryId)?.name ?? categoryId)
+    .join(' → ')
+  const categorySelectionValid = form.categoryPath.length > 0 && form.categoryPath.every((categoryId) => byId.has(categoryId))
+
+  const setCategoryAtLevel = (level: number, categoryId: string) => {
+    setForm((current) => {
+      const nextPath = current.categoryPath.slice(0, level)
+      nextPath[level] = categoryId
+      return {
+        ...current,
+        categoryId: nextPath[0] ?? categoryId,
+        subcategoryId: nextPath.length > 1 ? nextPath[nextPath.length - 1] : null,
+        categoryPath: nextPath,
+      }
+    })
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -138,7 +222,11 @@ export function ProductBaseFormDialog({
       ...form,
       slug: form.slug.trim() || slugifyProductBaseName(form.name),
       description: form.description || null,
-      subcategoryId: form.subcategoryId || null,
+      categoryId: form.categoryPath[0] ?? form.categoryId,
+      subcategoryId:
+        form.categoryPath.length > 1
+          ? form.categoryPath[form.categoryPath.length - 1]
+          : form.subcategoryId || null,
       baseImageUrl: form.baseImageUrl || null,
       attributes: form.attributes.map(({ clientKey: _clientKey, ...attr }, index) => ({
         ...attr,
@@ -252,55 +340,70 @@ export function ProductBaseFormDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className='space-y-2'>
-              <Label>Categoría</Label>
-              <Select
-                value={form.categoryId || undefined}
-                onValueChange={(value) =>
-                  setForm((current) => ({
-                    ...current,
-                    categoryId: value,
-                    subcategoryId: null,
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Seleccionar categoría' />
-                </SelectTrigger>
-                <SelectContent>
-                  {rootCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className='space-y-3 sm:col-span-2'>
+              <div className='space-y-1'>
+                <Label>Categorías</Label>
+                <p className='text-sm text-muted-foreground'>
+                  Elegí la ruta más profunda disponible para asociar el Product Base.
+                </p>
+              </div>
+
+              {rootCategories.length ? (
+                <div className='space-y-3'>
+                  {levels.map((level) => {
+                    const options = categoryOptionsAtLevel(level)
+                    const value = form.categoryPath[level] ?? ''
+                    const show = level === 0 || Boolean(form.categoryPath[level - 1])
+                    if (!show || options.length === 0) return null
+
+                    return (
+                      <div key={level} className='space-y-2'>
+                        <Label>{level === 0 ? 'Root category' : `Level ${level + 1}`}</Label>
+                        <select
+                          className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
+                          value={value}
+                          onChange={(event) => setCategoryAtLevel(level, event.target.value)}
+                        >
+                          <option value='' disabled>
+                            Elegí…
+                          </option>
+                          {options.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className='text-sm text-muted-foreground'>
+                  No hay categorías disponibles para seleccionar.
+                </p>
+              )}
             </div>
-            <div className='space-y-2'>
-              <Label>Subcategoría</Label>
-              <Select
-                value={form.subcategoryId ?? 'none'}
-                onValueChange={(value) =>
-                  setForm((current) => ({
-                    ...current,
-                    subcategoryId: value === 'none' ? null : value,
-                  }))
-                }
-                disabled={subcategories.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Opcional' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='none'>Sin subcategoría</SelectItem>
-                  {subcategories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+
+            <Separator className='sm:col-span-2' />
+
+            {form.categoryPath.length > 0 ? (
+              <div className='flex items-center justify-between gap-4 sm:col-span-2'>
+                <div className='space-y-1'>
+                  <p className='text-sm font-medium'>Categoría seleccionada</p>
+                  <p className='text-sm text-muted-foreground'>{selectedCategoryLabel || '—'}</p>
+                </div>
+                <BadgeCheck
+                  className={cn(
+                    'size-5',
+                    categorySelectionValid ? 'text-green-600' : 'text-muted-foreground',
+                  )}
+                />
+              </div>
+            ) : (
+              <p className='text-sm text-muted-foreground sm:col-span-2'>
+                Elegí una categoría para continuar.
+              </p>
+            )}
             {allowsBaseImage ? (
               <ProductBaseImageUploader
                 imageUrl={form.baseImageUrl?.trim() || null}
