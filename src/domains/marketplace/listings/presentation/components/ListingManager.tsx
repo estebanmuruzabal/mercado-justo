@@ -33,6 +33,7 @@ import type { SellerProductBaseDetailDto } from '@/domains/marketplace/product-b
 import { VariantEditor } from '@/domains/marketplace/listings/presentation/components/variants/VariantEditor'
 import type { VariantEditorValue } from '@/domains/marketplace/listings/presentation/components/variants/VariantCard'
 import { ListingManagerModal } from '@/domains/marketplace/listings/presentation/components/listing-manager/ListingManagerModal'
+import { LISTING_MODERATION_PRESENTATION } from '@/src/shared/utils/admin-status-presentation'
 
 type CategoryRow = {
   id: string
@@ -1290,6 +1291,7 @@ export function ListingManager() {
                 <tr className='text-left text-xs font-medium uppercase tracking-wide text-muted-foreground'>
                   <th className='px-4 py-3'>Title</th>
                   <th className='px-4 py-3'>Category</th>
+                  <th className='px-4 py-3'>Moderation</th>
                   <th className='px-4 py-3 text-right'>Actions</th>
                 </tr>
               </thead>
@@ -1301,6 +1303,22 @@ export function ListingManager() {
                     </td>
                     <td className='px-4 py-3 text-sm text-muted-foreground'>
                       {row.categoryId ? byId.get(row.categoryId)?.name ?? row.categoryId : '—'}
+                    </td>
+                    <td className='px-4 py-3'>
+                    <div className='space-y-1'>
+                        <Badge
+                          variant='secondary'
+                          className={cn(
+                            'border-transparent',
+                            LISTING_MODERATION_PRESENTATION[row.moderationStatus].className,
+                          )}
+                        >
+                          {LISTING_MODERATION_PRESENTATION[row.moderationStatus].label}
+                        </Badge>
+                        {row.moderationStatus === 'rejected' && row.moderationReason ? (
+                          <p className='text-xs text-muted-foreground'>{row.moderationReason}</p>
+                        ) : null}
+                      </div>
                     </td>
                     <td className='px-4 py-3'>
                       <div className='flex justify-end gap-2'>

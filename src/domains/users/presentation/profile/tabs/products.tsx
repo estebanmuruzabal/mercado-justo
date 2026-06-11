@@ -22,6 +22,7 @@ import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Separator } from '@/shared/ui/separator'
 import { Skeleton } from '@/shared/ui/skeleton'
+import { LISTING_MODERATION_PRESENTATION } from '@/shared/utils/admin-status-presentation'
 import { ListingLocationPicker } from '@/domains/vendors/presentation/shared/location/listing-location-picker'
 import { createClient } from '@/shared/database/supabase/client'
 import { cn } from '@/shared/utils/utils'
@@ -819,6 +820,7 @@ export function Products() {
                 <tr className='text-left text-xs font-medium uppercase tracking-wide text-muted-foreground'>
                   <th className='px-4 py-3'>Title</th>
                   <th className='px-4 py-3'>Category</th>
+                  <th className='px-4 py-3'>Moderation</th>
                   <th className='px-4 py-3 text-right'>Actions</th>
                 </tr>
               </thead>
@@ -830,6 +832,22 @@ export function Products() {
                     </td>
                     <td className='px-4 py-3 text-sm text-muted-foreground'>
                       {row.categoryId ? byId.get(row.categoryId)?.name ?? row.categoryId : '—'}
+                    </td>
+                    <td className='px-4 py-3'>
+                      <div className='space-y-1'>
+                        <Badge
+                          variant='secondary'
+                          className={cn(
+                            'border-transparent',
+                            LISTING_MODERATION_PRESENTATION[row.moderationStatus].className,
+                          )}
+                        >
+                          {LISTING_MODERATION_PRESENTATION[row.moderationStatus].label}
+                        </Badge>
+                        {row.moderationStatus === 'rejected' && row.moderationReason ? (
+                          <p className='text-xs text-muted-foreground'>{row.moderationReason}</p>
+                        ) : null}
+                      </div>
                     </td>
                     <td className='px-4 py-3'>
                       <div className='flex justify-end gap-2'>

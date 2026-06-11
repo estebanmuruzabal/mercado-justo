@@ -5,6 +5,8 @@ import { getStoreByUserId } from '@/domains/vendors/infrastructure/store.service
 import { getUserRoleByUserId } from '@/domains/users/application/queries/user.queries'
 import { ROLES, type Role } from '@/domains/users/domain/roles'
 import type { ListingType } from '@/domains/marketplace/listings/domain/listing'
+import type { ListingModerationStatus } from '@/domains/logistics/domain/types'
+import { notifySuperAdminsListingReviewRequested } from '@/shared/events/legacy-notifications/in-app-notifications'
 import {
   getProductBaseForListingForm,
   listActiveProductBasesForSeller,
@@ -33,6 +35,8 @@ export type ListingManagerRow = {
   status: 'draft' | 'published'
   listingType: ListingType
   categoryId: string
+  moderationStatus: ListingModerationStatus
+  moderationReason: string | null
   productBaseId: string | null
   title: string | null
   description: string | null
@@ -103,6 +107,8 @@ export async function getListingsManagerDataAction() {
     status: row.status as 'draft' | 'published',
     listingType: row.listing_type as ListingType,
     categoryId: row.category_id as string,
+    moderationStatus: (row.moderation_status as ListingModerationStatus) ?? 'pending',
+    moderationReason: (row.moderation_reason as string | null) ?? null,
     productBaseId: (row.product_base_id as string | null) ?? null,
     title: (row.title as string | null) ?? null,
     description: (row.description as string | null) ?? null,
@@ -304,6 +310,7 @@ export async function publishListingAction(id: string, payload: {
   // (Legacy drafts store dynamic fields in `characteristics`, and base stock/price separately.)
   type LegacyListingRow = {
     id: string
+    title: string | null
     stock: number | null
     characteristics: ListingAttributesPayload | null
     store_id: string
@@ -311,7 +318,7 @@ export async function publishListingAction(id: string, payload: {
 
   const { data: legacyListing, error: legacyError } = await supabase
     .from('listing')
-    .select('id, stock, characteristics, store_id')
+    .select('id, title, stock, characteristics, store_id')
     .eq('id', id)
     .maybeSingle()
 
@@ -404,6 +411,11 @@ export async function publishListingAction(id: string, payload: {
     .eq('id', id)
 
   if (error) throw error
+
+  await notifySuperAdminsListingReviewRequested({
+    listingId: id,
+    listingTitle: legacy.title?.trim() || 'Nuevo listing',
+  })
 }
 
 const variantAttributesSchema = z

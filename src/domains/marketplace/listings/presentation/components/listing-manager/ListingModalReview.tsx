@@ -182,7 +182,7 @@ export function ListingModalReview({
                     <div key={v.id ?? `${v.sku}-${idx}`} className='rounded-lg border bg-muted/10 p-3'>
                       <div className='flex items-start justify-between gap-3'>
                         <div className='space-y-0.5'>
-                          <p className='text-sm font-semibold'>{v.sku || '(Sin SKU)'}</p>
+                          <p className='text-sm font-semibold'>{v.name}</p>
                           <p className='text-xs text-muted-foreground'>Price: ${v.price}</p>
                           <p className='text-xs text-muted-foreground'>Stock: {v.stock}</p>
                         </div>

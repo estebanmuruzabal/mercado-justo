@@ -10,6 +10,7 @@ import { withAudit } from '@/shared/database/admin-audit'
 import { assertListingModeration } from '@/domains/moderation/domain/engines/moderation-engine'
 import { ADMIN_LISTINGS_PATH } from '@/shared/routing/routes'
 import { type ListingModerationStatus } from '@/domains/logistics/domain/types'
+import { notifyVendorListingModerationDecision } from '@/shared/events/legacy-notifications/in-app-notifications'
 
 export type AdminActionResult = { success: true } | { success: false; error: string }
 
@@ -38,7 +39,7 @@ export async function moderateListingAction(
 
     const { data: current, error: readError } = await admin
       .from('listing')
-      .select('moderation_status')
+      .select('moderation_status, title, store_id')
       .eq('id', listingId)
       .maybeSingle()
 
@@ -47,6 +48,11 @@ export async function moderateListingAction(
 
     const from = ((current as { moderation_status: string }).moderation_status ??
       'pending') as ListingModerationStatus
+    const currentRow = current as {
+      moderation_status: string
+      title: string | null
+      store_id: string
+    }
     const to = assertListingModeration(from, decision)
 
     await withAudit(
@@ -70,6 +76,16 @@ export async function moderateListingAction(
         if (error) throw error
       },
     )
+
+    if (to === 'approved' || to === 'rejected') {
+      await notifyVendorListingModerationDecision({
+        userId: currentRow.store_id,
+        listingId,
+        listingTitle: currentRow.title?.trim() || 'Tu listing',
+        decision: to,
+        reason: to === 'rejected' ? reason ?? null : null,
+      })
+    }
 
     revalidatePath(ADMIN_LISTINGS_PATH)
     return { success: true }
