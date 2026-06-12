@@ -113,6 +113,7 @@ export function CheckoutClient() {
     startTransition(async () => {
       try {
         // TODO: pass CheckoutMetadata when order schema supports fulfillment + payment + note
+        console.log('cartPayload::::::::', cartPayload)
         const { orderId } = await createOrderFromCartAction(cartPayload)
         clearCart()
         useCheckoutStore.getState().resetCheckoutUi()

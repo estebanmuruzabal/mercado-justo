@@ -218,6 +218,15 @@ export function ProductDetailClient({
               onClick={() => {
                 if (!selectedVariant) return
                 if (isSelfSeller) return
+                console.log('addItem::::::::', {
+                  listingType: 'product',
+                  variantId: selectedVariant.id,
+                  storeId,
+                  title: productTitle,
+                  image: productImage,
+                  quantity,
+                  unitPrice: selectedVariant.price,
+                })
                 addItem({
                   listingType: 'product',
                   variantId: selectedVariant.id,
@@ -239,6 +248,15 @@ export function ProductDetailClient({
               onClick={() => {
                 if (!selectedVariant) return
                 if (isSelfSeller) return
+                console.log('addItem2::::::::', {
+                  listingType: 'product',
+                  variantId: selectedVariant.id,
+                  storeId,
+                  title: productTitle,
+                  image: productImage,
+                  quantity,
+                  unitPrice: selectedVariant.price,
+                })
                 addItem({
                   listingType: 'product',
                   variantId: selectedVariant.id,

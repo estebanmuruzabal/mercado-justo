@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search } from 'lucide-react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import { TABS, type TabId, type SearchPayload } from '@/shared/shell/navbar/right/airbnbTabs'
@@ -14,6 +15,7 @@ import { MenuButton } from './menu-button'
 import { NotificationsPanel } from './notifications-panel'
 import { useHeaderSession } from '@/domains/auth/presentation/hooks/use-header-session'
 import { useUnreadNotifications } from '@/domains/community/notifications/presentation/hooks/notifications/use-unread-notifications'
+import { HOME_PATH } from '@/shared/routing/routes'
 
 export function MobileNav({
   scrolled,
@@ -66,15 +68,22 @@ export function MobileNav({
   return (
     <div className='relative lg:hidden py-2'>
       <div className='flex items-center gap-2' data-header-actions>
+        <Link
+          href={HOME_PATH}
+          className='flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.05)]'
+          aria-label='Ir a la homepage'
+        >
+          <span className='flex h-8 w-8 items-center justify-center rounded-full bg-[#FF385C]/10 text-[#FF385C]'>
+            <MercadoJustoLogo small />
+          </span>
+        </Link>
+
         <button
           type='button'
           onClick={onOpenMobileSearch}
           className='flex min-w-0 flex-1 items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.05)]'
           aria-label='Abrir búsqueda'
         >
-          <span className='flex h-8 w-8 items-center justify-center rounded-full bg-[#FF385C]/10 text-[#FF385C]'>
-            <MercadoJustoLogo small />
-          </span>
           <span className='flex min-w-0 items-center gap-2 text-sm font-semibold text-neutral-900'>
             <Search className='h-4 w-4 shrink-0' />
             <span className='truncate'>{isBrowsePage ? 'Filtros y búsqueda' : 'Empezá tu búsqueda'}</span>

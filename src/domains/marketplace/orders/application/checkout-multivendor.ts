@@ -25,6 +25,12 @@ export type CheckoutListingStockRow = {
   title: string | null
 }
 
+export type CheckoutVariantStockRow = {
+  id: string
+  listing_id: string
+  stock: number | null
+}
+
 export function groupCheckoutLinesByVendor(
   resolvedLines: ResolvedCheckoutLine[],
   listingsById: Map<string, CheckoutListingStockRow>,
@@ -53,15 +59,40 @@ export function aggregateCheckoutQuantitiesByListing(
   return requestedByListing
 }
 
-export function assertCheckoutListingStock(
-  requestedByListing: Map<string, number>,
-  listingsById: Map<string, CheckoutListingStockRow>,
+export function aggregateCheckoutQuantitiesByVariant(
+  resolvedLines: ResolvedCheckoutLine[],
+): Map<string, number> {
+  const requestedByVariant = new Map<string, number>()
+  for (const line of resolvedLines) {
+    requestedByVariant.set(
+      line.variantInfo.listingVariantId,
+      (requestedByVariant.get(line.variantInfo.listingVariantId) ?? 0) + line.item.quantity,
+    )
+  }
+  return requestedByVariant
+}
+
+export function assertCheckoutVariantStock(
+  requestedByVariant: Map<string, number>,
+  variantRowsById: Map<string, CheckoutVariantStockRow>,
 ): void {
-  for (const [listingId, quantity] of requestedByListing.entries()) {
-    const listing = listingsById.get(listingId)
-    const stockBefore = listing?.stock ?? 0
+  console.log('assertCheckoutVariantStock::::::::', {
+    requestedByVariant,
+    variantRowsById,
+  })
+  for (const [variantId, quantity] of requestedByVariant.entries()) {
+    const variant = variantRowsById.get(variantId)
+    console.log('variant::::::::', variant)
+    console.log('quantity::::::::', quantity)
+    const stockBefore = variant?.stock ?? 0
+    console.log(
+      'stockBefore::::::::',
+      stockBefore,
+    )
+    console.log('quantity::::::::', quantity)
+    console.log('stockBefore < quantity::::::::', stockBefore < quantity)
     if (stockBefore < quantity) {
-      throw new Error(`Stock insuficiente para ${listing?.title ?? listingId}.`)
+      throw new Error(`Stock insuficiente para ${variant?.id ?? variantId}.`)
     }
   }
 }
