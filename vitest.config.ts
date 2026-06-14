@@ -11,8 +11,10 @@ export default defineConfig({
     passWithNoTests: true,
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './'),
-    },
+    alias: [
+      { find: '@/domains', replacement: path.resolve(__dirname, './src/domains') },
+      { find: '@/shared', replacement: path.resolve(__dirname, './src/shared') },
+      { find: '@', replacement: path.resolve(__dirname, './') },
+    ],
   },
 })
