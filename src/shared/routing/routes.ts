@@ -58,6 +58,7 @@ export function vendorDashboardPathAfterStoreCreated() {
 }
 export const VENDOR_INFORMATION_PATH = '/dashboard-vendor/vendor-information' as const
 export const VENDOR_LISTINGS_PATH = '/dashboard-vendor/listings' as const
+export const VENDOR_FULFILLMENT_PATH = '/dashboard-vendor/fulfillment' as const
 export const VENDOR_DITTOBOTS_PATH = '/dashboard-vendor/dittobots' as const
 export const VENDOR_SALES_PATH = '/dashboard-vendor/sales' as const
 export const VENDOR_NOTIFICATIONS_PATH = '/dashboard-vendor/notifications' as const

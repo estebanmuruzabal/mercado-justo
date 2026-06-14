@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Package, ShoppingBag, Store } from 'lucide-react'
+import { Package, ShoppingBag, Store, Truck } from 'lucide-react'
 
 import { Button } from '@/shared/ui/button'
 import {
@@ -19,11 +19,13 @@ import {
   VENDOR_LISTINGS_PATH,
   VENDOR_SALES_PATH,
   VENDOR_INFORMATION_PATH,
+  VENDOR_FULFILLMENT_PATH,
   VENDOR_STORE_CREATED_PARAM,
 } from '@/shared/routing/routes'
 
 const QUICK_LINKS = [
   { href: VENDOR_LISTINGS_PATH, label: 'Mis listings', description: 'Publicá y gestioná productos', icon: Package },
+  { href: VENDOR_FULFILLMENT_PATH, label: 'Fulfillment', description: 'Configurá pickup y delivery', icon: Truck },
   { href: VENDOR_SALES_PATH, label: 'Ventas', description: 'Revisá pedidos y entregas', icon: ShoppingBag },
   { href: VENDOR_INFORMATION_PATH, label: 'Información del vendedor', description: 'Datos de tu tienda', icon: Store },
 ] as const

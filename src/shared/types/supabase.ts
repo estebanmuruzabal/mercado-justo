@@ -253,6 +253,59 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_windows: {
+        Row: {
+          code: string
+          created_at: string
+          day_of_week: number | null
+          end_time: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          start_time: string
+          timezone: string
+          updated_at: string
+          vendor_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          day_of_week?: number | null
+          end_time: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          start_time: string
+          timezone?: string
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          day_of_week?: number | null
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          start_time?: string
+          timezone?: string
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_windows_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ditto_bot_inventory_batch: {
         Row: {
           created_at: string
@@ -478,6 +531,172 @@ export type Database = {
           {
             foreignKeyName: "ditto_bot_inventory_unit_service_partner_id_fkey"
             columns: ["service_partner_id"]
+            isOneToOne: false
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fulfillment_batches: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          scheduled_window: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_window?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_window?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fulfillment_methods: {
+        Row: {
+          code: string
+          created_at: string
+          is_active: boolean
+          kind: string
+          label: string
+          provider: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_active?: boolean
+          kind: string
+          label: string
+          provider: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          kind?: string
+          label?: string
+          provider?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fulfillment_requests: {
+        Row: {
+          assigned_operator_id: string | null
+          batch_id: string | null
+          buyer_id: string
+          created_at: string
+          delivery_address: string | null
+          id: string
+          method_code: string
+          notes: string | null
+          order_id: string
+          pickup_address: string | null
+          pickup_window_id: string | null
+          scheduled_window: Json | null
+          shipment_id: string
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          assigned_operator_id?: string | null
+          batch_id?: string | null
+          buyer_id: string
+          created_at?: string
+          delivery_address?: string | null
+          id?: string
+          method_code: string
+          notes?: string | null
+          order_id: string
+          pickup_address?: string | null
+          pickup_window_id?: string | null
+          scheduled_window?: Json | null
+          shipment_id: string
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          assigned_operator_id?: string | null
+          batch_id?: string | null
+          buyer_id?: string
+          created_at?: string
+          delivery_address?: string | null
+          id?: string
+          method_code?: string
+          notes?: string | null
+          order_id?: string
+          pickup_address?: string | null
+          pickup_window_id?: string | null
+          scheduled_window?: Json | null
+          shipment_id?: string
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fulfillment_requests_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_requests_method_code_fkey"
+            columns: ["method_code"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_methods"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "fulfillment_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_requests_pickup_window_id_fkey"
+            columns: ["pickup_window_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_windows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_requests_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: true
+            referencedRelation: "shipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_requests_vendor_id_fkey"
+            columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "store"
             referencedColumns: ["id"]
@@ -993,6 +1212,59 @@ export type Database = {
             columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "listing_variant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pickup_windows: {
+        Row: {
+          code: string
+          created_at: string
+          day_of_week: number | null
+          end_time: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          start_time: string
+          timezone: string
+          updated_at: string
+          vendor_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          day_of_week?: number | null
+          end_time: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          start_time: string
+          timezone?: string
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          day_of_week?: number | null
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          start_time?: string
+          timezone?: string
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_windows_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "store"
             referencedColumns: ["id"]
           },
         ]
@@ -1994,6 +2266,60 @@ export type Database = {
           },
         ]
       }
+      vendor_fulfillment_settings: {
+        Row: {
+          created_at: string
+          default_method_code: string | null
+          delivery_radius_km: number | null
+          enabled_delivery_window_ids: string[]
+          enabled_method_codes: string[]
+          enabled_pickup_window_ids: string[]
+          pickup_address: string | null
+          preferences: Json
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_method_code?: string | null
+          delivery_radius_km?: number | null
+          enabled_delivery_window_ids?: string[]
+          enabled_method_codes?: string[]
+          enabled_pickup_window_ids?: string[]
+          pickup_address?: string | null
+          preferences?: Json
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          default_method_code?: string | null
+          delivery_radius_km?: number | null
+          enabled_delivery_window_ids?: string[]
+          enabled_method_codes?: string[]
+          enabled_pickup_window_ids?: string[]
+          pickup_address?: string | null
+          preferences?: Json
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_fulfillment_settings_default_method_code_fkey"
+            columns: ["default_method_code"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_methods"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "vendor_fulfillment_settings_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: true
+            referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_telegram: {
         Row: {
           chat_id: string | null
@@ -2193,6 +2519,10 @@ export type Database = {
       }
       ensure_taxonomy_node_for_category: {
         Args: { p_category_id: string }
+        Returns: string
+      }
+      fulfillment_method_code_from_delivery_method: {
+        Args: { p_delivery_method: string }
         Returns: string
       }
       has_active_ditto_bot: { Args: { p_user_id?: string }; Returns: boolean }
