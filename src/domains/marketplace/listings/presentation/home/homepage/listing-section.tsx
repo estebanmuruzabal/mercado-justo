@@ -25,6 +25,7 @@ export type ProductListing = BaseListing & {
   priceSecondary?: string
   storeId: string
   variantId: string
+  variantName?: string
 }
 
 export type OtherListing = BaseListing & {
@@ -91,6 +92,7 @@ export function ListingSection({ title, listings }: Props) {
                 addItem({
                   listingType: 'product',
                   variantId: listing.variantId,
+                  variantName: listing.variantName ?? listing.title,
                   title: listing.title,
                   image: listing.image,
                   storeId: listing.storeId,

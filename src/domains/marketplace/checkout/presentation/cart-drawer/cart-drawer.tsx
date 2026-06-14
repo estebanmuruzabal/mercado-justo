@@ -170,8 +170,14 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
                                   <div className='flex items-center justify-between gap-2'>
                                     <div className='min-w-0'>
                                       <div className='truncate text-sm font-semibold'>{item.title}</div>
+                                      { item.variantName != item.title ? (
+                                          <div className='text-xs text-muted-foreground'>
+                                            Variante: {item.variantName}
+                                          </div>
+                                        ) : null
+                                      }
                                       <div className='text-xs text-muted-foreground'>
-                                        {getListingTypeLabel(item.listingType)}
+                                        Tipo: {getListingTypeLabel(item.listingType)}
                                       </div>
                                     </div>
                                     <div className='text-sm font-semibold'>{formatMoney(item.unitPrice)}</div>

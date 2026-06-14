@@ -20,7 +20,12 @@ export function loadCartStateFromLocalStorage(): CartState {
       return EMPTY_CART_STATE
     }
 
-    return parsed.state
+    return {
+      items: parsed.state.items.map((item) => ({
+        ...item,
+        variantName: item.variantName ?? undefined,
+      })),
+    }
   } catch {
     // If localStorage is corrupted, ignore it.
     return EMPTY_CART_STATE
@@ -36,7 +41,12 @@ export function persistCartStateToLocalStorage(state: CartState): void {
   }
 
   const payload: CartPersistenceV1 = {
-    state,
+    state: {
+      items: state.items.map((item) => ({
+        ...item,
+        variantName: item.variantName ?? undefined,
+      })),
+    },
     lastUpdatedAt: Date.now(),
     version: 3,
   }

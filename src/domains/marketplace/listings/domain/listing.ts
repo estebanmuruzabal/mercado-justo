@@ -33,6 +33,8 @@ export type CartItem = {
   id: CartItemId
   listingType: ListingType
   variantId: string
+  variantName?: string
+  variantAttributes?: Record<string, string>
 
   // Seller context (vendor) so cart operations can be routed later.
   storeId: string

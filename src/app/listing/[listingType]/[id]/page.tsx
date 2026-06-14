@@ -105,9 +105,8 @@ export default async function ListingDetailPage({
 
   const { data: variantRows, error: variantError } = await supabase
     .from('listing_variant')
-    .select('id,name,sku,price,stock,is_default,attributes_json')
+    .select('id,name,sku,price,stock,attributes_json')
     .eq('listing_id', id)
-    .order('is_default', { ascending: false })
 
   if (variantError) throw variantError
   logListingDetail.debug('variant rows loaded', { listingId: id, count: (variantRows ?? []).length })
@@ -117,7 +116,6 @@ export default async function ListingDetailPage({
     sku?: string | null
     price?: number | string | null
     stock?: number | null
-    is_default?: boolean | null
     attributes_json?: Record<string, unknown> | null
   }
 
@@ -133,19 +131,15 @@ export default async function ListingDetailPage({
       name: String(v.name ?? v.sku ?? 'Variante'),
       price: Number(v.price ?? 0),
       stock: Number(v.stock ?? 0),
-      isDefault: Boolean(v.is_default),
       attributes,
     }
   })
 
-  const defaultVariant = variants.find((v) => v.isDefault) ?? variants[0]
-
   const productImage =
-    (defaultVariant?.attributes.image as string | undefined) ??
+    (variants.find((variant) => typeof variant.attributes.image === 'string')?.attributes.image as
+      | string
+      | undefined) ??
     'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop'
-
-  const productTitle =
-    (defaultVariant?.name && defaultVariant?.name !== 'Variante' ? defaultVariant.name : null) ?? listingTyped.title ?? 'Producto'
 
   return (
     <main className='min-h-screen bg-background px-6 py-10'>
@@ -159,7 +153,7 @@ export default async function ListingDetailPage({
         <ProductDetailClient
           storeId={String(listingTyped.store_id)}
           storeName={storeName ?? undefined}
-          productTitle={productTitle}
+          productTitle={listingTyped.title ?? 'Producto'}
           productImage={productImage}
           latitude={listingTyped.latitude === null ? null : Number(listingTyped.latitude)}
           longitude={listingTyped.longitude === null ? null : Number(listingTyped.longitude)}

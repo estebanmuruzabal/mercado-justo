@@ -44,7 +44,14 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         return {
           ...state,
           items: state.items.map((i) =>
-            i.id === nextId ? { ...i, quantity: i.quantity + action.payload.quantity } : i
+            i.id === nextId
+              ? {
+                  ...i,
+                  quantity: i.quantity + action.payload.quantity,
+                  variantName: i.variantName ?? action.payload.variantName,
+                  variantAttributes: i.variantAttributes ?? action.payload.variantAttributes,
+                }
+              : i
           ),
         }
       }
@@ -96,6 +103,8 @@ async function syncItemToServer(item: CartItem): Promise<void> {
     quantity: item.quantity,
     unitPrice: item.unitPrice,
     titleSnapshot: item.title,
+    variantName: item.variantName,
+    variantAttributes: item.variantAttributes,
   })
 }
 
@@ -132,6 +141,8 @@ export function CartStoreProvider({ children }: { children: React.ReactNode }) {
               id: makeCartItemId('product', line.variantId!),
               listingType: 'product' as const,
               variantId: line.variantId!,
+              variantName: line.variantName ?? undefined,
+              variantAttributes: line.variantAttributes ?? undefined,
               storeId: '',
               title: line.titleSnapshot,
               image: '',

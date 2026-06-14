@@ -22,23 +22,23 @@ type ListingRow = {
   category?: { name: string | null } | null
   listing_variant?: Array<{
     id: string
+    name: string | null
     price: number | null
-    is_default: boolean
     attributes_json?: unknown
   }> | null
 }
 
 function mapRowToMarketplaceListing(row: ListingRow): MarketplaceListing {
   const variantRows = row.listing_variant ?? []
-  const defaultVariant = variantRows.find((v) => v.is_default) ?? variantRows[0]
-  const attrs = (defaultVariant?.attributes_json ?? {}) as Record<string, unknown>
+  const singleVariant = variantRows.length === 1 ? variantRows[0] : null
+  const attrs = (singleVariant?.attributes_json ?? {}) as Record<string, unknown>
   const titleFromAttrs = typeof attrs.name === 'string' ? attrs.name : null
   const imageFromAttrs = typeof attrs.image === 'string' ? attrs.image : null
   const tagsRaw = attrs.tags
   const tags = Array.isArray(tagsRaw)
     ? tagsRaw.filter((t): t is string => typeof t === 'string')
     : undefined
-  const variantPrice = defaultVariant?.price ?? row.price ?? 0
+  const variantPrice = singleVariant?.price ?? row.price ?? 0
 
   return {
     id: String(row.id),
@@ -52,7 +52,8 @@ function mapRowToMarketplaceListing(row: ListingRow): MarketplaceListing {
     categoryName: row.category?.name ?? undefined,
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),
-    variantId: defaultVariant ? String(defaultVariant.id) : undefined,
+    variantId: singleVariant ? String(singleVariant.id) : undefined,
+    variantName: singleVariant?.name ?? (singleVariant ? titleFromAttrs ?? row.title ?? undefined : undefined),
     hasOptions: variantRows.length > 1,
     createdAt: row.created_at,
     tags,
@@ -68,7 +69,7 @@ export async function fetchMarketplaceListings(
   let query = supabase
     .from('listing')
     .select(
-      'id,title,price,latitude,longitude,listing_type,category_id,store_id,created_at,store(name),category(name),listing_variant(id,price,is_default,attributes_json)',
+      'id,title,price,latitude,longitude,listing_type,category_id,store_id,created_at,store(name),category(name),listing_variant(id,name,price,attributes_json)',
     )
     .eq('status', 'published')
     .order('created_at', { ascending: false })

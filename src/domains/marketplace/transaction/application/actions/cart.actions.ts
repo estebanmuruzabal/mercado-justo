@@ -13,6 +13,8 @@ export type CartLineDto = {
   quantity: number
   unitPrice: number
   titleSnapshot: string
+  variantName?: string | null
+  variantAttributes?: Record<string, string> | null
 }
 
 export async function getServerCartLines(): Promise<CartLineDto[]> {
@@ -30,7 +32,7 @@ export async function getServerCartLines(): Promise<CartLineDto[]> {
 
   const { data: lines, error } = await supabase
     .from('cart_line')
-    .select('id, variant_id, publication_id, quantity, unit_price, title_snapshot')
+    .select('id, variant_id, publication_id, quantity, unit_price, title_snapshot, metadata_json')
     .eq('cart_id', (cart as { id: string }).id)
 
   if (error) return []
@@ -42,6 +44,22 @@ export async function getServerCartLines(): Promise<CartLineDto[]> {
     quantity: row.quantity as number,
     unitPrice: Number(row.unit_price),
     titleSnapshot: row.title_snapshot as string,
+    variantName: (() => {
+      const metadata = row.metadata_json as Record<string, unknown> | null
+      return typeof metadata?.variantName === 'string' ? metadata.variantName : null
+    })(),
+    variantAttributes: (() => {
+      const metadata = row.metadata_json as Record<string, unknown> | null
+      const rawAttributes = metadata?.variantAttributes
+      if (!rawAttributes || typeof rawAttributes !== 'object') return null
+      const normalized: Record<string, string> = {}
+      for (const [key, value] of Object.entries(rawAttributes as Record<string, unknown>)) {
+        if (typeof value === 'string') {
+          normalized[key] = value
+        }
+      }
+      return Object.keys(normalized).length > 0 ? normalized : null
+    })(),
   }))
 }
 
@@ -51,6 +69,8 @@ export async function upsertServerCartLine(input: {
   quantity: number
   unitPrice: number
   titleSnapshot: string
+  variantName?: string
+  variantAttributes?: Record<string, string>
 }): Promise<void> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -84,6 +104,10 @@ export async function upsertServerCartLine(input: {
       quantity: input.quantity,
       unit_price: input.unitPrice,
       title_snapshot: input.titleSnapshot,
+      metadata_json: {
+        variantName: input.variantName ?? null,
+        variantAttributes: input.variantAttributes ?? null,
+      },
     } as never,
     { onConflict: 'cart_id,variant_id' },
   )

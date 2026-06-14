@@ -33,6 +33,7 @@ const logOrders = createLogger(LogScopes.checkout.orders)
 
 const cartItemSchema = z.object({
   variantId: z.string().min(1),
+  variantName: z.string().min(1).optional(),
   quantity: z.number().int().positive(),
   unitPrice: z.number().positive(),
   storeId: z.string().min(1),

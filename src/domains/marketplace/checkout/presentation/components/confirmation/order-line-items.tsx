@@ -17,7 +17,7 @@ export function OrderLineItems({
   if (items.length === 0) {
     return <p className='text-sm text-muted-foreground'>Tu carrito está vacío.</p>
   }
-
+  console.log('items', items, storeNames)
   return (
     <div className='space-y-3'>
       {items.map((item) => (
@@ -27,6 +27,9 @@ export function OrderLineItems({
         >
           <div className='min-w-0'>
             <div className='truncate text-sm font-semibold text-neutral-900'>{item.title}</div>
+            {item.variantName != item.title ? (
+              <div className='truncate text-xs text-muted-foreground'>Variante: {item.variantName}</div>
+            ) : null}
             <div className='text-xs text-neutral-500'>
               Vendedor: {storeNames[item.storeId] ?? item.storeId}
             </div>

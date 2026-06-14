@@ -37,6 +37,7 @@ export function MarketplaceFeedCard({
   const { addItem, items, setQuantity } = useCartStore()
 
   const variantId = listing.variantId ?? listing.id
+  const hasOptions = Boolean(listing.hasOptions)
   const cartItem = items.find(
     (i) => i.listingType === listing.listingType && i.variantId === variantId,
   )
@@ -48,7 +49,7 @@ export function MarketplaceFeedCard({
 
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation()
-    if (listing.listingType !== 'product' || !listing.variantId) {
+    if (listing.listingType !== 'product' || hasOptions || !listing.variantId) {
       navigateToDetail()
       return
     }
@@ -60,6 +61,7 @@ export function MarketplaceFeedCard({
     addItem({
       listingType: 'product',
       variantId: listing.variantId,
+      variantName: listing.variantName ?? listing.title,
       storeId: listing.storeId,
       title: listing.title,
       image: listing.image ?? FALLBACK_IMAGE,
@@ -122,7 +124,7 @@ export function MarketplaceFeedCard({
                 onClick={handleAdd}
                 className='rounded-full border bg-white/95 px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-neutral-50'
               >
-                + Agregar
+                {hasOptions ? 'Ver más' : '+ Agregar'}
               </button>
             ) : (
               <div

@@ -16,6 +16,7 @@ export type MarketplaceListing = {
   latitude: number | null
   longitude: number | null
   variantId?: string
+  variantName?: string
   hasOptions?: boolean
   createdAt?: string
   deliveryAvailable?: boolean

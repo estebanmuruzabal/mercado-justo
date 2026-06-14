@@ -9,11 +9,13 @@ import { Skeleton } from '@/shared/ui/skeleton'
 
 type OrderRow = {
   id: string
+  seller_id: string
   status: string
   payment_status: string
   subtotal: number
   total: number
   created_at: string
+  vendorName: string
 }
 
 type OrderItemRow = {
@@ -25,6 +27,18 @@ type OrderItemRow = {
 
 function formatMoney(amount: number) {
   return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+}
+
+function formatPurchaseDayLabel(isoDateTime: string) {
+  const date = new Date(isoDateTime)
+  if (Number.isNaN(date.getTime())) return 'Fecha desconocida'
+
+  const label = new Intl.DateTimeFormat('es-AR', {
+    day: 'numeric',
+    month: 'long',
+  }).format(date)
+
+  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 export function PurchasesTab() {
@@ -54,7 +68,7 @@ export function PurchasesTab() {
 
       const { data: ordersRows, error: ordersError } = await supabase
         .from('order')
-        .select('id,status,payment_status,subtotal,total,created_at')
+        .select('id,status,payment_status,subtotal,total,created_at,seller_id')
         .eq('buyer_id', userId)
         .order('created_at', { ascending: false })
 
@@ -63,6 +77,7 @@ export function PurchasesTab() {
       const typedOrders: OrderRow[] = (ordersRows ?? []).map((r: unknown) => {
         const row = r as {
           id: unknown
+            seller_id: unknown
           status: unknown
           payment_status: unknown
           subtotal: unknown
@@ -71,11 +86,13 @@ export function PurchasesTab() {
         }
         return {
           id: String(row.id),
+          seller_id: String(row.seller_id ?? ''),
           status: String((row.status as string | null) ?? 'pending'),
           payment_status: String((row.payment_status as string | null) ?? 'unpaid'),
           subtotal: Number((row.subtotal as number | null) ?? 0),
           total: Number((row.total as number | null) ?? 0),
           created_at: String(row.created_at ?? ''),
+          vendorName: '',
         }
       })
 
@@ -113,8 +130,32 @@ export function PurchasesTab() {
         map.set(key, prev)
       }
 
+      const sellerIds = [...new Set(typedOrders.map((o) => o.seller_id).filter(Boolean))]
+      const { data: storeRows, error: storeError } = sellerIds.length
+        ? await supabase.from('store').select('id,name').in('id', sellerIds)
+        : { data: [] as Array<{ id: string; name: string | null }> }
+
+      if (storeError) throw storeError
+
+      const storeNames = new Map(
+        (storeRows ?? []).map((row) => [String(row.id), row.name?.trim() || 'Vendedor']),
+      )
+
+      const ordersWithVendor = typedOrders
+        .map((order) => ({
+          ...order,
+          vendorName: order.seller_id ? storeNames.get(order.seller_id) ?? 'Vendedor' : 'Vendedor',
+        }))
+        .sort((a, b) => {
+          const byDate = b.created_at.localeCompare(a.created_at)
+          if (byDate !== 0) return byDate
+          const byVendor = a.vendorName.localeCompare(b.vendorName, undefined, { sensitivity: 'base' })
+          if (byVendor !== 0) return byVendor
+          return a.id.localeCompare(b.id)
+        })
+
       if (cancelled) return
-      setOrders(typedOrders)
+      setOrders(ordersWithVendor)
       setItemsByOrderId(map)
       setLoading(false)
     }
@@ -129,6 +170,29 @@ export function PurchasesTab() {
       cancelled = true
     }
   }, [supabase])
+
+  const ordersByDay = useMemo(() => {
+    const grouped = new Map<string, OrderRow[]>()
+
+    for (const order of orders) {
+      const dayKey = order.created_at.slice(0, 10)
+      const current = grouped.get(dayKey) ?? []
+      current.push(order)
+      grouped.set(dayKey, current)
+    }
+
+    return [...grouped.entries()].map(([dayKey, dayOrders]) => ({
+      dayKey,
+      label: dayOrders[0] ? formatPurchaseDayLabel(dayOrders[0].created_at) : 'Fecha desconocida',
+      orders: dayOrders.sort((a, b) => {
+        const byDate = b.created_at.localeCompare(a.created_at)
+        if (byDate !== 0) return byDate
+        const byVendor = a.vendorName.localeCompare(b.vendorName, undefined, { sensitivity: 'base' })
+        if (byVendor !== 0) return byVendor
+        return a.id.localeCompare(b.id)
+      }),
+    }))
+  }, [orders])
 
   return (
     <div className='space-y-6'>
@@ -156,47 +220,65 @@ export function PurchasesTab() {
           </CardContent>
         </Card>
       ) : (
-        <div className='space-y-3'>
-          {orders.map((o) => {
-            const items = itemsByOrderId.get(o.id) ?? []
-            const itemsCount = items.reduce((sum, i) => sum + (i.quantity ?? 0), 0)
-            return (
-              <Card key={o.id}>
-                <CardHeader className='gap-2 pb-3'>
-                  <div className='flex items-start justify-between gap-4'>
-                    <div className='space-y-1'>
-                      <CardTitle className='text-base'>Orden {o.id}</CardTitle>
-                      <div className='text-xs text-muted-foreground'>
-                        {o.status} • {o.payment_status}
-                      </div>
-                    </div>
-                    <div className='text-right'>
-                      <div className='text-sm font-semibold'>{formatMoney(o.total)}</div>
-                      <div className='text-xs text-muted-foreground'>Items: {itemsCount}</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className='space-y-2'>
-                  <ul className='space-y-2'>
-                    {items.map((it, idx) => (
-                      <li key={`${o.id}_${idx}`} className='flex items-start justify-between gap-4'>
-                        <div className='min-w-0'>
-                          <div className='truncate text-sm font-medium'>{it.title_snapshot}</div>
-                          <div className='text-xs text-muted-foreground'>
-                            Cantidad: {it.quantity} • {formatMoney(it.price_snapshot)} c/u
+        <div className='space-y-6'>
+          {ordersByDay.map(({ dayKey, label, orders: dayOrders }) => (
+            <section key={dayKey} className='space-y-3'>
+              <div className='space-y-1'>
+                <h3 className='text-lg font-semibold'>{label}</h3>
+                <p className='text-sm text-muted-foreground'>
+                  {dayOrders.length} orden{dayOrders.length === 1 ? '' : 'es'} en este día.
+                </p>
+              </div>
+
+              <div className='space-y-3'>
+                {dayOrders.map((o) => {
+                  const items = itemsByOrderId.get(o.id) ?? []
+                  const itemsCount = items.reduce((sum, i) => sum + (i.quantity ?? 0), 0)
+                  return (
+                    <Card key={o.id}>
+                      <CardHeader className='gap-2 pb-3'>
+                        <div className='flex items-start justify-between gap-4'>
+                          <div className='space-y-1'>
+                            <CardTitle className='text-base'>Orden {o.id}</CardTitle>
+                            <div className='text-xs font-medium text-muted-foreground'>
+                              {o.vendorName}
+                            </div>
+                            <div className='text-xs text-muted-foreground'>
+                              {o.status} • {o.payment_status}
+                            </div>
+                          </div>
+                          <div className='text-right'>
+                            <div className='text-sm font-semibold'>{formatMoney(o.total)}</div>
+                            <div className='text-xs text-muted-foreground'>Items: {itemsCount}</div>
                           </div>
                         </div>
-                        <div className='text-sm font-semibold'>
-                          {formatMoney((it.price_snapshot ?? 0) * (it.quantity ?? 0))}
+                      </CardHeader>
+                      <CardContent className='space-y-2'>
+                        <ul className='space-y-2'>
+                          {items.map((it, idx) => (
+                            <li key={`${o.id}_${idx}`} className='flex items-start justify-between gap-4'>
+                              <div className='min-w-0'>
+                                <div className='truncate text-sm font-medium'>{it.title_snapshot}</div>
+                                <div className='text-xs text-muted-foreground'>
+                                  Cantidad: {it.quantity} • {formatMoney(it.price_snapshot)} c/u
+                                </div>
+                              </div>
+                              <div className='text-sm font-semibold'>
+                                {formatMoney((it.price_snapshot ?? 0) * (it.quantity ?? 0))}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className='text-xs text-muted-foreground'>
+                          Fecha: {new Date(o.created_at).toLocaleString()}
                         </div>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className='text-xs text-muted-foreground'>Fecha: {new Date(o.created_at).toLocaleString()}</div>
-                </CardContent>
-              </Card>
-            )
-          })}
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       )}
     </div>

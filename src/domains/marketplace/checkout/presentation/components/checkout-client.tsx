@@ -75,6 +75,7 @@ export function CheckoutClient() {
     () =>
       items.map((i) => ({
         variantId: i.variantId,
+        variantName: i.variantName,
         quantity: i.quantity,
         unitPrice: i.unitPrice,
         storeId: i.storeId,
@@ -114,10 +115,14 @@ export function CheckoutClient() {
       try {
         // TODO: pass CheckoutMetadata when order schema supports fulfillment + payment + note
         console.log('cartPayload::::::::', cartPayload)
-        const { orderId } = await createOrderFromCartAction(cartPayload)
+        const { orderId, orderIds } = await createOrderFromCartAction(cartPayload)
         clearCart()
         useCheckoutStore.getState().resetCheckoutUi()
-        router.push(`/purchase-success?orderId=${orderId}`)
+        const params = new URLSearchParams({ orderId })
+        if (orderIds.length > 0) {
+          params.set('orderIds', orderIds.join(','))
+        }
+        router.push(`/purchase-success?${params.toString()}`)
       } catch (e) {
         setFormError(e instanceof Error ? e.message : 'No se pudo crear la orden.')
       }
