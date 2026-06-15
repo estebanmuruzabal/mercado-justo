@@ -7,7 +7,6 @@ import { createClient } from '@/shared/database/supabase/server'
 import { getStoreByUserId } from '@/domains/vendors/infrastructure/store.service'
 import { VENDOR_FULFILLMENT_PATH } from '@/shared/routing/routes'
 import { FULFILLMENT_METHOD_CODES } from '@/domains/logistics/domain/types'
-import { ISO_WEEKDAYS } from '@/domains/logistics/domain/window-schedule'
 import {
   normalizeVendorFulfillmentPreferences,
   validateVendorFulfillmentSettings,
@@ -301,5 +300,3 @@ export async function setVendorDeliveryWindowActiveAction(windowId: string, isAc
     }
   }
 }
-
-export const VENDOR_WINDOW_DAY_OPTIONS = ISO_WEEKDAYS.map((day) => ({ value: day }))

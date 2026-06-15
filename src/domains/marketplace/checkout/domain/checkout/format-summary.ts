@@ -1,5 +1,6 @@
-import { getPickupHubById } from './pickup-points.mock'
-import type { CheckoutFulfillmentInput, CheckoutPaymentInput } from './types'
+import type { CheckoutVendorFulfillmentDto } from '@/domains/logistics/application/dto/checkout-fulfillment.dto'
+import { isDeliveryMethodCode } from '@/domains/logistics/domain/policies/checkout-fulfillment-policy'
+import type { CheckoutPaymentInput, CheckoutVendorFulfillmentInput } from './types'
 
 const PAYMENT_LABELS: Record<'cash' | 'transfer' | 'card', string> = {
   cash: 'Efectivo',
@@ -13,35 +14,30 @@ export function formatCartSectionSummary(itemCount: number, subtotal: number): s
 }
 
 export function formatDeliverySectionSummary(
-  input: CheckoutFulfillmentInput,
-  sellerName?: string | null,
+  input: CheckoutVendorFulfillmentInput & { vendors: CheckoutVendorFulfillmentDto[] },
 ): string | null {
-  const { location, pickupSubOption, selectedPickupHubId } = input
+  if (input.vendorIds.length === 0) return null
 
-  if (location.mode === null) return null
+  const labels = input.vendorIds
+    .map((vendorId) => {
+      const vendor = input.vendors.find((item) => item.vendorId === vendorId)
+      const selection = input.selections[vendorId]
+      if (!vendor || !selection) return null
 
-  if (location.mode === 'delivery' && location.address) {
-    const cityPart =
-      location.city && location.province
-        ? ` - ${location.city}, ${location.province}`
-        : location.city
-          ? ` - ${location.city}`
-          : ''
-    return `Envío a ${location.address}${cityPart}`
-  }
+      const method = vendor.methods.find((item) => item.code === selection.methodCode)
+      const window =
+        isDeliveryMethodCode(selection.methodCode)
+          ? vendor.deliveryWindows.find((item) => item.id === selection.windowId)
+          : vendor.pickupWindows.find((item) => item.id === selection.windowId)
 
-  if (location.mode === 'pickup') {
-    if (pickupSubOption === 'hub' && selectedPickupHubId) {
-      const hub = getPickupHubById(selectedPickupHubId)
-      if (hub) return `Retiro en ${hub.name}`
-    }
-    if (pickupSubOption === 'seller') {
-      return sellerName ? `Retiro en ${sellerName}` : 'Retiro en dirección del vendedor'
-    }
-    return 'Retiro'
-  }
+      if (!method) return null
+      return `${vendor.vendorName}: ${method.label}${window ? ` · ${window.dayLabel}` : ''}`
+    })
+    .filter((value): value is string => value != null)
 
-  return null
+  if (labels.length === 0) return 'Elegí fulfillment por vendedor'
+  if (labels.length === 1) return labels[0] ?? null
+  return `${labels.length} vendedores configurados`
 }
 
 export function formatPaymentSectionSummary(input: CheckoutPaymentInput): string | null {

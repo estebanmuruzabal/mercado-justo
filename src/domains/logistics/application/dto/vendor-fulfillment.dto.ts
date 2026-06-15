@@ -29,6 +29,7 @@ export type FulfillmentPreviewPreferencesDto = {
   minimumPreparationMinutes: number | null
   pickupAddress: string | null
   deliveryRadiusKm: number | null
+  deliveryAddress: string | null
   notes: string | null
 }
 

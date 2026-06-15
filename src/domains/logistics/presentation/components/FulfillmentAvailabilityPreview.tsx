@@ -129,6 +129,12 @@ export function FulfillmentAvailabilityPreview({
               label='Dirección de pickup'
               value={preview.preferences.pickupAddress ?? 'Sin definir'}
             />
+            {preview.preferences.deliveryAddress ? (
+              <PreferenceRow
+                label='Domicilio de entrega'
+                value={preview.preferences.deliveryAddress}
+              />
+            ) : null}
             <PreferenceRow
               label='Radio delivery propio'
               value={

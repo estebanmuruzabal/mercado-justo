@@ -6,6 +6,121 @@
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
+-- Dev taxonomy + Product Base registry (testing catalog)
+-- ---------------------------------------------------------------------------
+
+do $$
+begin
+  -- Food hierarchy used for Product Base + listing manager testing.
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000001',
+    'Alimentos y Bebidas',
+    'alimentos-y-bebidas'
+  );
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000002',
+    'Frescos',
+    'frescos',
+    'd0000000-0000-4000-8000-000000000001'
+  );
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000003',
+    'Frutas y Verduras',
+    'frutas-y-verduras',
+    'd0000000-0000-4000-8000-000000000002'
+  );
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000004',
+    'Hortalizas de Hojas',
+    'hortalizas-de-hojas',
+    'd0000000-0000-4000-8000-000000000003'
+  );
+end $$;
+
+-- Product Base: Lechuga Romana (dynamic attribute schema for seller listings)
+do $$
+declare
+  v_product_base_id constant uuid := 'f0000000-0000-4000-8000-000000000001';
+  v_category_id constant uuid := 'd0000000-0000-4000-8000-000000000001';
+  v_subcategory_id constant uuid := 'd0000000-0000-4000-8000-000000000004';
+  v_image constant text :=
+    'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?q=80&w=800&auto=format&fit=crop';
+begin
+  insert into public.product_base (
+    id,
+    name,
+    slug,
+    description,
+    category_id,
+    subcategory_id,
+    type,
+    status,
+    base_image_url,
+    image_strategy
+  )
+  values (
+    v_product_base_id,
+    'Lechuga Romana',
+    'lechuga-romana',
+    'Lechuga romana fresca — plantilla base para publicaciones de hortalizas de hoja.',
+    v_category_id,
+    v_subcategory_id,
+    'PRODUCT',
+    'ACTIVE',
+    v_image,
+    'BASE_ONLY'
+  )
+  on conflict (slug) do update set
+    name = excluded.name,
+    description = excluded.description,
+    category_id = excluded.category_id,
+    subcategory_id = excluded.subcategory_id,
+    type = excluded.type,
+    status = excluded.status,
+    base_image_url = excluded.base_image_url,
+    image_strategy = excluded.image_strategy,
+    updated_at = now();
+
+  insert into public.product_base_attribute (
+    product_base_id,
+    key,
+    label,
+    type,
+    required,
+    sort_order,
+    is_visible,
+    is_filterable,
+    is_searchable,
+    is_variant_dimension,
+    allow_variant_pricing
+  )
+  values (
+    v_product_base_id,
+    'peso',
+    'Peso en gramos aprox.',
+    'NUMBER',
+    true,
+    0,
+    true,
+    false,
+    false,
+    false,
+    false
+  )
+  on conflict (product_base_id, key) do update set
+    label = excluded.label,
+    type = excluded.type,
+    required = excluded.required,
+    sort_order = excluded.sort_order,
+    is_visible = excluded.is_visible,
+    is_filterable = excluded.is_filterable,
+    is_searchable = excluded.is_searchable,
+    is_variant_dimension = excluded.is_variant_dimension,
+    allow_variant_pricing = excluded.allow_variant_pricing,
+    updated_at = now();
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Auth users + public."user" mirror
 -- ---------------------------------------------------------------------------
 
@@ -228,10 +343,10 @@ end $$;
 
 do $$
 declare
-  v_cat_verduras uuid;
-  v_cat_tecnologia uuid;
-  v_cat_artesanias uuid;
-  v_cat_plantas uuid;
+  v_cat_verduras constant uuid := 'c0000000-0000-4000-8000-000000000001';
+  v_cat_tecnologia constant uuid := 'c0000000-0000-4000-8000-000000000005';
+  v_cat_artesanias constant uuid := 'c0000000-0000-4000-8000-000000000006';
+  v_cat_plantas constant uuid := 'c0000000-0000-4000-8000-000000000007';
   v_listing uuid;
   listing record;
   listings constant jsonb := '[
@@ -256,11 +371,6 @@ declare
     {"store":"10000000-0000-4000-8000-000000000024","category":"Plantas","title":"Lavanda","description":"Lavanda en maceta, aroma intenso para jardín o balcón.","price":3200,"stock":22,"lat":-27.44890,"lng":-58.98120,"image":"https://images.unsplash.com/photo-1596409189063-aa4524a8bf97?q=80&w=800&auto=format&fit=crop"}
   ]'::jsonb;
 begin
-  select id into v_cat_verduras from public.category where name = 'Verduras';
-  select id into v_cat_tecnologia from public.category where name = 'Tecnología';
-  select id into v_cat_artesanias from public.category where name = 'Artesanías';
-  select id into v_cat_plantas from public.category where name = 'Plantas';
-
   for listing in
     select
       (elem->>'store')::uuid as store_id,

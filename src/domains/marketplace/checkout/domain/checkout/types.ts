@@ -1,3 +1,5 @@
+import type { FulfillmentMethodCode } from '@/domains/logistics/domain/types'
+import type { CheckoutVendorFulfillmentSelectionDto } from '@/domains/logistics/application/dto/checkout-fulfillment.dto'
 import type { LocationMode, LocationSelection } from '@/shared/maps/location/location-types'
 
 /** Alias: homepage/header receive mode (`useLocationStore.mode`). */
@@ -31,23 +33,19 @@ export type PickupHub = {
   kind: 'ditto_van' | 'plaza' | 'locker' | 'hub'
 }
 
-export type VendorFulfillmentDraft = {
-  storeId: string
-  method: DeliveryMethod
-  pickupSubOption?: PickupSubOption
-  hubId?: string
-  deliveryAddress?: LocationSelection
-  timeWindowId?: string
-  deliveryFeeCents?: number
+export type VendorFulfillmentDraft = CheckoutVendorFulfillmentSelectionDto
+
+export type CheckoutVendorFulfillmentInput = {
+  vendorIds: string[]
+  selections: Record<string, CheckoutVendorFulfillmentSelectionDto | undefined>
+  deliveryAddress: string | null
 }
 
-/** Future: sent to server when order schema supports fulfillment metadata. */
 export type CheckoutMetadata = {
-  fulfillment: VendorFulfillmentDraft
+  fulfillments: CheckoutVendorFulfillmentSelectionDto[]
   paymentMethod: PaymentMethodId
   note?: string
   couponCode?: string
-  scheduledWindowId?: string
 }
 
 export type LocationSnapshot = {
@@ -59,6 +57,7 @@ export type LocationSnapshot = {
   province: string | null
 }
 
+/** @deprecated Legacy location-based fulfillment input. Prefer CheckoutVendorFulfillmentInput. */
 export type CheckoutFulfillmentInput = {
   location: LocationSnapshot
   pickupSubOption: PickupSubOption | null
@@ -80,3 +79,5 @@ export type CheckoutConfirmationInput = {
   paymentValid: boolean
   cartValid: boolean
 }
+
+export type { FulfillmentMethodCode }

@@ -22,6 +22,12 @@ import {
 } from '@/domains/marketplace/orders/application/checkout-variant.resolver'
 import { inferTransactionKindFromPublicationTypes } from '@/domains/marketplace/transaction/domain/checkout-strategies'
 import { fetchTransactionByLegacyOrderId } from '@/domains/marketplace/transaction/application/queries/transaction.queries'
+import { FULFILLMENT_METHOD_CODES } from '@/domains/logistics/domain/types'
+import {
+  normalizeCheckoutSelectionTimes,
+  validateCheckoutFulfillmentPayload,
+} from '@/domains/logistics/domain/policies/checkout-fulfillment-policy'
+import { getCheckoutFulfillmentOptionsForVendors } from '@/domains/logistics/application/queries/checkout-fulfillment.queries'
 import { createClient } from '@/shared/database/supabase/server'
 import { dispatchNotificationEvent } from '@/shared/events/bus/dispatch'
 import { createLogger, LogScopes } from '@/shared/lib/logger/logger'
@@ -38,6 +44,22 @@ const cartItemSchema = z.object({
   unitPrice: z.number().positive(),
   storeId: z.string().min(1),
   title: z.string().min(1),
+})
+
+const fulfillmentSelectionSchema = z.object({
+  vendorId: z.string().uuid(),
+  methodCode: z.enum(FULFILLMENT_METHOD_CODES),
+  windowId: z.string().uuid(),
+  scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  startTime: z.string().min(4),
+  endTime: z.string().min(4),
+  pickupAddress: z.string().nullable().default(null),
+  deliveryAddress: z.string().nullable().default(null),
+})
+
+const checkoutPayloadSchema = z.object({
+  items: z.array(cartItemSchema).min(1),
+  fulfillments: z.array(fulfillmentSelectionSchema).min(1),
 })
 
 type ParsedCartItem = z.infer<typeof cartItemSchema>
@@ -63,16 +85,57 @@ type CheckoutData = {
 }
 
 export async function createOrderFromCartAction(
-  items: Array<z.infer<typeof cartItemSchema>>,
+  input: z.input<typeof checkoutPayloadSchema>,
 ): Promise<{ orderId: string; orderIds: string[] }> {
-  console.log('items::::::::', items)
-  const parsedItems = parseCheckoutItems(items)
+  const parsed = checkoutPayloadSchema.safeParse(input)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? 'Invalid checkout payload')
+  }
+
+  const parsedItems = parsed.data.items
   const context = await createCheckoutContext()
   const checkoutData = await resolveCheckoutData(context.supabase, context.userId, parsedItems)
 
   validateCheckout(checkoutData)
 
-  const orderIds = await createOrders(context.supabase, context.userId, checkoutData)
+  const vendorIds = [...new Set(parsedItems.map((item) => item.storeId))]
+  const vendorOptions = await getCheckoutFulfillmentOptionsForVendors({
+    vendorIds,
+    itemCountsByVendor: Object.fromEntries(
+      vendorIds.map((vendorId) => [
+        vendorId,
+        parsedItems
+          .filter((item) => item.storeId === vendorId)
+          .reduce((sum, item) => sum + item.quantity, 0),
+      ]),
+    ),
+  })
+
+  const normalizedFulfillments = parsed.data.fulfillments.map((selection) =>
+    normalizeCheckoutSelectionTimes(selection),
+  )
+
+  const selections = Object.fromEntries(
+    normalizedFulfillments.map((selection) => [selection.vendorId, selection]),
+  )
+
+  const fulfillmentErrors = validateCheckoutFulfillmentPayload({
+    vendors: vendorOptions,
+    selections,
+    deliveryAddress:
+      normalizedFulfillments.find((selection) => selection.deliveryAddress)?.deliveryAddress ?? null,
+  })
+
+  if (fulfillmentErrors.length > 0) {
+    throw new Error(fulfillmentErrors[0])
+  }
+
+  const orderIds = await createOrders(
+    context.supabase,
+    context.userId,
+    checkoutData,
+    normalizedFulfillments,
+  )
 
   await logStockChanges(context.supabase, checkoutData)
 
@@ -84,13 +147,6 @@ export async function createOrderFromCartAction(
   }
 }
 
-function parseCheckoutItems(items: Array<ParsedCartItem>): ParsedCartItem[] {
-  logCreateOrder.debug('items received', { count: items.length, items })
-  const parsed = z.array(cartItemSchema).safeParse(items)
-  if (!parsed?.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid cart payload')
-  if (parsed.data.length === 0) throw new Error('Cart is empty.')
-  return parsed.data
-}
 
 async function createCheckoutContext(): Promise<CheckoutContext> {
   const { supabase } = await createSellerBuyerContext()
@@ -198,18 +254,32 @@ async function createOrders(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   checkoutData: CheckoutData,
+  fulfillments: Array<z.infer<typeof fulfillmentSelectionSchema>>,
 ): Promise<string[]> {
   const checkoutRpcClient = supabase as unknown as {
     rpc: (
       fn: 'create_orders_from_cart',
-      args: { p_buyer_id: string; p_lines: unknown },
+      args: { p_buyer_id: string; p_lines: unknown; p_fulfillments: unknown },
     ) => Promise<{ data: string[] | null; error: Error | null }>
   }
+
+  const rpcFulfillments = fulfillments.map((selection) => ({
+    vendor_id: selection.vendorId,
+    method_code: selection.methodCode,
+    window_id: selection.windowId,
+    scheduled_date: selection.scheduledDate,
+    start_time: selection.startTime.length === 5 ? `${selection.startTime}:00` : selection.startTime,
+    end_time: selection.endTime.length === 5 ? `${selection.endTime}:00` : selection.endTime,
+    pickup_address: selection.pickupAddress ?? null,
+    delivery_address: selection.deliveryAddress ?? null,
+  }))
+
   const { data: createdOrderIds, error: createOrdersError } = await checkoutRpcClient.rpc(
     'create_orders_from_cart',
     {
       p_buyer_id: userId,
       p_lines: checkoutData.checkoutLines,
+      p_fulfillments: rpcFulfillments,
     },
   )
 

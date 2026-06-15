@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation'
 import { useCartStore } from '@/domains/marketplace/checkout/presentation/stores/cart-store/cart-store'
 import { useCheckoutStore } from '@/domains/marketplace/checkout/presentation/stores/checkout.store'
 import { createOrderFromCartAction } from '@/domains/marketplace/orders/application/actions/checkout.actions'
-import { createClient } from '@/shared/database/supabase/client'
+import { getCheckoutFulfillmentOptionsAction } from '@/domains/logistics/application/actions/checkout-fulfillment.actions'
+import { buildDefaultCheckoutSelection } from '@/domains/logistics/domain/policies/checkout-fulfillment-policy'
+import type { CheckoutVendorFulfillmentDto } from '@/domains/logistics/application/dto/checkout-fulfillment.dto'
 import { useCheckoutFlow } from '@/domains/marketplace/checkout/presentation/hooks/use-checkout-flow'
-import { useCheckoutSeller } from '@/domains/marketplace/checkout/presentation/hooks/use-checkout-seller'
 import type { CheckoutSectionId, PaymentMethodId } from '@/domains/marketplace/checkout/domain/checkout/types'
+import { useLocationStore } from '@/shared/maps/location/presentation/stores/location.store'
+import { createClient } from '@/shared/database/supabase/client'
 
 import { CheckoutPageLayout } from './checkout-page-layout'
 import { CheckoutAccordionSection } from './checkout-accordion'
@@ -22,24 +25,80 @@ import { ConfirmationSection } from './sections/confirmation-section'
 export function CheckoutClient() {
   const router = useRouter()
   const { items, itemCount, totalPrice, setQuantity, removeItem, clearCart } = useCartStore()
+  const locationAddress = useLocationStore((s) => s.address)
 
   useEffect(() => {
     useCheckoutStore.getState().resetCheckoutUi()
   }, [])
 
   const setPaymentMethod = useCheckoutStore((s) => s.setPaymentMethod)
+  const vendorFulfillment = useCheckoutStore((s) => s.vendorFulfillment)
+  const setVendorFulfillmentSelection = useCheckoutStore((s) => s.setVendorFulfillmentSelection)
 
-  const storeIds = useMemo(() => [...new Set(items.map((i) => i.storeId))], [items])
-  const primaryStoreId = storeIds.length === 1 ? storeIds[0]! : storeIds[0] ?? null
+  const storeIds = useMemo(() => [...new Set(items.map((i) => i.storeId).filter(Boolean))], [items])
+  const itemCountsByVendor = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const item of items) {
+      if (!item.storeId) continue
+      counts[item.storeId] = (counts[item.storeId] ?? 0) + item.quantity
+    }
+    return counts
+  }, [items])
 
-  const { seller, loading: sellerLoading, sellerHasAddress } = useCheckoutSeller(primaryStoreId)
+  const [vendors, setVendors] = useState<CheckoutVendorFulfillmentDto[]>([])
+  const [vendorsLoading, setVendorsLoading] = useState(false)
+
+  useEffect(() => {
+    if (storeIds.length === 0) {
+      setVendors([])
+      return
+    }
+
+    let cancelled = false
+    setVendorsLoading(true)
+
+    void (async () => {
+      const options = await getCheckoutFulfillmentOptionsAction({
+        vendorIds: storeIds,
+        itemCountsByVendor,
+      })
+      if (cancelled) return
+      setVendors(options)
+      setVendorsLoading(false)
+
+      for (const vendor of options) {
+        const existing = useCheckoutStore.getState().vendorFulfillment[vendor.vendorId]
+        if (!existing) {
+          const defaults = buildDefaultCheckoutSelection(vendor)
+          if (defaults) {
+            setVendorFulfillmentSelection(vendor.vendorId, defaults)
+          }
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [storeIds, itemCountsByVendor, setVendorFulfillmentSelection])
+
+  useEffect(() => {
+    for (const vendorId of storeIds) {
+      const selection = useCheckoutStore.getState().vendorFulfillment[vendorId]
+      if (!selection || !selection.methodCode.startsWith('delivery_')) continue
+      if (selection.deliveryAddress === locationAddress) continue
+      setVendorFulfillmentSelection(vendorId, {
+        ...selection,
+        deliveryAddress: locationAddress,
+      })
+    }
+  }, [locationAddress, storeIds, setVendorFulfillmentSelection])
 
   const flow = useCheckoutFlow({
     itemCount,
     storeIds,
     subtotal: totalPrice,
-    sellerName: seller?.name ?? null,
-    sellerHasAddress,
+    vendors,
   })
 
   const [storeNames, setStoreNames] = useState<Record<string, string>>({})
@@ -47,7 +106,7 @@ export function CheckoutClient() {
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
-    const ids = [...new Set(items.map((i) => i.storeId))]
+    const ids = [...new Set(items.map((i) => i.storeId).filter(Boolean))]
     if (ids.length === 0) {
       setStoreNames({})
       return
@@ -84,6 +143,18 @@ export function CheckoutClient() {
     [items],
   )
 
+  const fulfillmentPayload = useMemo(
+    () =>
+      storeIds
+        .map((vendorId) => vendorFulfillment[vendorId])
+        .filter((selection): selection is NonNullable<typeof selection> => selection != null)
+        .map((selection) => ({
+          ...selection,
+          deliveryAddress: locationAddress,
+        })),
+    [storeIds, vendorFulfillment, locationAddress],
+  )
+
   const subtotal = totalPrice
   const deliveryPrice = 0
   const total = subtotal + deliveryPrice
@@ -113,9 +184,10 @@ export function CheckoutClient() {
 
     startTransition(async () => {
       try {
-        // TODO: pass CheckoutMetadata when order schema supports fulfillment + payment + note
-        console.log('cartPayload::::::::', cartPayload)
-        const { orderId, orderIds } = await createOrderFromCartAction(cartPayload)
+        const { orderId, orderIds } = await createOrderFromCartAction({
+          items: cartPayload,
+          fulfillments: fulfillmentPayload,
+        })
         clearCart()
         useCheckoutStore.getState().resetCheckoutUi()
         const params = new URLSearchParams({ orderId })
@@ -193,12 +265,17 @@ export function CheckoutClient() {
         disabled={!flow.canOpenSection('delivery')}
         onToggle={() => handleSectionToggle('delivery')}
       >
-        <DeliverySection
-          seller={seller}
-          sellerLoading={sellerLoading}
-          onContinue={flow.completeDeliveryIfValid}
-          onFulfillmentChange={() => flow.revalidateSection('delivery', false)}
-        />
+        {vendorsLoading ? (
+          <p className='text-sm text-muted-foreground'>Cargando opciones de fulfillment…</p>
+        ) : (
+          <DeliverySection
+            vendors={vendors}
+            selections={vendorFulfillment}
+            deliveryAddress={locationAddress}
+            onSelectionChange={setVendorFulfillmentSelection}
+            onContinue={flow.completeDeliveryIfValid}
+          />
+        )}
       </CheckoutAccordionSection>
 
       <CheckoutAccordionSection
@@ -220,7 +297,7 @@ export function CheckoutClient() {
         disabled={!flow.canOpenSection('confirmation')}
         onToggle={() => handleSectionToggle('confirmation')}
       >
-        <ConfirmationSection />
+        <ConfirmationSection vendors={vendors} />
       </CheckoutAccordionSection>
     </CheckoutPageLayout>
   )

@@ -2482,10 +2482,12 @@ export type Database = {
         Args: { p_activation_code: string; p_serial_number: string }
         Returns: string
       }
-      create_orders_from_cart: {
-        Args: { p_buyer_id: string; p_lines: Json }
-        Returns: string[]
-      }
+      create_orders_from_cart:
+        | { Args: { p_buyer_id: string; p_lines: Json }; Returns: string[] }
+        | {
+            Args: { p_buyer_id: string; p_fulfillments?: Json; p_lines: Json }
+            Returns: string[]
+          }
       create_product_base_with_attributes: {
         Args: {
           p_attributes: Json
@@ -2521,6 +2523,10 @@ export type Database = {
         Args: { p_category_id: string }
         Returns: string
       }
+      fulfillment_delivery_method_from_code: {
+        Args: { p_method_code: string }
+        Returns: string
+      }
       fulfillment_method_code_from_delivery_method: {
         Args: { p_delivery_method: string }
         Returns: string
@@ -2529,6 +2535,17 @@ export type Database = {
       has_role: { Args: { target_role: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      seed_upsert_category: {
+        Args: {
+          p_id: string
+          p_is_visible?: boolean
+          p_listing_type?: Database["public"]["Enums"]["listing_type"]
+          p_name: string
+          p_parent_id?: string
+          p_slug: string
+        }
+        Returns: undefined
+      }
       slugify: { Args: { value: string }; Returns: string }
     }
     Enums: {

@@ -17,28 +17,24 @@ import {
   isPaymentSectionValid,
 } from '@/domains/marketplace/checkout/domain/checkout/validation'
 import type { CheckoutSectionId, CheckoutSectionVisualState } from '@/domains/marketplace/checkout/domain/checkout/types'
+import type { CheckoutVendorFulfillmentDto } from '@/domains/logistics/application/dto/checkout-fulfillment.dto'
 import { useCheckoutStore } from '@/domains/marketplace/checkout/presentation/stores/checkout.store'
 import { useLocationStore } from '@/shared/maps/location/presentation/stores/location.store'
-
-import { useCheckoutFulfillmentInput } from './use-checkout-fulfillment'
 
 type UseCheckoutFlowOptions = {
   itemCount: number
   storeIds: string[]
   subtotal: number
-  sellerName?: string | null
-  sellerHasAddress: boolean
+  vendors: CheckoutVendorFulfillmentDto[]
 }
 
 export function useCheckoutFlow({
   itemCount,
   storeIds,
   subtotal,
-  sellerName,
-  sellerHasAddress,
+  vendors,
 }: UseCheckoutFlowOptions) {
-  const locationMode = useLocationStore((s) => s.mode)
-  const fulfillmentInput = useCheckoutFulfillmentInput(sellerHasAddress)
+  const locationAddress = useLocationStore((s) => s.address)
 
   const activeSection = useCheckoutStore((s) => s.activeSection)
   const sectionState = useCheckoutStore((s) => s.sectionState)
@@ -46,18 +42,22 @@ export function useCheckoutFlow({
   const paymentMethod = useCheckoutStore((s) => s.paymentMethod)
   const note = useCheckoutStore((s) => s.note)
   const initialized = useCheckoutStore((s) => s.initialized)
-  const pickupSubOption = useCheckoutStore((s) => s.pickupSubOption)
-  const selectedPickupHubId = useCheckoutStore((s) => s.selectedPickupHubId)
+  const vendorFulfillment = useCheckoutStore((s) => s.vendorFulfillment)
 
   const setActiveSection = useCheckoutStore((s) => s.setActiveSection)
   const setSectionState = useCheckoutStore((s) => s.setSectionState)
   const setSectionErrors = useCheckoutStore((s) => s.setSectionErrors)
-  const setPickupSubOption = useCheckoutStore((s) => s.setPickupSubOption)
-  const setSelectedPickupHubId = useCheckoutStore((s) => s.setSelectedPickupHubId)
   const setInitialized = useCheckoutStore((s) => s.setInitialized)
 
+  const deliveryInput = {
+    vendorIds: storeIds,
+    selections: vendorFulfillment,
+    deliveryAddress: locationAddress,
+    vendors,
+  }
+
   const cartValid = isCartSectionValid({ itemCount, storeIds }).length === 0
-  const deliveryValid = isDeliverySectionValid(fulfillmentInput).length === 0
+  const deliveryValid = isDeliverySectionValid(deliveryInput).length === 0
   const paymentValid = isPaymentSectionValid({ paymentMethod }).length === 0
   const confirmationValid =
     isConfirmationSectionValid({
@@ -68,7 +68,7 @@ export function useCheckoutFlow({
 
   const summaries = {
     cart: formatCartSectionSummary(itemCount, subtotal),
-    delivery: formatDeliverySectionSummary(fulfillmentInput, sellerName),
+    delivery: formatDeliverySectionSummary(deliveryInput),
     payment: formatPaymentSectionSummary({ paymentMethod }),
     confirmation: formatConfirmationSectionSummary(note.trim().length > 0),
   }
@@ -76,11 +76,11 @@ export function useCheckoutFlow({
   const getSectionErrors = useCallback(
     (section: CheckoutSectionId): string[] => {
       if (section === 'cart') return isCartSectionValid({ itemCount, storeIds })
-      if (section === 'delivery') return isDeliverySectionValid(fulfillmentInput)
+      if (section === 'delivery') return isDeliverySectionValid(deliveryInput)
       if (section === 'payment') return isPaymentSectionValid({ paymentMethod })
       return isConfirmationSectionValid({ cartValid, deliveryValid, paymentValid })
     },
-    [itemCount, storeIds, fulfillmentInput, paymentMethod, cartValid, deliveryValid, paymentValid],
+    [itemCount, storeIds, deliveryInput, paymentMethod, cartValid, deliveryValid, paymentValid],
   )
 
   const revalidateSection = useCallback(
@@ -150,27 +150,8 @@ export function useCheckoutFlow({
     } else {
       setSectionState('cart', 'valid')
       setSectionErrors('cart', [])
-
-      if (locationMode === 'pickup') {
-        setPickupSubOption(null)
-        setSelectedPickupHubId(null)
-        setSectionState('delivery', 'editing')
-        setActiveSection('delivery')
-      } else if (locationMode === 'delivery') {
-        const deliveryErrors = isDeliverySectionValid(fulfillmentInput)
-        if (deliveryErrors.length === 0) {
-          setSectionState('delivery', 'valid')
-          setSectionState('payment', 'editing')
-          setActiveSection('payment')
-        } else {
-          setSectionState('delivery', 'editing')
-          setActiveSection('delivery')
-        }
-      } else {
-        setSectionState('delivery', 'invalid')
-        setSectionErrors('delivery', ['Elegí envío o retiro para continuar.'])
-        setActiveSection('delivery')
-      }
+      setSectionState('delivery', 'editing')
+      setActiveSection('delivery')
     }
 
     setInitialized(true)
@@ -178,10 +159,6 @@ export function useCheckoutFlow({
     initialized,
     itemCount,
     storeIds,
-    locationMode,
-    fulfillmentInput,
-    setPickupSubOption,
-    setSelectedPickupHubId,
     setSectionState,
     setActiveSection,
     setSectionErrors,
@@ -200,15 +177,7 @@ export function useCheckoutFlow({
     if (sectionState.delivery === 'editing') {
       revalidateSection('delivery', false)
     }
-  }, [
-    initialized,
-    sectionState.delivery,
-    locationMode,
-    pickupSubOption,
-    selectedPickupHubId,
-    fulfillmentInput,
-    revalidateSection,
-  ])
+  }, [initialized, sectionState.delivery, vendorFulfillment, locationAddress, vendors, revalidateSection])
 
   useEffect(() => {
     if (!initialized) return

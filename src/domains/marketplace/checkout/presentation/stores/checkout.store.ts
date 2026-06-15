@@ -39,6 +39,10 @@ type CheckoutState = {
   setSelectedPickupHubId: (id: string | null) => void
   setPaymentMethod: (method: PaymentMethodId | null) => void
   setNote: (note: string) => void
+  setVendorFulfillmentSelection: (
+    vendorId: string,
+    selection: VendorFulfillmentDraft | null,
+  ) => void
   setInitialized: (value: boolean) => void
   resetCheckoutUi: () => void
 }
@@ -80,6 +84,14 @@ export const useCheckoutStore = create<CheckoutState>((set) => ({
   setSelectedPickupHubId: (id) => set({ selectedPickupHubId: id }),
   setPaymentMethod: (method) => set({ paymentMethod: method }),
   setNote: (note) => set({ note }),
+  setVendorFulfillmentSelection: (vendorId, selection) =>
+    set((prev) => ({
+      vendorFulfillment: selection
+        ? { ...prev.vendorFulfillment, [vendorId]: selection }
+        : Object.fromEntries(
+            Object.entries(prev.vendorFulfillment).filter(([id]) => id !== vendorId),
+          ),
+    })),
   setInitialized: (value) => set({ initialized: value }),
   resetCheckoutUi: () =>
     set({
@@ -90,5 +102,6 @@ export const useCheckoutStore = create<CheckoutState>((set) => ({
       selectedPickupHubId: null,
       paymentMethod: null,
       initialized: false,
+      vendorFulfillment: {},
     }),
 }))

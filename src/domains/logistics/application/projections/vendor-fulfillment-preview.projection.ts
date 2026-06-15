@@ -101,6 +101,7 @@ export function buildVendorFulfillmentPreview(input: {
         ? input.storeAddress
         : input.settings.pickupAddress,
       deliveryRadiusKm: input.settings.deliveryRadiusKm,
+      deliveryAddress: null,
       notes: input.settings.preferences.notes,
     },
     isReadyForCheckout: readinessIssues.length === 0,

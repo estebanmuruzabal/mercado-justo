@@ -1,50 +1,58 @@
 'use client'
 
-import { useLocationStore } from '@/shared/maps/location/presentation/stores/location.store'
-import type { CheckoutSellerInfo } from '@/domains/marketplace/checkout/presentation/hooks/use-checkout-seller'
-
-import { DeliveryHomeCard } from '../delivery/delivery-home-card'
-import { DeliveryMissingModeBanner } from '../delivery/delivery-missing-mode-banner'
-import { DeliveryPickupOptions } from '../delivery/delivery-pickup-options'
+import type { CheckoutVendorFulfillmentDto } from '@/domains/logistics/application/dto/checkout-fulfillment.dto'
+import type { CheckoutVendorFulfillmentSelectionDto } from '@/domains/logistics/application/dto/checkout-fulfillment.dto'
+import { CheckoutVendorFulfillmentPanel } from '@/domains/logistics/presentation/components/CheckoutVendorFulfillmentPanel'
+import { isDeliveryMethodCode } from '@/domains/logistics/domain/policies/checkout-fulfillment-policy'
 import { Button } from '@/shared/ui/button'
 
+import { DeliveryHomeCard } from '../delivery/delivery-home-card'
+
 export function DeliverySection({
-  seller,
-  sellerLoading,
+  vendors,
+  selections,
+  deliveryAddress,
+  onSelectionChange,
   onContinue,
-  onFulfillmentChange,
 }: {
-  seller: CheckoutSellerInfo | null
-  sellerLoading: boolean
+  vendors: CheckoutVendorFulfillmentDto[]
+  selections: Record<string, CheckoutVendorFulfillmentSelectionDto | undefined>
+  deliveryAddress: string | null
+  onSelectionChange: (vendorId: string, selection: CheckoutVendorFulfillmentSelectionDto) => void
   onContinue: () => void
-  onFulfillmentChange: () => void
 }) {
-  const mode = useLocationStore((s) => s.mode)
-
-  if (mode === null) {
-    return <DeliveryMissingModeBanner />
-  }
-
-  if (mode === 'delivery') {
-    return (
-      <div className='space-y-4'>
-        <DeliveryHomeCard />
-        <Button type='button' className='w-full rounded-full' onClick={onContinue}>
-          Continuar con este domicilio
-        </Button>
-      </div>
-    )
-  }
+  const needsDeliveryAddress = Object.values(selections).some(
+    (selection) => selection && isDeliveryMethodCode(selection.methodCode),
+  )
 
   return (
     <div className='space-y-4'>
-      <DeliveryPickupOptions
-        seller={seller}
-        sellerLoading={sellerLoading}
-        onFulfillmentChange={onFulfillmentChange}
-      />
+      <p className='text-sm text-muted-foreground'>
+        Tu pedido incluye productos de {vendors.length} vendedor{vendors.length === 1 ? '' : 'es'}.
+        Configurá fulfillment para cada uno.
+      </p>
+
+      {needsDeliveryAddress ? (
+        <div className='space-y-2'>
+          <p className='text-sm font-medium'>Domicilio de entrega</p>
+          <DeliveryHomeCard />
+        </div>
+      ) : null}
+
+      <div className='space-y-4'>
+        {vendors.map((vendor) => (
+          <CheckoutVendorFulfillmentPanel
+            key={vendor.vendorId}
+            vendor={vendor}
+            selection={selections[vendor.vendorId]}
+            deliveryAddress={deliveryAddress}
+            onChange={(selection) => onSelectionChange(vendor.vendorId, selection)}
+          />
+        ))}
+      </div>
+
       <Button type='button' className='w-full rounded-full' onClick={onContinue}>
-        Continuar con este retiro
+        Continuar con fulfillment
       </Button>
     </div>
   )
