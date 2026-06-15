@@ -1,5 +1,7 @@
 'use client'
 
+import { useMemo, useState } from 'react'
+
 import type { FulfillmentMethodCode } from '@/domains/logistics/domain/types'
 import type {
   CheckoutVendorFulfillmentDto,
@@ -11,13 +13,24 @@ import {
   resolveNextScheduledDate,
   windowDayFromLabel,
 } from '@/domains/logistics/domain/policies/checkout-fulfillment-policy'
-import { FulfillmentMethodBadge } from '@/domains/logistics/presentation/components/FulfillmentMethodBadge'
 import { FulfillmentWindowChip } from '@/domains/logistics/presentation/components/FulfillmentWindowChip'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { PillOptions } from '@/shared/ui/pill-options'
 import { cn } from '@/shared/utils/utils'
+
+const FULFILLMENT_PILL_OPTIONS = ['Envío', 'Retiro', 'Coordinar'] as const
+type FulfillmentPillOption = (typeof FULFILLMENT_PILL_OPTIONS)[number]
 
 function methodKind(code: FulfillmentMethodCode): 'pickup' | 'delivery' {
   return code.startsWith('pickup_') ? 'pickup' : 'delivery'
+}
+
+function preferredMethodCode(
+  methods: CheckoutVendorFulfillmentDto['methods'],
+  kind: 'pickup' | 'delivery',
+): FulfillmentMethodCode | undefined {
+  const filtered = methods.filter((method) => method.kind === kind)
+  return (filtered.find((method) => method.isDefault) ?? filtered[0])?.code
 }
 
 export function CheckoutVendorFulfillmentPanel({
@@ -31,6 +44,7 @@ export function CheckoutVendorFulfillmentPanel({
   deliveryAddress: string | null
   onChange: (selection: CheckoutVendorFulfillmentSelectionDto) => void
 }) {
+  const [coordinateSelected, setCoordinateSelected] = useState(false)
   const currentSelection = selection ?? buildDefaultCheckoutSelection(vendor) ?? undefined
   const selectedMethodCode = currentSelection?.methodCode
   const selectedKind = selectedMethodCode ? methodKind(selectedMethodCode) : null
@@ -40,6 +54,24 @@ export function CheckoutVendorFulfillmentPanel({
       : selectedKind === 'delivery'
         ? vendor.deliveryWindows
         : []
+
+  const pillOptions = useMemo((): FulfillmentPillOption[] => {
+    const options: FulfillmentPillOption[] = []
+    if (vendor.methods.some((method) => method.kind === 'delivery')) options.push('Envío')
+    if (vendor.methods.some((method) => method.kind === 'pickup')) options.push('Retiro')
+    if (vendor.methods.length > 0) options.push('Coordinar')
+    return options
+  }, [vendor.methods])
+
+  const pillValue = useMemo((): FulfillmentPillOption => {
+    if (coordinateSelected && pillOptions.includes('Coordinar')) return 'Coordinar'
+    if (selectedMethodCode) {
+      const kind = methodKind(selectedMethodCode)
+      if (kind === 'pickup' && pillOptions.includes('Retiro')) return 'Retiro'
+      if (kind === 'delivery' && pillOptions.includes('Envío')) return 'Envío'
+    }
+    return pillOptions[0] ?? 'Envío'
+  }, [coordinateSelected, pillOptions, selectedMethodCode])
 
   function updateSelection(next: Partial<CheckoutVendorFulfillmentSelectionDto>) {
     if (!currentSelection) return
@@ -100,6 +132,26 @@ export function CheckoutVendorFulfillmentPanel({
     })
   }
 
+  function handlePillChange(option: FulfillmentPillOption) {
+    setCoordinateSelected(option === 'Coordinar')
+
+    if (option === 'Coordinar') {
+      const methodCode =
+        (vendor.defaultMethodCode &&
+        vendor.methods.some((method) => method.code === vendor.defaultMethodCode)
+          ? vendor.defaultMethodCode
+          : null) ?? vendor.methods[0]?.code
+      if (methodCode) selectMethod(methodCode)
+      return
+    }
+
+    const methodCode = preferredMethodCode(
+      vendor.methods,
+      option === 'Envío' ? 'delivery' : 'pickup',
+    )
+    if (methodCode) selectMethod(methodCode)
+  }
+
   if (!vendor.preview.isReadyForCheckout) {
     return (
       <Card className='border-amber-200 bg-amber-50'>
@@ -122,37 +174,23 @@ export function CheckoutVendorFulfillmentPanel({
 
   return (
     <Card>
-      <CardHeader>
+      {/* <CardHeader>
         <CardTitle className='text-base'>{vendor.vendorName}</CardTitle>
         <CardDescription>
           {vendor.itemCount} artículo{vendor.itemCount === 1 ? '' : 's'} · Elegí cómo recibir este
           pedido
         </CardDescription>
-      </CardHeader>
+      </CardHeader> */}
       <CardContent className='space-y-5'>
         <div className='space-y-2'>
           <p className='text-sm font-medium'>Método de fulfillment</p>
-          <div className='flex flex-wrap gap-2'>
-            {vendor.methods.map((method) => {
-              const selected = selectedMethodCode === method.code
-              return (
-                <button
-                  key={method.code}
-                  type='button'
-                  onClick={() => selectMethod(method.code)}
-                  className={cn('rounded-full transition-opacity', selected ? 'opacity-100' : 'opacity-70 hover:opacity-100')}
-                >
-                  <FulfillmentMethodBadge
-                    label={method.label}
-                    kind={method.kind}
-                    provider={method.provider}
-                    isDefault={method.isDefault}
-                    className={cn(selected && 'ring-2 ring-primary ring-offset-2')}
-                  />
-                </button>
-              )
-            })}
-          </div>
+          <PillOptions
+            options={pillOptions}
+            value={pillValue}
+            onSelectChange={handlePillChange}
+            className='w-full'
+            disabled={pillOptions.length === 0}
+          />
         </div>
 
         {selectedMethodCode ? (
