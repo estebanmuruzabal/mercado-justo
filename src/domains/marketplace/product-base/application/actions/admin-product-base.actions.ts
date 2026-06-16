@@ -8,7 +8,7 @@ import { listCategoriesForAdmin } from '@/domains/marketplace/categories/applica
 import { assertSuperAdmin } from '@/shared/auth/guards/require-staff'
 import { createAdminClient } from '@/shared/database/admin-client'
 import { withAudit } from '@/shared/database/admin-audit'
-import { ADMIN_PRODUCT_BASES_PATH } from '@/shared/routing/routes'
+import { ADMIN_CATEGORIES_PATH, ADMIN_PRODUCT_BASES_PATH, HOME_PATH } from '@/shared/routing/routes'
 
 import {
   PRODUCT_BASE_IMAGE_STRATEGIES,
@@ -101,6 +101,7 @@ const statusSchema = z.object({
 
 function revalidateProductBaseSurfaces() {
   revalidatePath(ADMIN_PRODUCT_BASES_PATH)
+  revalidatePath(ADMIN_CATEGORIES_PATH)
 }
 
 function getActionErrorMessage(err: unknown, fallback: string): string {

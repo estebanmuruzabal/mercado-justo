@@ -1,16 +1,39 @@
 'use client'
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Eye,
-  EyeOff,
-  Loader2,
-  PencilLine,
-  Plus,
-  Trash2,
-} from 'lucide-react'
+import { ChevronsDownUp, ChevronsUpDown, Loader2, Plus } from 'lucide-react'
 
+import { CategoryTree, CategoryTreeSearch } from '@/shared/admin-ui/categories/CategoryTree'
+import type {
+  CategoryTreeSource,
+  ListingTypeFilter,
+} from '@/shared/admin-ui/categories/types/category-tree.types'
+import {
+  adminRowToTreeSource,
+  buildCategoryTreeWithProductBases,
+  collectNodeIds,
+  countCategoriesByListingType,
+  isDescendantOf,
+} from '@/shared/admin-ui/categories/utils/category-tree.utils'
+import { getListingTypeLabel, type ListingType } from '@/domains/marketplace/listings/domain/listing'
+import {
+  createCategoryAction,
+  deleteCategoryAction,
+  updateCategoryAction,
+} from '@/domains/marketplace/categories/application/actions/category.actions'
+import type { AdminCategoryRow } from '@/domains/marketplace/categories/application/queries/admin-categories.queries'
+import {
+  deleteProductBaseAction,
+  duplicateProductBaseAction,
+  getProductBaseDetailAction,
+  setProductBaseStatusAction,
+} from '@/domains/marketplace/product-base/application/actions/admin-product-base.actions'
+import type {
+  ProductBaseDetailDto,
+  ProductBaseSummaryDto,
+} from '@/domains/marketplace/product-base/application/dto/product-base.dto'
+import { ProductBaseFormDialog } from '@/shared/admin-ui/product-bases/ProductBaseFormDialog'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import {
@@ -31,14 +54,8 @@ import {
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Separator } from '@/shared/ui/separator'
-import { getListingTypeLabel, type ListingType } from '@/domains/marketplace/listings/domain/listing'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { cn } from '@/shared/utils/utils'
-import {
-  createCategoryAction,
-  deleteCategoryAction,
-  updateCategoryAction,
-} from '@/domains/marketplace/categories/application/actions/category.actions'
-import type { AdminCategoryRow } from '@/domains/marketplace/categories/application/queries/admin-categories.queries'
 
 const ADMIN_LISTING_TYPES = ['product', 'service', 'property'] as const satisfies readonly ListingType[]
 
@@ -56,44 +73,81 @@ const EMPTY_FORM: CategoryFormState = {
   listingType: 'product',
 }
 
+const LISTING_TYPE_FILTER_OPTIONS: { value: ListingTypeFilter; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  ...ADMIN_LISTING_TYPES.map((type) => ({
+    value: type as ListingTypeFilter,
+    label: getListingTypeLabel(type),
+  })),
+]
+
+function isAdminListingTypeFilter(
+  filter: ListingTypeFilter,
+): filter is CategoryFormState['listingType'] {
+  return filter === 'product' || filter === 'service' || filter === 'property'
+}
+
 function sortCategories(items: AdminCategoryRow[]) {
   return [...items].sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
 }
 
-function getParentLabel(category: AdminCategoryRow, categories: AdminCategoryRow[]) {
-  if (!category.parentId) return 'Raíz'
-  return categories.find((item) => item.id === category.parentId)?.name ?? 'Raíz'
-}
-
 export function CategoriesAdminPanel({
   initialCategories,
+  initialProductBases = [],
 }: {
   initialCategories: AdminCategoryRow[]
+  initialProductBases?: ProductBaseSummaryDto[]
 }) {
   const router = useRouter()
   const [categories, setCategories] = useState(() => sortCategories(initialCategories))
+  const [productBases, setProductBases] = useState(initialProductBases)
 
   useEffect(() => {
     setCategories(sortCategories(initialCategories))
   }, [initialCategories])
 
+  useEffect(() => {
+    setProductBases(initialProductBases)
+  }, [initialProductBases])
+
+  const [listingTypeFilter, setListingTypeFilter] = useState<ListingTypeFilter>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set())
+
   const [createOpen, setCreateOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<CategoryTreeSource | null>(null)
 
   const [form, setForm] = useState<CategoryFormState>(EMPTY_FORM)
   const [formError, setFormError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [reparenting, setReparenting] = useState(false)
+  const [togglingVisibilityId, setTogglingVisibilityId] = useState<string | null>(null)
+
+  const [productBaseDialogOpen, setProductBaseDialogOpen] = useState(false)
+  const [editingProductBase, setEditingProductBase] = useState<ProductBaseDetailDto | null>(null)
+  const [loadingProductBaseId, setLoadingProductBaseId] = useState<string | null>(null)
+  const [productBaseError, setProductBaseError] = useState<string | null>(null)
+
+  const treeSources = useMemo(
+    () => categories.map(adminRowToTreeSource),
+    [categories],
+  )
+
+  const treeNodes = useMemo(
+    () => buildCategoryTreeWithProductBases(treeSources, productBases, listingTypeFilter),
+    [treeSources, productBases, listingTypeFilter],
+  )
+
+  const listingTypeCounts = useMemo(
+    () => countCategoriesByListingType(treeSources),
+    [treeSources],
+  )
 
   const editingCategory = useMemo(
     () => (editId ? categories.find((item) => item.id === editId) ?? null : null),
     [categories, editId],
-  )
-
-  const deletingCategory = useMemo(
-    () => (deleteId ? categories.find((item) => item.id === deleteId) ?? null : null),
-    [categories, deleteId],
   )
 
   const parentOptions = useMemo(
@@ -104,19 +158,31 @@ export function CategoriesAdminPanel({
     [categories, editId, form.listingType],
   )
 
+  const filteredCount = useMemo(() => {
+    if (listingTypeFilter === 'all') return treeSources.length
+    if (isAdminListingTypeFilter(listingTypeFilter)) return listingTypeCounts[listingTypeFilter]
+    return 0
+  }, [listingTypeCounts, listingTypeFilter, treeSources.length])
+
   function syncFromServer() {
     router.refresh()
   }
 
-  function openCreate() {
-    setForm(EMPTY_FORM)
+  function openCreate(preset?: Partial<CategoryFormState>) {
+    setForm({
+      ...EMPTY_FORM,
+      listingType: isAdminListingTypeFilter(listingTypeFilter)
+        ? listingTypeFilter
+        : EMPTY_FORM.listingType,
+      ...preset,
+    })
     setFormError(null)
     setDeleteError(null)
     setEditId(null)
     setCreateOpen(true)
   }
 
-  function openEdit(category: AdminCategoryRow) {
+  function openEdit(category: CategoryTreeSource) {
     setForm({
       name: category.name,
       parentId: category.parentId ?? '',
@@ -127,6 +193,13 @@ export function CategoriesAdminPanel({
     setDeleteError(null)
     setEditId(category.id)
     setCreateOpen(true)
+  }
+
+  function openCreateChild(parent: CategoryTreeSource) {
+    openCreate({
+      parentId: parent.id,
+      listingType: parent.listingType as CategoryFormState['listingType'],
+    })
   }
 
   function closeForm() {
@@ -183,15 +256,77 @@ export function CategoriesAdminPanel({
     }
   }
 
+  const handleToggleVisibility = useCallback(async (category: CategoryTreeSource) => {
+    setTogglingVisibilityId(category.id)
+
+    try {
+      await updateCategoryAction(category.id, {
+        name: category.name,
+        parentId: category.parentId,
+        isVisible: !category.isVisible,
+        listingType: category.listingType as CategoryFormState['listingType'],
+      })
+      syncFromServer()
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error ? error.message : 'No se pudo cambiar la visibilidad.',
+      )
+    } finally {
+      setTogglingVisibilityId(null)
+    }
+  }, [])
+
+  const handleReparent = useCallback(
+    async (categoryId: string, newParentId: string | null) => {
+      const category = categories.find((item) => item.id === categoryId)
+      if (!category) return
+
+      if (newParentId === category.parentId) return
+
+      if (newParentId && isDescendantOf(treeSources, newParentId, categoryId)) {
+        setDeleteError('No se puede mover una categoría dentro de sus propios descendientes.')
+        return
+      }
+
+      if (newParentId) {
+        const newParent = categories.find((item) => item.id === newParentId)
+        if (newParent && newParent.listingType !== category.listingType) {
+          setDeleteError('La categoría padre debe tener el mismo tipo de listing.')
+          return
+        }
+      }
+
+      setReparenting(true)
+      setDeleteError(null)
+
+      try {
+        await updateCategoryAction(categoryId, {
+          name: category.name,
+          parentId: newParentId,
+          isVisible: category.isVisible,
+          listingType: category.listingType as CategoryFormState['listingType'],
+        })
+        syncFromServer()
+      } catch (error) {
+        setDeleteError(
+          error instanceof Error ? error.message : 'No se pudo mover la categoría.',
+        )
+      } finally {
+        setReparenting(false)
+      }
+    },
+    [categories, treeSources],
+  )
+
   async function confirmDelete() {
-    if (!deleteId) return
+    if (!deleteTarget) return
 
     setSubmitting(true)
     setDeleteError(null)
 
     try {
-      const targetId = deleteId
-      setDeleteId(null)
+      const targetId = deleteTarget.id
+      setDeleteTarget(null)
       await deleteCategoryAction(targetId)
       syncFromServer()
     } catch (deleteErrorValue) {
@@ -205,6 +340,107 @@ export function CategoriesAdminPanel({
     }
   }
 
+  function expandAll() {
+    setExpandedIds(new Set(collectNodeIds(treeNodes)))
+  }
+
+  function collapseAll() {
+    setExpandedIds(new Set())
+  }
+
+  const handleDeleteRequest = useCallback((category: CategoryTreeSource) => {
+    setDeleteError(null)
+    setProductBaseError(null)
+    setDeleteTarget(category)
+  }, [])
+
+  const openProductBase = useCallback(async (productBaseId: string) => {
+    setLoadingProductBaseId(productBaseId)
+    setProductBaseError(null)
+
+    const detail = await getProductBaseDetailAction(productBaseId)
+    setLoadingProductBaseId(null)
+
+    if (!detail) {
+      setProductBaseError('No se pudo cargar el Product Base.')
+      return
+    }
+
+    setEditingProductBase(detail)
+    setProductBaseDialogOpen(true)
+  }, [])
+
+  const handleDuplicateProductBase = useCallback(async (productBaseId: string) => {
+    setLoadingProductBaseId(productBaseId)
+    setProductBaseError(null)
+
+    const result = await duplicateProductBaseAction({ productBaseId })
+    setLoadingProductBaseId(null)
+
+    if (!result.success) {
+      setProductBaseError(result.error)
+      return
+    }
+
+    syncFromServer()
+  }, [])
+
+  const handleProductBaseStatus = useCallback(
+    async (productBaseId: string, status: ProductBaseSummaryDto['status']) => {
+      setLoadingProductBaseId(productBaseId)
+      setProductBaseError(null)
+
+      const result = await setProductBaseStatusAction({ productBaseId, status })
+      setLoadingProductBaseId(null)
+
+      if (!result.success) {
+        setProductBaseError(result.error)
+        return
+      }
+
+      syncFromServer()
+    },
+    [],
+  )
+
+  const handleDeleteProductBase = useCallback(async (productBaseId: string) => {
+    setLoadingProductBaseId(productBaseId)
+    setProductBaseError(null)
+
+    const result = await deleteProductBaseAction({ productBaseId })
+    setLoadingProductBaseId(null)
+
+    if (!result.success) {
+      setProductBaseError(result.error)
+      return
+    }
+
+    syncFromServer()
+  }, [])
+
+  const productBaseHandlers = useMemo(
+    () => ({
+      onOpen: (productBaseId: string) => void openProductBase(productBaseId),
+      onEdit: (productBaseId: string) => void openProductBase(productBaseId),
+      onDuplicate: (productBaseId: string) => void handleDuplicateProductBase(productBaseId),
+      onToggleStatus: (productBaseId: string, status: ProductBaseSummaryDto['status']) =>
+        void handleProductBaseStatus(productBaseId, status),
+      onDelete: (productBaseId: string) => void handleDeleteProductBase(productBaseId),
+    }),
+    [handleDeleteProductBase, handleDuplicateProductBase, handleProductBaseStatus, openProductBase],
+  )
+
+  const actionHandlers = useMemo(
+    () => ({
+      onEdit: openEdit,
+      onCreateChild: openCreateChild,
+      onToggleVisibility: handleToggleVisibility,
+      onDelete: handleDeleteRequest,
+      onReparent: handleReparent,
+    }),
+    [handleDeleteRequest, handleReparent, handleToggleVisibility],
+  )
+
   return (
     <div className='space-y-6'>
       <Card className='shadow-sm'>
@@ -212,17 +448,80 @@ export function CategoriesAdminPanel({
           <div className='space-y-1'>
             <CardTitle className='text-xl'>Taxonomía de categorías</CardTitle>
             <CardDescription>
-              Gestioná categorías raíz, subcategorías y tipos de listing. Solo super-admin.
+              Gestioná categorías, subcategorías y productos base asociados. Arrastrá para cambiar el padre.
             </CardDescription>
           </div>
 
-          <Button onClick={openCreate} className='gap-2 self-start'>
+          <Button onClick={() => openCreate()} className='gap-2 self-start'>
             <Plus className='size-4' />
             Nueva categoría
           </Button>
         </CardHeader>
 
         <Separator />
+
+        <div className='space-y-4 p-4 sm:p-6'>
+          <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+            <Tabs
+              value={listingTypeFilter}
+              onValueChange={(value) => setListingTypeFilter(value as ListingTypeFilter)}
+            >
+              <TabsList className='h-auto flex-wrap'>
+                {LISTING_TYPE_FILTER_OPTIONS.map((option) => {
+                  const count =
+                    option.value === 'all'
+                      ? treeSources.length
+                      : isAdminListingTypeFilter(option.value)
+                        ? listingTypeCounts[option.value]
+                        : 0
+
+                  return (
+                    <TabsTrigger key={option.value} value={option.value} className='gap-2'>
+                      {option.label}
+                      <Badge variant='secondary' className='px-1.5 py-0 text-xs'>
+                        {count}
+                      </Badge>
+                    </TabsTrigger>
+                  )
+                })}
+              </TabsList>
+            </Tabs>
+
+            <div className='flex flex-wrap items-center gap-2'>
+              <Button type='button' variant='outline' size='sm' className='gap-1.5' onClick={expandAll}>
+                <ChevronsUpDown className='size-4' />
+                Expandir todo
+              </Button>
+              <Button type='button' variant='outline' size='sm' className='gap-1.5' onClick={collapseAll}>
+                <ChevronsDownUp className='size-4' />
+                Contraer todo
+              </Button>
+            </div>
+          </div>
+
+          <CategoryTreeSearch value={searchQuery} onChange={setSearchQuery} />
+
+          <p className='text-sm text-muted-foreground'>
+            {filteredCount} categoría{filteredCount === 1 ? '' : 's'}
+            {listingTypeFilter !== 'all' && isAdminListingTypeFilter(listingTypeFilter)
+              ? ` de tipo ${getListingTypeLabel(listingTypeFilter)}`
+              : ' en total'}
+            {' · '}
+            {productBases.length} producto{productBases.length === 1 ? '' : 's'} base
+          </p>
+
+          {deleteError ? (
+            <p className='rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive'>
+              {deleteError}
+            </p>
+          ) : null}
+
+          {productBaseError ? (
+            <p className='rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive'>
+              {productBaseError}
+            </p>
+          ) : null}
+        </div>
 
         <CardContent className='p-0'>
           {categories.length === 0 ? (
@@ -233,83 +532,23 @@ export function CategoriesAdminPanel({
                   Creá la primera categoría para organizar el catálogo del marketplace.
                 </p>
               </div>
-              <Button onClick={openCreate} className='gap-2'>
+              <Button onClick={() => openCreate()} className='gap-2'>
                 <Plus className='size-4' />
                 Crear categoría
               </Button>
             </div>
           ) : (
-            <div className='overflow-x-auto'>
-              <table className='min-w-full border-separate border-spacing-0'>
-                <thead className='bg-muted/40'>
-                  <tr className='text-left text-xs font-medium uppercase tracking-wide text-muted-foreground'>
-                    <th className='px-6 py-4'>Nombre</th>
-                    <th className='px-6 py-4'>Tipo</th>
-                    <th className='px-6 py-4'>Padre</th>
-                    <th className='px-6 py-4'>Visibilidad</th>
-                    <th className='px-6 py-4 text-right'>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categories.map((category) => (
-                    <tr key={category.id} className='border-t'>
-                      <td className='px-6 py-4'>
-                        <div className='space-y-1'>
-                          <p className='font-medium text-foreground'>{category.name}</p>
-                          <p className='text-xs text-muted-foreground'>
-                            ID: <span className='font-mono'>{category.id.slice(0, 8)}</span>
-                          </p>
-                        </div>
-                      </td>
-                      <td className='px-6 py-4'>
-                        <Badge variant='outline'>{getListingTypeLabel(category.listingType)}</Badge>
-                      </td>
-                      <td className='px-6 py-4 text-sm text-muted-foreground'>
-                        {getParentLabel(category, categories)}
-                      </td>
-                      <td className='px-6 py-4'>
-                        <Badge
-                          variant={category.isVisible ? 'default' : 'secondary'}
-                          className='gap-1.5'
-                        >
-                          {category.isVisible ? (
-                            <Eye className='size-3.5' />
-                          ) : (
-                            <EyeOff className='size-3.5' />
-                          )}
-                          {category.isVisible ? 'Visible' : 'Oculta'}
-                        </Badge>
-                      </td>
-                      <td className='px-6 py-4'>
-                        <div className='flex justify-end gap-1.5'>
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => openEdit(category)}
-                            aria-label={`Editar ${category.name}`}
-                          >
-                            <PencilLine className='size-4' />
-                          </Button>
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => {
-                              setDeleteError(null)
-                              setDeleteId(category.id)
-                            }}
-                            aria-label={`Eliminar ${category.name}`}
-                          >
-                            <Trash2 className='size-4' />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <CategoryTree
+              nodes={treeNodes}
+              searchQuery={searchQuery}
+              expandedIds={expandedIds}
+              onExpandedChange={setExpandedIds}
+              actionHandlers={actionHandlers}
+              productBaseHandlers={productBaseHandlers}
+              isReparenting={reparenting}
+              togglingVisibilityId={togglingVisibilityId}
+              loadingProductBaseId={loadingProductBaseId}
+            />
           )}
         </CardContent>
       </Card>
@@ -426,13 +665,16 @@ export function CategoriesAdminPanel({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(deleteId)} onOpenChange={(open) => (!open ? setDeleteId(null) : null)}>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => (!open ? setDeleteTarget(null) : null)}
+      >
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>Eliminar categoría</DialogTitle>
             <DialogDescription>
-              {deletingCategory
-                ? `Vas a eliminar "${deletingCategory.name}". Confirmá para continuar.`
+              {deleteTarget
+                ? `Vas a eliminar "${deleteTarget.name}". Confirmá para continuar.`
                 : 'Confirmá la eliminación para continuar.'}
             </DialogDescription>
           </DialogHeader>
@@ -443,7 +685,7 @@ export function CategoriesAdminPanel({
             <Button
               type='button'
               variant='outline'
-              onClick={() => setDeleteId(null)}
+              onClick={() => setDeleteTarget(null)}
               disabled={submitting}
             >
               Cancelar
@@ -454,6 +696,14 @@ export function CategoriesAdminPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ProductBaseFormDialog
+        open={productBaseDialogOpen}
+        onOpenChange={setProductBaseDialogOpen}
+        categories={categories}
+        initial={editingProductBase}
+        onSaved={syncFromServer}
+      />
     </div>
   )
 }

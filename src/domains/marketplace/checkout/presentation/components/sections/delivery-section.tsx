@@ -32,13 +32,6 @@ export function DeliverySection({
         Configurá fulfillment para cada uno.
       </p>
 
-      {needsDeliveryAddress ? (
-        <div className='space-y-2'>
-          <p className='text-sm font-medium'>Domicilio de entrega</p>
-          <DeliveryHomeCard />
-        </div>
-      ) : null}
-
       <div className='space-y-4'>
         {vendors.map((vendor) => (
           <CheckoutVendorFulfillmentPanel
@@ -51,6 +44,13 @@ export function DeliverySection({
         ))}
       </div>
 
+      {needsDeliveryAddress ? (
+        <div className='space-y-2'>
+          <p className='text-sm font-medium'>Domicilio de entrega</p>
+          <DeliveryHomeCard />
+        </div>
+      ) : null}
+      
       <Button type='button' className='w-full rounded-full' onClick={onContinue}>
         Continuar con fulfillment
       </Button>

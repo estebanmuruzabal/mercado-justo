@@ -174,13 +174,13 @@ export function CheckoutVendorFulfillmentPanel({
 
   return (
     <Card>
-      {/* <CardHeader>
+      <CardHeader>
         <CardTitle className='text-base'>{vendor.vendorName}</CardTitle>
         <CardDescription>
           {vendor.itemCount} artículo{vendor.itemCount === 1 ? '' : 's'} · Elegí cómo recibir este
           pedido
         </CardDescription>
-      </CardHeader> */}
+      </CardHeader>
       <CardContent className='space-y-5'>
         <div className='space-y-2'>
           <p className='text-sm font-medium'>Método de fulfillment</p>
