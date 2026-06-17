@@ -17,12 +17,46 @@ begin
     'Alimentos y Bebidas',
     'alimentos-y-bebidas'
   );
+
+  -- Direct children of Alimentos y Bebidas
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000005',
+    'Almacén',
+    'almacen',
+    'd0000000-0000-4000-8000-000000000001'
+  );
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000006',
+    'Bebidas',
+    'bebidas',
+    'd0000000-0000-4000-8000-000000000001'
+  );
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000007',
+    'Comida Preparada',
+    'comida-preparada',
+    'd0000000-0000-4000-8000-000000000001'
+  );
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000008',
+    'Congelados',
+    'congelados',
+    'd0000000-0000-4000-8000-000000000001'
+  );
   perform public.seed_upsert_category(
     'd0000000-0000-4000-8000-000000000002',
     'Frescos',
     'frescos',
     'd0000000-0000-4000-8000-000000000001'
   );
+  perform public.seed_upsert_category(
+    'd0000000-0000-4000-8000-000000000009',
+    'Otros',
+    'otros',
+    'd0000000-0000-4000-8000-000000000001'
+  );
+
+  -- Frescos → deeper taxonomy for Product Base testing
   perform public.seed_upsert_category(
     'd0000000-0000-4000-8000-000000000003',
     'Frutas y Verduras',

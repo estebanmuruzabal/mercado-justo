@@ -12,7 +12,7 @@ import { useEffect, useRef } from 'react'
 import { tabUnderlineVariants, tabLabelVariants } from '@/shared/motion/navbar-motion'
 import { useMarketplaceFiltersStore } from '@/domains/marketplace/listings/presentation/stores/useMarketplaceFiltersStore'
 import { useHeaderSession } from '@/domains/auth/presentation/hooks/use-header-session'
-import { BECOME_VENDOR_PATH, VENDOR_DASHBOARD_PATH } from '@/shared/routing/routes'
+import { BECOME_VENDOR_PATH, ADMIN_DASHBOARD_PATH, VENDOR_DASHBOARD_PATH } from '@/shared/routing/routes'
 import { useUnreadNotifications } from '@/domains/community/notifications/presentation/hooks/notifications/use-unread-notifications'
 import { CartButton } from './cart-button'
 import { NotificationButton } from './notification-button'
@@ -53,7 +53,7 @@ export function DesktopNav({
   const pathname = usePathname()
   const isBrowsePage = pathname === '/'
   const radiusKm = useMarketplaceFiltersStore((s) => s.radiusKm)
-  const { isAuthenticated, isSeller, isLoading } = useHeaderSession()
+  const { isAuthenticated, isSeller, isSuperAdmin, isLoading } = useHeaderSession()
   const notificationAudience = isSeller ? 'vendor' : 'buyer'
   const { unreadCount, bellPulseToken } = useUnreadNotifications(notificationAudience)
   const displayUnread = isAuthenticated ? unreadCount : 0
@@ -168,27 +168,40 @@ export function DesktopNav({
         ) : null}
 
         <div className='relative flex items-center gap-2' data-header-actions>
-          {isLoading ? null : !isAuthenticated ? (
-            <Link
-              href={BECOME_VENDOR_PATH}
-              className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
-            >
-              Become a seller
-            </Link>
-          ) : isSeller ? (
-            <Link
-              href={VENDOR_DASHBOARD_PATH}
-              className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
-            >
-              Panel Vendedor
-            </Link>
-          ) : (
-            <Link
-              href={BECOME_VENDOR_PATH}
-              className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
-            >
-              Become a seller
-            </Link>
+          {isLoading ? null : (
+            <>
+              {isAuthenticated && isSuperAdmin ? (
+                <Link
+                  href={ADMIN_DASHBOARD_PATH}
+                  className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
+                >
+                  Panel Admin
+                </Link>
+              ) : null}
+
+              {!isAuthenticated ? (
+                <Link
+                  href={BECOME_VENDOR_PATH}
+                  className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
+                >
+                  Become a seller
+                </Link>
+              ) : isSeller ? (
+                <Link
+                  href={VENDOR_DASHBOARD_PATH}
+                  className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
+                >
+                  Panel Vendedor
+                </Link>
+              ) : (
+                <Link
+                  href={BECOME_VENDOR_PATH}
+                  className='hidden xl:block rounded-full px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100'
+                >
+                  Become a seller
+                </Link>
+              )}
+            </>
           )}
 
           <CartButton itemCount={cartItemCount} showBadge={showCartBadge} onClick={onOpenCart} />

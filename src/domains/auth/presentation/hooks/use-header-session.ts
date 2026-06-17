@@ -5,10 +5,12 @@ import { usePathname } from 'next/navigation'
 
 import { createClient } from '@/shared/database/supabase/client'
 import { AUTH_SESSION_SYNC_EVENT } from '@/domains/auth/domain/auth/session-sync'
+import { isSuperAdmin, type Role } from '@/domains/users/domain/roles'
 
 export type HeaderSession = {
   isAuthenticated: boolean
   isSeller: boolean
+  isSuperAdmin: boolean
   isLoading: boolean
 }
 
@@ -16,6 +18,7 @@ export function useHeaderSession(): HeaderSession {
   const pathname = usePathname()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSeller, setIsSeller] = useState(false)
+  const [isSuperAdminUser, setIsSuperAdminUser] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   const syncSession = useCallback(async () => {
@@ -35,21 +38,26 @@ export function useHeaderSession(): HeaderSession {
       if (!user) {
         setIsAuthenticated(false)
         setIsSeller(false)
+        setIsSuperAdminUser(false)
         return
       }
 
       setIsAuthenticated(true)
 
-      const { data: storeRow, error } = await supabase
-        .from('store')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
+      const [{ data: storeRow, error: storeError }, { data: userRow, error: userError }] =
+        await Promise.all([
+          supabase.from('store').select('id').eq('id', user.id).maybeSingle(),
+          supabase.from('user').select('role').eq('id', user.id).maybeSingle(),
+        ])
 
-      setIsSeller(Boolean(storeRow) && !error)
+      setIsSeller(Boolean(storeRow) && !storeError)
+      setIsSuperAdminUser(
+        !userError && isSuperAdmin((userRow?.role as Role | undefined) ?? null),
+      )
     } catch {
       setIsAuthenticated(false)
       setIsSeller(false)
+      setIsSuperAdminUser(false)
     } finally {
       setIsLoading(false)
     }
@@ -67,6 +75,7 @@ export function useHeaderSession(): HeaderSession {
       if (event === 'SIGNED_OUT' || !session?.user) {
         setIsAuthenticated(false)
         setIsSeller(false)
+        setIsSuperAdminUser(false)
         setIsLoading(false)
         return
       }
@@ -93,5 +102,5 @@ export function useHeaderSession(): HeaderSession {
     void syncSession()
   }, [pathname, syncSession])
 
-  return { isAuthenticated, isSeller, isLoading }
+  return { isAuthenticated, isSeller, isSuperAdmin: isSuperAdminUser, isLoading }
 }
