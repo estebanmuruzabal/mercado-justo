@@ -21,6 +21,10 @@ export const PRODUCT_BASE_IMAGE_STRATEGIES = [
 
 export type ProductBaseImageStrategy = (typeof PRODUCT_BASE_IMAGE_STRATEGIES)[number]
 
+export const PRODUCT_BASE_SOURCES = ['seed', 'community', 'admin'] as const
+
+export type ProductBaseSource = (typeof PRODUCT_BASE_SOURCES)[number]
+
 /** Future listing/publication type mapping (R3.1+). */
 export const PRODUCT_BASE_TYPE_TO_LISTING_TYPE: Record<ProductBaseType, string> = {
   PRODUCT: 'product',
@@ -40,6 +44,7 @@ export type ProductBase = {
   subcategoryId: string | null
   type: ProductBaseType
   status: ProductBaseStatus
+  source: ProductBaseSource
   baseImageUrl: string | null
   imageStrategy: ProductBaseImageStrategy
   createdAt: string

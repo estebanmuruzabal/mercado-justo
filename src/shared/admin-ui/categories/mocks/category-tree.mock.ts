@@ -29,6 +29,22 @@ export const MOCK_CATEGORY_TREE_SOURCES: CategoryTreeSource[] = [
     createdAt: MOCK_CREATED_AT,
   },
   {
+    id: 'cat-frutas',
+    name: 'Frutas',
+    parentId: 'cat-frutas-verduras',
+    listingType: 'product',
+    isVisible: true,
+    createdAt: MOCK_CREATED_AT,
+  },
+  {
+    id: 'cat-verduras',
+    name: 'Verduras',
+    parentId: 'cat-frutas-verduras',
+    listingType: 'product',
+    isVisible: true,
+    createdAt: MOCK_CREATED_AT,
+  },
+  {
     id: 'cat-hortalizas-hojas',
     name: 'Hortalizas de Hojas',
     parentId: 'cat-frutas-verduras',

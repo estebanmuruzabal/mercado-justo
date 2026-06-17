@@ -1,4 +1,8 @@
-import type { ProductBaseStatus, ProductBaseType } from '@/domains/marketplace/product-base/domain/product-base'
+import type {
+  ProductBaseSource,
+  ProductBaseStatus,
+  ProductBaseType,
+} from '@/domains/marketplace/product-base/domain/product-base'
 import type { ListingType } from '@/domains/marketplace/listings/domain/listing'
 
 export type CategoryVisibilityStatus = 'visible' | 'hidden' | 'archived'
@@ -23,6 +27,7 @@ export type ProductBaseTreeItem = {
   slug: string
   type: ProductBaseType
   status: ProductBaseStatus
+  source: ProductBaseSource
   categoryId: string
   subcategoryId: string | null
   attributeCount: number
@@ -49,6 +54,7 @@ export type ProductBaseTreeActionHandlers = {
 export type CategoryTreeActionHandlers = {
   onEdit: (category: CategoryTreeSource) => void
   onCreateChild: (parent: CategoryTreeSource) => void
+  onCreateProductBase: (category: CategoryTreeSource) => void
   onToggleVisibility: (category: CategoryTreeSource) => void
   onDelete: (category: CategoryTreeSource) => void
   onReparent: (categoryId: string, newParentId: string | null) => Promise<void>

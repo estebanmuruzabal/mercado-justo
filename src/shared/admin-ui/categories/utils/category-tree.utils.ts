@@ -82,6 +82,34 @@ export function resolveProductBaseCategoryId(productBase: Pick<ProductBaseSummar
   return productBase.subcategoryId ?? productBase.categoryId
 }
 
+/** Maps a tree category node to product_base category_id + subcategory_id (root + leaf). */
+export function productBasePlacementForCategory(
+  categories: AdminCategoryRow[],
+  targetCategoryId: string,
+): { categoryId: string; subcategoryId: string | null; categoryPath: string[] } {
+  const byId = new Map(categories.map((category) => [category.id, category]))
+  const target = byId.get(targetCategoryId)
+  if (!target) {
+    return { categoryId: '', subcategoryId: null, categoryPath: [] }
+  }
+
+  const pathFromRoot: string[] = []
+  let current: AdminCategoryRow | undefined = target
+  while (current) {
+    pathFromRoot.unshift(current.id)
+    current = current.parentId ? byId.get(current.parentId) : undefined
+  }
+
+  const rootId = pathFromRoot[0] ?? targetCategoryId
+  const isRoot = targetCategoryId === rootId
+
+  return {
+    categoryId: rootId,
+    subcategoryId: isRoot ? null : targetCategoryId,
+    categoryPath: pathFromRoot,
+  }
+}
+
 export function toProductBaseTreeItem(row: ProductBaseSummaryDto): ProductBaseTreeItem {
   return {
     id: row.id,
@@ -89,6 +117,7 @@ export function toProductBaseTreeItem(row: ProductBaseSummaryDto): ProductBaseTr
     slug: row.slug,
     type: row.type,
     status: row.status,
+    source: row.source,
     categoryId: row.categoryId,
     subcategoryId: row.subcategoryId,
     attributeCount: row.attributeCount,

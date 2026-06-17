@@ -56,7 +56,7 @@ enabled = true
 # Shared master data + development demo dataset (see supabase/seeds/).
 sql_paths = [
   "./seeds/seed.shared.sql",
-  "./seeds/seed.dev.sql",
+  "./seeds/seed.dev-users.sql",
 ]
 
 [realtime]

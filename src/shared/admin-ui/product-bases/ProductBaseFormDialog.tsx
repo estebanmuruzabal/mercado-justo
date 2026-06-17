@@ -91,7 +91,27 @@ function buildCategoryPath(
 function buildInitialForm(
   initial?: ProductBaseDetailDto | null,
   categories: AdminCategoryRow[] = [],
+  createPreset?: { categoryId: string; subcategoryId: string | null } | null,
 ): FormState {
+  if (!initial && createPreset?.categoryId) {
+    return {
+      name: '',
+      slug: '',
+      description: '',
+      categoryId: createPreset.categoryId,
+      subcategoryId: createPreset.subcategoryId,
+      categoryPath: buildCategoryPath(
+        categories,
+        createPreset.categoryId,
+        createPreset.subcategoryId,
+      ),
+      type: 'PRODUCT',
+      baseImageUrl: '',
+      imageStrategy: 'BASE_OR_LISTING',
+      attributes: [],
+    }
+  }
+
   if (!initial) {
     return {
       name: '',
@@ -126,15 +146,19 @@ export function ProductBaseFormDialog({
   onOpenChange,
   categories,
   initial,
+  createPreset = null,
   onSaved,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   categories: AdminCategoryRow[]
   initial?: ProductBaseDetailDto | null
+  createPreset?: { categoryId: string; subcategoryId: string | null } | null
   onSaved: () => void
 }) {
-  const [form, setForm] = useState<FormState>(() => buildInitialForm(initial, categories))
+  const [form, setForm] = useState<FormState>(() =>
+    buildInitialForm(initial, categories, createPreset),
+  )
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [slugTouched, setSlugTouched] = useState(false)
@@ -144,11 +168,11 @@ export function ProductBaseFormDialog({
 
   useEffect(() => {
     if (open) {
-      setForm(buildInitialForm(initial, categories))
+      setForm(buildInitialForm(initial, categories, createPreset))
       setSlugTouched(Boolean(initial))
       setError(null)
     }
-  }, [open, initial, categories])
+  }, [open, initial, categories, createPreset])
 
   const byId = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories])
 

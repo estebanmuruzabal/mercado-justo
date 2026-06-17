@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 
 import { CategoryActions } from '@/shared/admin-ui/categories/CategoryActions'
+import { CategoryTreeQuickAdd } from '@/shared/admin-ui/categories/CategoryTreeQuickAdd'
 import { ProductBaseTreeRow } from '@/shared/admin-ui/categories/ProductBaseTreeRow'
 import type {
   CategoryTreeActionHandlers,
@@ -21,7 +22,6 @@ import type {
   ProductBaseTreeActionHandlers,
 } from '@/shared/admin-ui/categories/types/category-tree.types'
 import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils/utils'
 
 const INDENT_PX = 20
@@ -84,7 +84,7 @@ export function CategoryTreeNode({
 }: CategoryTreeNodeProps) {
   const hasSubcategories = node.childCount > 0
   const hasProductBases = node.productBases.length > 0
-  const isExpandable = hasSubcategories || hasProductBases
+  const isExpandable = true
   const isDropTarget = overId === node.id && activeDragId !== node.id
 
   const {
@@ -138,40 +138,56 @@ export function CategoryTreeNode({
           <GripVertical className='size-4' />
         </button>
 
-        <Button
+        <button
           type='button'
-          variant='ghost'
-          size='icon'
-          className={cn('size-7 shrink-0', !isExpandable && 'invisible')}
-          disabled={!isExpandable}
+          className={cn(
+            'flex min-w-0 flex-1 items-center gap-2 rounded-md py-0.5 text-left transition-colors',
+            'cursor-pointer hover:bg-muted/60',
+            disabled && 'pointer-events-none opacity-60',
+          )}
+          disabled={disabled}
           onClick={() => onToggleExpand(node.id)}
+          aria-expanded={isExpanded}
           aria-label={isExpanded ? `Contraer ${node.name}` : `Expandir ${node.name}`}
         >
-          {isExpanded ? (
-            <ChevronDown className='size-4' />
-          ) : (
-            <ChevronRight className='size-4' />
-          )}
-        </Button>
+            <span
+              className='flex size-7 shrink-0 items-center justify-center text-muted-foreground'
+              aria-hidden
+            >
+              {isExpanded ? (
+                <ChevronDown className='size-4' />
+              ) : (
+                <ChevronRight className='size-4' />
+              )}
+            </span>
 
-        <Folder className='size-4 shrink-0 text-sky-600 dark:text-sky-400' aria-hidden />
+            <Folder className='size-4 shrink-0 text-sky-600 dark:text-sky-400' aria-hidden />
 
-        <div className='min-w-0 flex-1'>
-          <div className='flex flex-wrap items-center gap-2'>
-            <span className='truncate font-medium text-foreground'>{node.name}</span>
-            {hasSubcategories ? (
-              <span className='shrink-0 text-xs text-muted-foreground'>
-                {node.childCount} {node.childCount === 1 ? 'hijo' : 'hijos'}
-              </span>
-            ) : null}
-            {hasProductBases ? (
-              <span className='shrink-0 text-xs text-emerald-700 dark:text-emerald-300'>
-                {node.productBases.length}{' '}
-                {node.productBases.length === 1 ? 'producto base' : 'productos base'}
-              </span>
-            ) : null}
+            <div className='min-w-0 flex-1'>
+              <div className='flex flex-wrap items-center gap-2'>
+                <span className='truncate font-medium text-foreground'>{node.name}</span>
+                {hasSubcategories ? (
+                  <span className='shrink-0 text-xs text-muted-foreground'>
+                    {node.childCount} {node.childCount === 1 ? 'hijo' : 'hijos'}
+                  </span>
+                ) : null}
+                {hasProductBases ? (
+                  <span className='shrink-0 text-xs text-emerald-700 dark:text-emerald-300'>
+                    {node.productBases.length}{' '}
+                    {node.productBases.length === 1 ? 'producto base' : 'productos base'}
+                  </span>
+                ) : null}
+            </div>
           </div>
-        </div>
+        </button>
+
+        <CategoryTreeQuickAdd
+          category={node}
+          onCreateChild={actionHandlers.onCreateChild}
+          onCreateProductBase={actionHandlers.onCreateProductBase}
+          disabled={disabled}
+          variant='inline'
+        />
 
         <VisibilityBadge status={node.visibilityStatus} />
 
@@ -216,6 +232,15 @@ export function CategoryTreeNode({
               isLoading={loadingProductBaseId === productBase.id}
             />
           ))}
+
+          <CategoryTreeQuickAdd
+            category={node}
+            onCreateChild={actionHandlers.onCreateChild}
+            onCreateProductBase={actionHandlers.onCreateProductBase}
+            disabled={disabled}
+            variant='footer'
+            depth={node.depth + 1}
+          />
         </div>
       ) : null}
     </div>

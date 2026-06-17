@@ -40,6 +40,7 @@ import {
 } from '@/shared/ui/table'
 
 import { ProductBaseFormDialog } from './ProductBaseFormDialog'
+import { ProductBaseSourceBadge } from './ProductBaseSourceBadge'
 
 function statusVariant(status: ProductBaseSummaryDto['status']) {
   if (status === 'ACTIVE') return 'default'
@@ -215,6 +216,7 @@ export function ProductBasesAdminPanel({
                 <TableHead>Categoría</TableHead>
                 <TableHead>Atributos</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead>Origen</TableHead>
                 <TableHead className='text-right'>Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -239,6 +241,9 @@ export function ProductBasesAdminPanel({
                     <TableCell>{row.attributeCount}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant(row.status)}>{row.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <ProductBaseSourceBadge source={row.source} />
                     </TableCell>
                     <TableCell>
                       <div className='flex justify-end gap-1'>
@@ -298,9 +303,20 @@ export function ProductBasesAdminPanel({
                             onClick={() => void handleDelete(row.id)}
                             aria-label='Eliminar'
                           >
-                            <Trash2 className='h-4 w-4' />
+                            <Trash2 className='h-4 w-4 text-destructive' />
                           </Button>
-                        ) : null}
+                        ) : (
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            disabled
+                            aria-label='Desactivá antes de eliminar'
+                            title='Desactivá antes de eliminar'
+                          >
+                            <Trash2 className='h-4 w-4 text-muted-foreground/40' />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

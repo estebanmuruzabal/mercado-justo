@@ -30,7 +30,8 @@
     "telegram:webhook:info": "node scripts/telegram-set-webhook.js --info",
     "telegram:webhook:delete": "node scripts/telegram-set-webhook.js --delete",
     "email:dev": "email dev --dir emails",
-    "prepare": "husky"
+    "prepare": "husky",
+    "seed:generate-taxonomy": "node scripts/generate-taxonomy-seed.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -84,9 +85,11 @@
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.0",
+    "pg": "^8.21.0",
     "prettier": "^3.5.3",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.1.4"
+    "vitest": "^3.1.4",
+    "xlsx": "^0.18.5"
   }
 }

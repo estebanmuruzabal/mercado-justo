@@ -1279,6 +1279,7 @@ export type Database = {
           image_strategy: string
           name: string
           slug: string
+          source: string
           status: string
           subcategory_id: string | null
           type: string
@@ -1293,6 +1294,7 @@ export type Database = {
           image_strategy?: string
           name: string
           slug: string
+          source?: string
           status?: string
           subcategory_id?: string | null
           type: string
@@ -1307,6 +1309,7 @@ export type Database = {
           image_strategy?: string
           name?: string
           slug?: string
+          source?: string
           status?: string
           subcategory_id?: string | null
           type?: string

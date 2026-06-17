@@ -32,20 +32,29 @@ function mapAttributeToDto(attr: ProductBaseAttribute): ProductBaseDetailDto['at
   }
 }
 
+/** PostgREST puts `.in()` values in the URL; chunk to avoid 414 URI too long. */
+const ATTRIBUTE_COUNT_IN_CHUNK_SIZE = 80
+
 async function countAttributesByBaseIds(baseIds: string[]): Promise<Map<string, number>> {
   if (baseIds.length === 0) return new Map()
+
   const admin = createAdminClient()
-  const { data, error } = await admin
-    .from('product_base_attribute')
-    .select('product_base_id')
-    .in('product_base_id', baseIds)
-
-  if (error) throw error
-
   const counts = new Map<string, number>()
-  for (const row of (data ?? []) as Array<{ product_base_id: string }>) {
-    counts.set(row.product_base_id, (counts.get(row.product_base_id) ?? 0) + 1)
+
+  for (let offset = 0; offset < baseIds.length; offset += ATTRIBUTE_COUNT_IN_CHUNK_SIZE) {
+    const chunk = baseIds.slice(offset, offset + ATTRIBUTE_COUNT_IN_CHUNK_SIZE)
+    const { data, error } = await admin
+      .from('product_base_attribute')
+      .select('product_base_id')
+      .in('product_base_id', chunk)
+
+    if (error) throw error
+
+    for (const row of (data ?? []) as Array<{ product_base_id: string }>) {
+      counts.set(row.product_base_id, (counts.get(row.product_base_id) ?? 0) + 1)
+    }
   }
+
   return counts
 }
 
@@ -54,7 +63,10 @@ export async function listProductBasesForAdmin(
 ): Promise<ProductBaseSummaryDto[]> {
   const admin = createAdminClient()
   const rows = await listProductBasesAdmin(admin, filters)
-  const counts = await countAttributesByBaseIds(rows.map((row) => row.id))
+  const includeAttributeCount = filters.includeAttributeCount !== false
+  const counts = includeAttributeCount
+    ? await countAttributesByBaseIds(rows.map((row) => row.id))
+    : new Map<string, number>()
 
   return rows.map((row) => ({
     id: row.id,
@@ -62,6 +74,7 @@ export async function listProductBasesForAdmin(
     slug: row.slug,
     type: row.type,
     status: row.status,
+    source: row.source,
     categoryId: row.categoryId,
     categoryName: row.categoryName,
     subcategoryId: row.subcategoryId,
@@ -87,6 +100,7 @@ export async function getProductBaseDetailForAdmin(id: string): Promise<ProductB
     subcategoryName: row.subcategoryName,
     type: row.type,
     status: row.status,
+    source: row.source,
     baseImageUrl: row.baseImageUrl,
     imageStrategy: row.imageStrategy,
     attributes: row.attributes.map(mapAttributeToDto),

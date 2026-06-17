@@ -16,7 +16,7 @@ import {
 type AdminClient = ReturnType<typeof createAdminClient>
 
 const BASE_SELECT =
-  'id, name, slug, description, category_id, subcategory_id, type, status, base_image_url, image_strategy, created_at, updated_at'
+  'id, name, slug, description, category_id, subcategory_id, type, status, source, base_image_url, image_strategy, created_at, updated_at'
 
 const BASE_ADMIN_SELECT = `${BASE_SELECT}, category:category!product_base_category_id_fkey(name), subcategory:category!product_base_subcategory_id_fkey(name)`
 
@@ -28,6 +28,8 @@ export type ProductBaseFilters = {
   type?: ProductBaseType
   status?: ProductBaseStatus
   categoryId?: string
+  /** When false, skips per-row attribute count (avoids N+1 / large IN queries). */
+  includeAttributeCount?: boolean
 }
 
 export type CreateProductBaseRepoInput = {

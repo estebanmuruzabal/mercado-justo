@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "namespace": "mercado-justo-taxonomy-v1",
+  "categories": {
+    "alimentos-y-bebidas": "d0000000-0000-4000-8000-000000000001",
+    "alimentos-y-bebidas/almacen": "d0000000-0000-4000-8000-000000000005",
+    "alimentos-y-bebidas/bebidas": "d0000000-0000-4000-8000-000000000006",
+    "alimentos-y-bebidas/comida-preparada": "d0000000-0000-4000-8000-000000000007",
+    "alimentos-y-bebidas/congelados": "d0000000-0000-4000-8000-000000000008",
+    "alimentos-y-bebidas/frescos": "d0000000-0000-4000-8000-000000000002",
+    "alimentos-y-bebidas/otros": "d0000000-0000-4000-8000-000000000009",
+    "alimentos-y-bebidas/frescos/frutas-y-verduras": "d0000000-0000-4000-8000-000000000003",
+    "alimentos-y-bebidas/frescos/frutas-y-verduras/frutas": "d0000000-0000-4000-8000-000000000010",
+    "alimentos-y-bebidas/frescos/frutas-y-verduras/verduras": "d0000000-0000-4000-8000-000000000011",
+    "alimentos-y-bebidas/frescos/frutas-y-verduras/hortalizas-de-hojas": "d0000000-0000-4000-8000-000000000004"
+  },
+  "displayNames": {
+    "alimentos-y-bebidas/frescos/frutas-y-verduras/frutas": "Frutas",
+    "alimentos-y-bebidas/frescos/frutas-y-verduras/verduras": "Verduras",
+    "alimentos-y-bebidas/frescos/frutas-y-verduras/hortalizas-de-hojas": "Hortalizas de Hojas"
+  },
+  "productBases": {
+    "lechuga-romana": "f0000000-0000-4000-8000-000000000001"
+  },
+  "reservedNames": {
+    "Frutas y Verduras": "alimentos-y-bebidas/frescos/frutas-y-verduras"
+  }
+}

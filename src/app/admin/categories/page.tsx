@@ -12,7 +12,7 @@ export default async function AdminCategoriesPage() {
 
   const [categories, productBases] = await Promise.all([
     listCategoriesForAdmin(),
-    listProductBasesForAdmin(),
+    listProductBasesForAdmin({ includeAttributeCount: false }),
   ])
 
   return (

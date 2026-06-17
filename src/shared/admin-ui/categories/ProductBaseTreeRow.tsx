@@ -3,6 +3,7 @@
 import { Package } from 'lucide-react'
 
 import { ProductBaseActions } from '@/shared/admin-ui/categories/ProductBaseActions'
+import { ProductBaseSourceBadge } from '@/shared/admin-ui/product-bases/ProductBaseSourceBadge'
 import type {
   ProductBaseTreeActionHandlers,
   ProductBaseTreeItem,
@@ -68,6 +69,8 @@ export function ProductBaseTreeRow({
         <Badge variant={statusVariant(productBase.status)} className='shrink-0'>
           {productBase.status}
         </Badge>
+
+        <ProductBaseSourceBadge source={productBase.source} />
 
         <ProductBaseActions
           productBase={productBase}

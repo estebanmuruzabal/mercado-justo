@@ -1,6 +1,7 @@
 import type {
   ProductBase,
   ProductBaseImageStrategy,
+  ProductBaseSource,
   ProductBaseStatus,
   ProductBaseType,
 } from '../../domain/product-base'
@@ -19,6 +20,7 @@ type ProductBaseRow = {
   subcategory_id: string | null
   type: string
   status: string
+  source: string
   base_image_url: string | null
   image_strategy: string
   created_at: string
@@ -60,6 +62,7 @@ export function mapProductBaseRow(row: ProductBaseRow): ProductBase {
     subcategoryId: row.subcategory_id,
     type: row.type as ProductBaseType,
     status: row.status as ProductBaseStatus,
+    source: row.source as ProductBaseSource,
     baseImageUrl: row.base_image_url,
     imageStrategy: row.image_strategy as ProductBaseImageStrategy,
     createdAt: row.created_at,

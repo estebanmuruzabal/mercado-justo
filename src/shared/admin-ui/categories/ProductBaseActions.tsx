@@ -140,7 +140,26 @@ export function ProductBaseActions({
             </TooltipTrigger>
             <TooltipContent>Eliminar</TooltipContent>
           </Tooltip>
-        ) : null}
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className='inline-flex'>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon'
+                  className='size-8 text-destructive/40'
+                  disabled
+                  onClick={(event) => event.stopPropagation()}
+                  aria-label={`Desactivá ${productBase.name} antes de eliminar`}
+                >
+                  <Trash2 className='size-4' />
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Desactivá antes de eliminar</TooltipContent>
+          </Tooltip>
+        )}
       </div>
     </TooltipProvider>
   )

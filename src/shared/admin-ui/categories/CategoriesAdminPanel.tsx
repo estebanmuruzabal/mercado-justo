@@ -15,6 +15,7 @@ import {
   collectNodeIds,
   countCategoriesByListingType,
   isDescendantOf,
+  productBasePlacementForCategory,
 } from '@/shared/admin-ui/categories/utils/category-tree.utils'
 import { getListingTypeLabel, type ListingType } from '@/domains/marketplace/listings/domain/listing'
 import {
@@ -127,6 +128,10 @@ export function CategoriesAdminPanel({
 
   const [productBaseDialogOpen, setProductBaseDialogOpen] = useState(false)
   const [editingProductBase, setEditingProductBase] = useState<ProductBaseDetailDto | null>(null)
+  const [productBaseCreatePreset, setProductBaseCreatePreset] = useState<{
+    categoryId: string
+    subcategoryId: string | null
+  } | null>(null)
   const [loadingProductBaseId, setLoadingProductBaseId] = useState<string | null>(null)
   const [productBaseError, setProductBaseError] = useState<string | null>(null)
 
@@ -200,6 +205,23 @@ export function CategoriesAdminPanel({
       parentId: parent.id,
       listingType: parent.listingType as CategoryFormState['listingType'],
     })
+  }
+
+  function openCreateProductBase(category: CategoryTreeSource) {
+    const placement = productBasePlacementForCategory(categories, category.id)
+    setEditingProductBase(null)
+    setProductBaseCreatePreset({
+      categoryId: placement.categoryId,
+      subcategoryId: placement.subcategoryId,
+    })
+    setProductBaseError(null)
+    setProductBaseDialogOpen(true)
+  }
+
+  function closeProductBaseDialog() {
+    setProductBaseDialogOpen(false)
+    setEditingProductBase(null)
+    setProductBaseCreatePreset(null)
   }
 
   function closeForm() {
@@ -367,6 +389,7 @@ export function CategoriesAdminPanel({
     }
 
     setEditingProductBase(detail)
+    setProductBaseCreatePreset(null)
     setProductBaseDialogOpen(true)
   }, [])
 
@@ -434,6 +457,7 @@ export function CategoriesAdminPanel({
     () => ({
       onEdit: openEdit,
       onCreateChild: openCreateChild,
+      onCreateProductBase: openCreateProductBase,
       onToggleVisibility: handleToggleVisibility,
       onDelete: handleDeleteRequest,
       onReparent: handleReparent,
@@ -699,9 +723,13 @@ export function CategoriesAdminPanel({
 
       <ProductBaseFormDialog
         open={productBaseDialogOpen}
-        onOpenChange={setProductBaseDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeProductBaseDialog()
+          else setProductBaseDialogOpen(true)
+        }}
         categories={categories}
         initial={editingProductBase}
+        createPreset={productBaseCreatePreset}
         onSaved={syncFromServer}
       />
     </div>

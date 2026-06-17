@@ -1,5 +1,6 @@
 import type {
   ProductBaseImageStrategy,
+  ProductBaseSource,
   ProductBaseStatus,
   ProductBaseType,
 } from '../../domain/product-base'
@@ -36,6 +37,7 @@ export type ProductBaseSummaryDto = {
   slug: string
   type: ProductBaseType
   status: ProductBaseStatus
+  source: ProductBaseSource
   categoryId: string
   categoryName: string | null
   subcategoryId: string | null
@@ -55,6 +57,7 @@ export type ProductBaseDetailDto = {
   subcategoryName: string | null
   type: ProductBaseType
   status: ProductBaseStatus
+  source: ProductBaseSource
   baseImageUrl: string | null
   imageStrategy: ProductBaseImageStrategy
   attributes: ProductBaseAttributeDto[]

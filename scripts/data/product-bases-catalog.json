@@ -1,0 +1,404 @@
+{
+  "Aceites y Vinagres": [
+    "Aceite de oliva extra virgen",
+    "Aceite de girasol",
+    "Aceite de coco",
+    "Vinagre de alcohol"
+  ],
+  "Arroz, Legumbres y Semillas": [
+    "Arroz largo fino",
+    "Lentejas",
+    "Porotos negros",
+    "Garbanzos"
+  ],
+  "Azúcar y Endulzantes": [
+    "Azúcar común",
+    "Azúcar impalpable",
+    "Edulcorante stevia",
+    "Miel de abeja"
+  ],
+  "Cajas Navideñas": [
+    "Caja navideña clásica",
+    "Caja navideña premium",
+    "Caja navideña sin TACC",
+    "Caja navideña familiar"
+  ],
+  "Canastas Básicas": [
+    "Canasta básica individual",
+    "Canasta básica familiar",
+    "Canasta básica mensual",
+    "Canasta escolar"
+  ],
+  "Cereales y Barras": [
+    "Avena tradicional",
+    "Cereal copos de maíz",
+    "Barra de cereal",
+    "Granola"
+  ],
+  "Dulces y Chocolates": [
+    "Chocolate con leche",
+    "Alfajor de chocolate",
+    "Caramelo masticable",
+    "Chupetín"
+  ],
+  "Encurtidos y Conservas": [
+    "Aceitunas verdes",
+    "Pickles",
+    "Tomate triturado",
+    "Atún en lata"
+  ],
+  "Galletitas": [
+    "Galletitas dulces",
+    "Galletitas saladas",
+    "Galletitas de agua",
+    "Galletitas surtidas"
+  ],
+  "Harina": [
+    "Harina 000",
+    "Harina 0000",
+    "Harina integral",
+    "Harina leudante"
+  ],
+  "Infusiones": [
+    "Yerba mate",
+    "Té negro",
+    "Té de hierbas",
+    "Café molido"
+  ],
+  "Levaduras": [
+    "Levadura seca",
+    "Levadura fresca",
+    "Polvo de hornear",
+    "Bicarbonato de sodio"
+  ],
+  "Mermeladas, Dulces y Miel": [
+    "Mermelada de frutilla",
+    "Dulce de leche",
+    "Miel",
+    "Dulce de membrillo"
+  ],
+  "Pan Rallado": [
+    "Pan rallado fino",
+    "Pan rallado con hierbas",
+    "Pan rallado integral",
+    "Panko"
+  ],
+  "Panadería": [
+    "Pan lactal",
+    "Pan de campo",
+    "Medialunas",
+    "Facturas surtidas"
+  ],
+  "Pastas": [
+    "Fideos spaghetti",
+    "Fideos tirabuzón",
+    "Ravioles",
+    "Ñoquis"
+  ],
+  "Pulpas de Fruta": [
+    "Pulpa de durazno",
+    "Pulpa de frutilla",
+    "Pulpa de mango",
+    "Pulpa de ananá"
+  ],
+  "Quesos Rallados": [
+    "Queso rallado clásico",
+    "Queso rallado reggianito",
+    "Queso rallado mix",
+    "Queso parmesano rallado"
+  ],
+  "Repostería y Pastelería": [
+    "Bizcochuelo",
+    "Brownie",
+    "Torta helada",
+    "Cupcakes"
+  ],
+  "Saborizantes y Jarabes": [
+    "Esencia de vainilla",
+    "Colorante alimentario",
+    "Jarabe de chocolate",
+    "Jarabe de maple"
+  ],
+  "Salsas y Condimentos": [
+    "Mayonesa",
+    "Ketchup",
+    "Mostaza",
+    "Salsa golf"
+  ],
+  "Snacks": [
+    "Papas fritas",
+    "Palitos salados",
+    "Maní tostado",
+    "Mix de frutos secos"
+  ],
+  "Tapas de Tartas y Empanadas": [
+    "Tapas para empanadas",
+    "Tapas para tartas",
+    "Hojaldre",
+    "Discos de empanada"
+  ],
+  "Tripas para Embutido": [
+    "Tripa natural",
+    "Tripa colageno",
+    "Tripa para chorizo",
+    "Tripa para salame"
+  ],
+  "Otros": [
+    "Producto almacén varios 1",
+    "Producto almacén varios 2",
+    "Insumo cocina",
+    "Artículo despensa"
+  ],
+  "Aguas": [
+    "Agua mineral sin gas",
+    "Agua mineral con gas",
+    "Agua saborizada",
+    "Agua premium"
+  ],
+  "Bebidas Alcohólicas Preparadas": [
+    "Fernet con cola",
+    "Gin tonic listo",
+    "Aperol spritz",
+    "Vino tinto sangría"
+  ],
+  "Bebidas Aperitivos con Alcohol": [
+    "Aperol",
+    "Campari",
+    "Vermut rosso",
+    "Fernet"
+  ],
+  "Bebidas Aperitivos sin Alcohol": [
+    "Aperitivo sin alcohol",
+    "Bitter sin alcohol",
+    "Tónica premium",
+    "Ginger ale"
+  ],
+  "Bebidas Blancas y Licores": [
+    "Gin",
+    "Vodka",
+    "Whisky",
+    "Ron"
+  ],
+  "Bebidas Energizantes": [
+    "Bebida energizante clásica",
+    "Bebida energizante zero",
+    "Bebida energizante tropical",
+    "Shot energizante"
+  ],
+  "Bebidas Isotónicas": [
+    "Bebida isotónica naranja",
+    "Bebida isotónica manzana",
+    "Bebida isotónica zero",
+    "Bebida hidratante"
+  ],
+  "Cervezas": [
+    "Cerveza rubia",
+    "Cerveza negra",
+    "Cerveza IPA",
+    "Cerveza sin alcohol"
+  ],
+  "Gaseosas": [
+    "Cola",
+    "Cola zero",
+    "Limonada",
+    "Naranja"
+  ],
+  "Jugos": [
+    "Jugo de naranja",
+    "Jugo de manzana",
+    "Jugo multifruta",
+    "Jugo exprimido"
+  ],
+  "Leche": [
+    "Leche entera",
+    "Leche descremada",
+    "Leche chocolatada",
+    "Leche vegetal"
+  ],
+  "Otras Bebidas": [
+    "Kombucha",
+    "Bebida de avena",
+    "Horchata",
+    "Limonada casera"
+  ],
+  "Vinos y Espumantes": [
+    "Vino malbec",
+    "Vino torrontés",
+    "Espumante extra brut",
+    "Vino blend"
+  ],
+  "Kéfir": [
+    "Kéfir natural",
+    "Kéfir saborizado",
+    "Kéfir de coco",
+    "Kéfir premium"
+  ],
+  "Bandejas Dulces y Saladas": [
+    "Bandeja dulce surtida",
+    "Bandeja salada surtida",
+    "Bandeja mixta",
+    "Bandeja ejecutiva"
+  ],
+  "Desayunos y Meriendas": [
+    "Desayuno continental",
+    "Tostadas y mermelada",
+    "Merienda infantil",
+    "Desayuno proteico"
+  ],
+  "Empanadas": [
+    "Empanada de carne",
+    "Empanada de pollo",
+    "Empanada de jamón y queso",
+    "Empanada de verdura"
+  ],
+  "Entradas y Acompañamientos": [
+    "Tabla de entradas",
+    "Papas fritas caseras",
+    "Ensalada mixta",
+    "Provoleta"
+  ],
+  "Sandwiches": [
+    "Sandwich de milanesa",
+    "Sandwich de jamón y queso",
+    "Sandwich veggie",
+    "Sandwich completo"
+  ],
+  "Tablas de Picadas": [
+    "Tabla de fiambres",
+    "Tabla de quesos",
+    "Tabla mixta",
+    "Tabla premium"
+  ],
+  "Tartas Saladas": [
+    "Tarta de verdura",
+    "Tarta de jamón y queso",
+    "Tarta de pollo",
+    "Tarta de zapallito"
+  ],
+  "Frutas Congeladas": [
+    "Frutillas congeladas",
+    "Mix de frutos rojos",
+    "Mango congelado",
+    "Ananá congelado"
+  ],
+  "Hamburguesas": [
+    "Hamburguesa de carne",
+    "Hamburguesa de pollo",
+    "Hamburguesa veggie",
+    "Hamburguesa doble"
+  ],
+  "Mariscos": [
+    "Camarones congelados",
+    "Mejillones",
+    "Calamar anillos",
+    "Langostinos"
+  ],
+  "Milanesas y Medallones": [
+    "Milanesa de nalga",
+    "Milanesa de pollo",
+    "Medallón de soja",
+    "Milanesa de cerdo"
+  ],
+  "Papas Congeladas": [
+    "Papas bastón",
+    "Papas noisette",
+    "Papas rústicas",
+    "Papas hash brown"
+  ],
+  "Pizzas Congeladas": [
+    "Pizza muzzarella",
+    "Pizza especial",
+    "Pizza napolitana",
+    "Pizza media masa"
+  ],
+  "Snacks Congelados": [
+    "Nuggets de pollo",
+    "Mozzarella sticks",
+    "Empanadas congeladas",
+    "Tequeños"
+  ],
+  "Vegetales Congelados": [
+    "Espinaca congelada",
+    "Brócoli congelado",
+    "Mix primavera",
+    "Choclo congelado"
+  ],
+  "Achuras": [
+    "Chorizo parrillero",
+    "Morcilla",
+    "Chinchulines",
+    "Riñones"
+  ],
+  "Carnes y Pollos": [
+    "Asado de tira",
+    "Bife de chorizo",
+    "Pollo entero",
+    "Pechuga de pollo"
+  ],
+  "Embutidos": [
+    "Salame",
+    "Panceta",
+    "Bondiola",
+    "Longaniza"
+  ],
+  "Fiambres": [
+    "Jamón cocido",
+    "Paleta",
+    "Mortadela",
+    "Lomito"
+  ],
+  "Frutas": [
+    "Manzana roja",
+    "Banana",
+    "Naranja",
+    "Pera"
+  ],
+  "Verduras": [
+    "Tomate redondo",
+    "Zanahoria",
+    "Cebolla",
+    "Papa"
+  ],
+  "Huevos": [
+    "Huevos blancos",
+    "Huevos color",
+    "Huevos orgánicos",
+    "Huevos camperos"
+  ],
+  "Lácteos": [
+    "Yogur natural",
+    "Queso cremoso",
+    "Crema de leche",
+    "Ricota"
+  ],
+  "Pescados": [
+    "Merluza fresca",
+    "Salmón fresco",
+    "Pejerrey",
+    "Filet de pescado"
+  ],
+  "Postres Refrigerados": [
+    "Postre de leche",
+    "Mousse",
+    "Arroz con leche",
+    "Flan refrigerado"
+  ],
+  "Comida Preparada/Helados y Postres": [
+    "Helado de vainilla",
+    "Helado de chocolate",
+    "Flan casero",
+    "Budín de pan"
+  ],
+  "Congelados/Helados y Postres": [
+    "Helado familiar",
+    "Postre congelado",
+    "Torta helada",
+    "Bombón helado"
+  ],
+  "Almacén/Otros": [
+    "Producto varios",
+    "Artículo de almacén",
+    "Insumo básico",
+    "Otros productos"
+  ]
+}
