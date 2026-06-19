@@ -64,6 +64,8 @@ const RULES = [
     group: 'telegram',
     check: (v) => (isProd && v.length < 16 ? 'use a longer random secret in production' : null),
   },
+  // OpenAI Vision for product-base photo identification (optional in dev).
+  { key: 'OPENAI_API_KEY', required: false },
   // Resend is optional; if any var is present, API key is required.
   { key: 'RESEND_API_KEY', required: false, group: 'resend' },
   {

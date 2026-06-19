@@ -65,7 +65,7 @@ function getProductBaseAttributeStatus(form: DraftFormState): ListingSectionStat
 function getMediaStatus(form: DraftFormState): ListingSectionStatus {
   if (!form.productBase) return 'complete'
   const baseImageUrl = form.productBase.baseImageUrl?.trim() || null
-  const hasListingImages = form.images.length > 0
+  const hasListingImages = form.images.length > 0 || form.pendingListingImages.length > 0
   const hasBaseImage = Boolean(baseImageUrl)
 
   if (form.productBase.imageStrategy === 'LISTING_REQUIRED' && !hasListingImages) return 'error'
@@ -87,7 +87,6 @@ function getCommerceStatus(form: DraftFormState): ListingSectionStatus {
 }
 
 function getVariantStatus(variants: VariantEditorValue[]): ListingSectionStatus {
-  console.log('variants', variants)
   if (variants.length === 0) return 'error'
   const hasErrors = variants.some((variant) => !variant.sku.trim() || variant.price <= 0 || variant.stock < 0)
   if (hasErrors) return 'incomplete'
@@ -106,6 +105,7 @@ export function ListingModalStep2({
   sellerLocation,
   onBack,
   onNext,
+  onPendingImagesChange,
 }: {
   template: TemplateDef
   form: DraftFormState
@@ -118,6 +118,7 @@ export function ListingModalStep2({
   sellerLocation: { latitude: number | null; longitude: number | null } | null
   onBack: () => void
   onNext: () => void
+  onPendingImagesChange: (pendingImages: DraftFormState['pendingListingImages']) => void
 }) {
   const canEditListingLocation = form.listingType === 'product' || form.listingType === 'dittobot'
   const baseImageUrl = form.productBase?.baseImageUrl?.trim() || null
@@ -212,9 +213,11 @@ export function ListingModalStep2({
                 <ListingImagesEditor
                   listingId={form.listingId}
                   images={form.images}
+                  pendingImages={form.pendingListingImages}
                   required={form.productBase?.imageStrategy === 'LISTING_REQUIRED'}
                   disabled={formBusy}
                   onChange={(images) => setForm((current) => ({ ...current, images }))}
+                  onPendingImagesChange={onPendingImagesChange}
                 />
               ) : null}
             </div>

@@ -49,19 +49,21 @@ export function ListingModalReview({
   onSaveDraft: () => void
   onPublish: () => void
 }) {
-  const reviewImage = form.images[0] ?? form.productBase?.baseImageUrl?.trim() ?? ''
+  const reviewImage =
+    form.images[0] ?? form.pendingListingImages[0]?.previewUrl ?? form.productBase?.baseImageUrl?.trim() ?? ''
   const hasReviewImage = Boolean(reviewImage)
+  const hasListingMedia = form.images.length > 0 || form.pendingListingImages.length > 0
   const reviewTitle = form.productBase?.name ?? form.title
   const productBaseAttributes = form.productBase?.attributes ?? []
   const categoryStatus: ListingSectionStatus = form.categoryId ? 'complete' : 'incomplete'
   const mediaStatus: ListingSectionStatus = form.productBase
-    ? form.productBase.imageStrategy === 'LISTING_REQUIRED' && form.images.length === 0
+    ? form.productBase.imageStrategy === 'LISTING_REQUIRED' && !hasListingMedia
       ? 'error'
       : form.productBase.imageStrategy === 'BASE_ONLY' && !reviewImage
         ? 'error'
         : form.productBase.imageStrategy === 'BASE_OR_LISTING' && !reviewImage
-        ? 'incomplete'
-        : 'complete'
+          ? 'incomplete'
+          : 'complete'
     : hasReviewImage
       ? 'complete'
       : 'incomplete'

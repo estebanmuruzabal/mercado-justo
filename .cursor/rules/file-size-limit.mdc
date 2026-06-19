@@ -1,0 +1,16 @@
+---
+description: Enforce maximum file size for maintainability
+alwaysApply: true
+---
+
+# File Size Limit
+
+- **Maximum 600 lines per source file** (`.ts`, `.tsx`, `.js`, `.jsx`).
+- If a file approaches or exceeds 600 lines, split it before adding more code.
+- Prefer extraction by responsibility:
+  - constants and types → dedicated modules
+  - pure helpers → `utils/`
+  - state and side effects → custom hooks (`hooks/`)
+  - UI sections → focused components
+- The entry component should compose smaller pieces; avoid monolithic containers.
+- When refactoring, delete dead code instead of keeping legacy helpers "just in case".

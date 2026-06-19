@@ -11,6 +11,7 @@ import {
   getProductBaseForListingForm,
   listActiveProductBasesForSeller,
 } from '@/domains/marketplace/product-base/application/queries/seller-product-base.queries'
+import { searchProductBases } from '@/domains/marketplace/product-base/application/queries/search-product-bases.queries'
 import {
   publicationTypeFromProductBaseType,
   resolveListingDbTypeFromProductBaseType,
@@ -146,6 +147,15 @@ export async function listActiveProductBasesForSellerAction(input: {
 export async function getProductBaseForListingFormAction(productBaseId: string) {
   await getSellerContext()
   return getProductBaseForListingForm(productBaseId)
+}
+
+export async function searchProductBasesForSellerAction(input: {
+  query: string
+  listingType?: ListingType
+  limit?: number
+}) {
+  await getSellerContext()
+  return searchProductBases(input)
 }
 
 export async function createProductBaseDraftListingAction(input: {

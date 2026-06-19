@@ -7,6 +7,8 @@ import type { VariantEditorValue } from '@/domains/marketplace/listings/presenta
 import type { Dispatch, SetStateAction } from 'react'
 
 import type { ListingManagerRow } from '@/domains/marketplace/listings/application/actions/listing-manager.actions'
+import type { ProductBaseSearchResultDto } from '@/domains/marketplace/product-base/application/dto/product-base-search.dto'
+import type { PendingListingImage } from '@/domains/marketplace/listings/presentation/utils/pending-listing-image'
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Button } from '@/shared/ui/button'
@@ -23,13 +25,10 @@ export function ListingManagerModal({
   form,
   template,
   byId,
-  rootCategories,
-  childrenByParent,
-  categoryOptionsAtLevel,
-  setCategoryAtLevel,
-  deepestSelectedOk,
   listingTypeLabel,
-  onProductBaseChange,
+  onProductBaseSelect,
+  onIdentificationImageCaptured,
+  onPendingImagesChange,
   formBusy,
   formError,
   handleStep1Next,
@@ -53,13 +52,10 @@ export function ListingManagerModal({
   form: DraftFormState
   template: TemplateDef
   byId: Map<string, { name?: string | null }>
-  rootCategories: Array<{ id: string }>
-  childrenByParent: Map<string, Array<{ id: string }>>
-  categoryOptionsAtLevel: (level: number) => Array<{ id: string; name: string }>
-  setCategoryAtLevel: (level: number, categoryId: string) => void
-  deepestSelectedOk: boolean
   listingTypeLabel: (listingType: DraftFormState['listingType']) => string
-  onProductBaseChange: (productBase: { id: string; name: string }) => void
+  onProductBaseSelect: (result: ProductBaseSearchResultDto) => void
+  onIdentificationImageCaptured: (file: File) => void | Promise<void>
+  onPendingImagesChange: (pendingImages: PendingListingImage[]) => void
   formBusy: boolean
   formError: string | null
   handleStep1Next: () => Promise<void> | void
@@ -79,10 +75,10 @@ export function ListingManagerModal({
   return (
     <>
       <Dialog open={modalOpen} onOpenChange={(open) => setModalOpen(open)}>
-        <DialogContent className='max-w-2xl max-h-[90vh] overflow-hidden'>
+        <DialogContent className='max-w-md sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col'>
           <DialogHeader>
             <DialogTitle>
-              {form.listingId ? 'Edit Listing' : 'Create Listing'} — Step {step}/3
+              {form.listingId ? 'Editar publicación' : 'Publicar'} — Paso {step}/3
             </DialogTitle>
           </DialogHeader>
 
@@ -91,14 +87,9 @@ export function ListingManagerModal({
               form={form}
               formError={formError}
               formBusy={formBusy}
-              deepestSelectedOk={deepestSelectedOk}
-              byId={byId}
-              childrenByParent={childrenByParent}
-              rootCategories={rootCategories}
-              categoryOptionsAtLevel={categoryOptionsAtLevel}
-              setCategoryAtLevel={setCategoryAtLevel}
               listingTypeLabel={(lt) => listingTypeLabel(lt)}
-              onProductBaseChange={onProductBaseChange}
+              onProductBaseSelect={onProductBaseSelect}
+              onIdentificationImageCaptured={onIdentificationImageCaptured}
               onContinue={() => void handleStep1Next()}
             />
           ) : step === 2 ? (
@@ -114,6 +105,7 @@ export function ListingManagerModal({
               formError={formError}
               onBack={() => setStep(1)}
               onNext={() => void handleStep2Next()}
+              onPendingImagesChange={onPendingImagesChange}
             />
           ) : (
             <ListingModalReview

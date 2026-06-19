@@ -55,6 +55,7 @@ Mercado Justo migra a Ditto. Toda contribución DEBE respetar arquitectura por d
 - NO duplicar tipos (ListingType, Role, Store) — buscar en `domain/` existente
 - NO hardcodear URLs — usar `shared/routing/routes.ts`
 - NO modificar DB sin migration en `supabase/migrations/`
+- NO superar **600 líneas por archivo** — dividir en `utils/`, `hooks/`, componentes o constantes antes de seguir creciendo
 
 ### Marketplace Discovery — Discovery Boundary
 
