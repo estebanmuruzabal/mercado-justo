@@ -5,6 +5,7 @@ import { Toaster } from "@/shared/ui/sonner";
 import { CartStoreProvider } from "@/domains/marketplace/checkout/presentation/stores/cart-store/CartStoreProvider";
 import { NotificationRealtimeProvider } from "@/domains/community/notifications/presentation/components/notifications/notification-realtime-provider";
 import { AuthSessionProvider } from "@/domains/auth/presentation/providers/auth-session-provider";
+import { LastSeenTracker } from "@/domains/users/presentation/presence/LastSeenTracker";
 import { LocationProvider } from "@/shared/maps/location/presentation/location-provider";
 import "./globals.css";
 import Header from "@/shared/shell/layout/header/header";
@@ -43,6 +44,7 @@ export default async function RootLayout({
         <CartStoreProvider>
           <NotificationRealtimeProvider>
             <AuthSessionProvider>
+            <LastSeenTracker />
             <LocationProvider>
               <Header />
               <div className="flex flex-1 flex-col">{children}</div>

@@ -26,6 +26,8 @@ import {
 } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/utils/utils'
+import type { UserLocationSettingsDto } from '@/domains/users/application/dto/user-location.dto'
+import type { UserMessagingSettingsDto } from '@/domains/users/application/dto/user-messaging.dto'
 import type { Role } from '@/domains/users/domain/roles'
 import type { Store as StoreModel } from '@/domains/vendors/domain/store'
 
@@ -74,10 +76,14 @@ function TabNavButton({
 export function ProfilePageClient({
   userEmail,
   initialStore,
+  initialLocationSettings,
+  initialMessagingSettings,
 }: {
   userEmail: string
   initialStore: StoreModel | null
   initialRole: Role | null
+  initialLocationSettings: UserLocationSettingsDto
+  initialMessagingSettings: UserMessagingSettingsDto
 }) {
   const router = useRouter()
   const [tab, setTab] = useState<TabId>('personal')
@@ -192,6 +198,8 @@ export function ProfilePageClient({
                   user={{ email: userEmail }}
                   store={store}
                   onStoreCreated={setStore}
+                  initialLocationSettings={initialLocationSettings}
+                  initialMessagingSettings={initialMessagingSettings}
                 />
               </CardContent>
             </Card>

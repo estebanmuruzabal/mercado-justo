@@ -6,6 +6,8 @@ import { Security } from './tabs/security'
 import { SellerSettings } from './tabs/seller-settings'
 import { ListingManager } from '@/domains/marketplace/listings/presentation/components/ListingManager'
 import { DittoBots } from './tabs/ditto-bots'
+import type { UserLocationSettingsDto } from '@/domains/users/application/dto/user-location.dto'
+import type { UserMessagingSettingsDto } from '@/domains/users/application/dto/user-messaging.dto'
 import type { Store } from '@/domains/vendors/domain/store'
 import { PurchasesTab } from './tabs/purchases'
 import { SalesTab } from './tabs/sales'
@@ -17,15 +19,25 @@ export function ProfileContent({
   user,
   store,
   onStoreCreated,
+  initialLocationSettings,
+  initialMessagingSettings,
 }: {
   tab: TabId
   user: { email?: string }
   store: Store | null
   onStoreCreated: (store: Store) => void
+  initialLocationSettings: UserLocationSettingsDto
+  initialMessagingSettings: UserMessagingSettingsDto
 }) {
   switch (tab) {
     case 'personal':
-      return <PersonalData user={user} />
+      return (
+        <PersonalData
+          user={user}
+          initialLocationSettings={initialLocationSettings}
+          initialMessagingSettings={initialMessagingSettings}
+        />
+      )
 
     case 'security':
       return <Security />

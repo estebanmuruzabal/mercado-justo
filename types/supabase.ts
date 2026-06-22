@@ -220,6 +220,85 @@ export type Database = {
           },
         ]
       }
+      conversation: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conversation_direct_pair: {
+        Row: {
+          conversation_id: string
+          user_high: string
+          user_low: string
+        }
+        Insert: {
+          conversation_id: string
+          user_high: string
+          user_low: string
+        }
+        Update: {
+          conversation_id?: string
+          user_high?: string
+          user_low?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_direct_pair_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: true
+            referencedRelation: "conversation"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_participant: {
+        Row: {
+          conversation_id: string
+          joined_at: string
+          last_read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participant_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversation"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_batch: {
         Row: {
           code: string
@@ -925,6 +1004,38 @@ export type Database = {
             columns: ["seller_id"]
             isOneToOne: false
             referencedRelation: "store"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversation"
             referencedColumns: ["id"]
           },
         ]
@@ -2191,15 +2302,22 @@ export type Database = {
       }
       user: {
         Row: {
+          allow_direct_messages: boolean
           avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
           last_access_at: string | null
+          last_seen_at: string | null
+          location_city: string | null
           location_lat: number | null
           location_lng: number | null
+          location_precision: string
+          location_province: string | null
+          location_radius_meters: number | null
           location_region: string | null
+          location_visibility: boolean
           role: string
           status: string
           suspended_at: string | null
@@ -2208,15 +2326,22 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          allow_direct_messages?: boolean
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
           last_access_at?: string | null
+          last_seen_at?: string | null
+          location_city?: string | null
           location_lat?: number | null
           location_lng?: number | null
+          location_precision?: string
+          location_province?: string | null
+          location_radius_meters?: number | null
           location_region?: string | null
+          location_visibility?: boolean
           role?: string
           status?: string
           suspended_at?: string | null
@@ -2225,15 +2350,22 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          allow_direct_messages?: boolean
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           last_access_at?: string | null
+          last_seen_at?: string | null
+          location_city?: string | null
           location_lat?: number | null
           location_lng?: number | null
+          location_precision?: string
+          location_province?: string | null
+          location_radius_meters?: number | null
           location_region?: string | null
+          location_visibility?: boolean
           role?: string
           status?: string
           suspended_at?: string | null
@@ -2526,6 +2658,10 @@ export type Database = {
         Args: { p_category_id: string }
         Returns: string
       }
+      format_user_location_label: {
+        Args: { p_city: string; p_province: string; p_visibility: boolean }
+        Returns: string
+      }
       fulfillment_delivery_method_from_code: {
         Args: { p_method_code: string }
         Returns: string
@@ -2534,10 +2670,27 @@ export type Database = {
         Args: { p_delivery_method: string }
         Returns: string
       }
+      get_or_create_direct_conversation: {
+        Args: { p_other_user_id: string }
+        Returns: string
+      }
       has_active_ditto_bot: { Args: { p_user_id?: string }; Returns: boolean }
       has_role: { Args: { target_role: string }; Returns: boolean }
+      is_conversation_participant: {
+        Args: { p_conversation_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_staff: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      search_messageable_users: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          location_label: string
+        }[]
+      }
       seed_upsert_category: {
         Args: {
           p_id: string
@@ -2550,6 +2703,8 @@ export type Database = {
         Returns: undefined
       }
       slugify: { Args: { value: string }; Returns: string }
+      touch_user_last_seen: { Args: never; Returns: undefined }
+      truncate_message_preview: { Args: { p_body: string }; Returns: string }
     }
     Enums: {
       listing_status: "draft" | "published"

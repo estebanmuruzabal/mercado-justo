@@ -7,6 +7,7 @@ import {
   Bot,
   BookOpen,
   HelpCircle,
+  MessageSquare,
   Settings,
   User,
   Package,
@@ -22,6 +23,7 @@ import {
   BECOME_VENDOR_PATH,
   PROFILE_DITTOBOTS_PATH,
   PROFILE_PATH,
+  MESSAGES_PATH,
   RECETAS_PATH,
   VENDOR_LISTINGS_PATH,
   VENDOR_SALES_PATH,
@@ -154,6 +156,11 @@ export function UserMenu({
       return
     }
 
+    if (actionKey === 'mensajes') {
+      router.push(MESSAGES_PATH)
+      return
+    }
+
     if (actionKey === 'anfitrion') {
       router.push(BECOME_VENDOR_PATH)
       return
@@ -175,7 +182,7 @@ export function UserMenu({
     }
 
     // Fallbacks for actions not yet wired in this app:
-    if (actionKey === 'favoritos' || actionKey === 'viajes' || actionKey === 'mensajes' || actionKey === 'notificaciones' || actionKey === 'idiomas' || actionKey === 'ayuda') {
+    if (actionKey === 'favoritos' || actionKey === 'viajes' || actionKey === 'notificaciones' || actionKey === 'idiomas' || actionKey === 'ayuda') {
       router.push(HOME_PATH)
       return
     }
@@ -189,6 +196,7 @@ export function UserMenu({
     if (itemId === 'recetas') return pathname.startsWith(RECETAS_PATH)
 
     if (itemId === 'perfil' || itemId === 'configuracion') return pathname === PROFILE_PATH
+    if (itemId === 'mensajes') return pathname.startsWith(MESSAGES_PATH)
     if (itemId === 'anfitrion') return pathname === BECOME_VENDOR_PATH
 
     if (itemId === 'vendor_listings') return pathname.startsWith(VENDOR_LISTINGS_PATH)
@@ -216,6 +224,7 @@ export function UserMenu({
 
   const authenticatedItems: Array<{ id: string; label: string; icon: LucideIcon } | { divider: true }> = [
     { id: 'perfil', label: 'Perfil', icon: User },
+    { id: 'mensajes', label: 'Mensajes', icon: MessageSquare },
     { id: 'dittobots', label: 'Mis DittoBots', icon: Bot },
     ...growerItems,
     { divider: true },

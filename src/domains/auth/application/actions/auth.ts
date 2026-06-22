@@ -102,9 +102,13 @@ export async function signIn(data: SignInData): Promise<AuthActionResult> {
 
     revalidateAuthSurfaces()
 
+    const userId = signInData.user?.id
+    if (userId) {
+      await supabase.schema('public').rpc('touch_user_last_seen')
+    }
+
     // Platform staff land in the admin panel by default, unless they were
     // following an explicit internal deep link elsewhere.
-    const userId = signInData.user?.id
     if (userId && (!data.callbackUrl || requestedRedirect === '/')) {
       const role = await getUserRoleByUserId(userId)
       if (isStaff(role)) {

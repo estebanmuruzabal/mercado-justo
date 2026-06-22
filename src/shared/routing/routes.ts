@@ -40,6 +40,11 @@ export const PROFILE_SELLER_PATH = '/profile/seller' as const
 export const PROFILE_SALES_PATH = '/profile/sales' as const
 export const PROFILE_NOTIFICATIONS_PATH = '/profile/notifications' as const
 export const PROFILE_DITTOBOTS_PATH = '/profile/dittobots' as const
+export const MESSAGES_PATH = '/messages' as const
+
+export function messageConversationPath(conversationId: string) {
+  return `${MESSAGES_PATH}/${conversationId}` as const
+}
 
 // ——— Grower / Protocolos ———
 export const RECETAS_PATH = '/recetas' as const

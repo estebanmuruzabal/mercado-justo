@@ -1,4 +1,5 @@
 // components/profile/profile-content.tsx
+import type { UserLocationSettingsDto } from '@/domains/users/application/dto/user-location.dto'
 import { PersonalData } from './tabs/personal-data'
 import { Security } from './tabs/security'
 import { SellerSettings } from './tabs/seller-settings'
@@ -7,6 +8,15 @@ import { DittoBots } from './tabs/ditto-bots'
 
 type TabId = 'personal' | 'security' | 'seller' | 'products' | 'ditto'
 type ProfileUser = { email?: string }
+
+const EMPTY_LOCATION_SETTINGS: UserLocationSettingsDto = {
+  latitude: null,
+  longitude: null,
+  locationVisibility: false,
+  locationPrivacy: { mode: 'city' },
+  city: null,
+  province: null,
+}
 
 export function ProfileContent({
   tab,
@@ -20,7 +30,7 @@ export function ProfileContent({
 }) {
   switch (tab) {
     case 'personal':
-      return <PersonalData user={user} />
+      return <PersonalData user={user} initialLocationSettings={EMPTY_LOCATION_SETTINGS} />
 
     case 'security':
       return <Security />
