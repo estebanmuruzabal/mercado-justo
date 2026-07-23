@@ -169,11 +169,11 @@ export function CategoriesAdminPanel({
     return 0
   }, [listingTypeCounts, listingTypeFilter, treeSources.length])
 
-  function syncFromServer() {
+  const syncFromServer = useCallback(() => {
     router.refresh()
-  }
+  }, [router])
 
-  function openCreate(preset?: Partial<CategoryFormState>) {
+  const openCreate = useCallback((preset?: Partial<CategoryFormState>) => {
     setForm({
       ...EMPTY_FORM,
       listingType: isAdminListingTypeFilter(listingTypeFilter)
@@ -185,9 +185,9 @@ export function CategoriesAdminPanel({
     setDeleteError(null)
     setEditId(null)
     setCreateOpen(true)
-  }
+  }, [listingTypeFilter])
 
-  function openEdit(category: CategoryTreeSource) {
+  const openEdit = useCallback((category: CategoryTreeSource) => {
     setForm({
       name: category.name,
       parentId: category.parentId ?? '',
@@ -198,16 +198,16 @@ export function CategoriesAdminPanel({
     setDeleteError(null)
     setEditId(category.id)
     setCreateOpen(true)
-  }
+  }, [])
 
-  function openCreateChild(parent: CategoryTreeSource) {
+  const openCreateChild = useCallback((parent: CategoryTreeSource) => {
     openCreate({
       parentId: parent.id,
       listingType: parent.listingType as CategoryFormState['listingType'],
     })
-  }
+  }, [openCreate])
 
-  function openCreateProductBase(category: CategoryTreeSource) {
+  const openCreateProductBase = useCallback((category: CategoryTreeSource) => {
     const placement = productBasePlacementForCategory(categories, category.id)
     setEditingProductBase(null)
     setProductBaseCreatePreset({
@@ -216,7 +216,7 @@ export function CategoriesAdminPanel({
     })
     setProductBaseError(null)
     setProductBaseDialogOpen(true)
-  }
+  }, [categories])
 
   function closeProductBaseDialog() {
     setProductBaseDialogOpen(false)
@@ -296,7 +296,7 @@ export function CategoriesAdminPanel({
     } finally {
       setTogglingVisibilityId(null)
     }
-  }, [])
+  }, [syncFromServer])
 
   const handleReparent = useCallback(
     async (categoryId: string, newParentId: string | null) => {
@@ -337,7 +337,7 @@ export function CategoriesAdminPanel({
         setReparenting(false)
       }
     },
-    [categories, treeSources],
+    [categories, treeSources, syncFromServer],
   )
 
   async function confirmDelete() {
@@ -406,7 +406,7 @@ export function CategoriesAdminPanel({
     }
 
     syncFromServer()
-  }, [])
+  }, [syncFromServer])
 
   const handleProductBaseStatus = useCallback(
     async (productBaseId: string, status: ProductBaseSummaryDto['status']) => {
@@ -423,7 +423,7 @@ export function CategoriesAdminPanel({
 
       syncFromServer()
     },
-    [],
+    [syncFromServer],
   )
 
   const handleDeleteProductBase = useCallback(async (productBaseId: string) => {
@@ -439,7 +439,7 @@ export function CategoriesAdminPanel({
     }
 
     syncFromServer()
-  }, [])
+  }, [syncFromServer])
 
   const productBaseHandlers = useMemo(
     () => ({
@@ -462,7 +462,7 @@ export function CategoriesAdminPanel({
       onDelete: handleDeleteRequest,
       onReparent: handleReparent,
     }),
-    [handleDeleteRequest, handleReparent, handleToggleVisibility],
+    [handleDeleteRequest, handleReparent, handleToggleVisibility, openCreateChild, openCreateProductBase, openEdit],
   )
 
   return (

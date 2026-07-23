@@ -252,10 +252,11 @@ export function ProductBaseFormDialog({
           ? form.categoryPath[form.categoryPath.length - 1]
           : form.subcategoryId || null,
       baseImageUrl: form.baseImageUrl || null,
-      attributes: form.attributes.map(({ clientKey: _clientKey, ...attr }, index) => ({
-        ...attr,
-        sortOrder: index,
-      })),
+      attributes: form.attributes.map((attr, index) => {
+        const { clientKey, ...rest } = attr
+        void clientKey
+        return { ...rest, sortOrder: index }
+      }),
     }
 
     const result = initial

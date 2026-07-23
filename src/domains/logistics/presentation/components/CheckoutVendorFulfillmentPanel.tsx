@@ -18,8 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { PillOptions } from '@/shared/ui/pill-options'
 import { cn } from '@/shared/utils/utils'
 
-const FULFILLMENT_PILL_OPTIONS = ['Envío', 'Retiro', 'Coordinar'] as const
-type FulfillmentPillOption = (typeof FULFILLMENT_PILL_OPTIONS)[number]
+type FulfillmentPillOption = 'Envío' | 'Retiro' | 'Coordinar'
 
 function methodKind(code: FulfillmentMethodCode): 'pickup' | 'delivery' {
   return code.startsWith('pickup_') ? 'pickup' : 'delivery'

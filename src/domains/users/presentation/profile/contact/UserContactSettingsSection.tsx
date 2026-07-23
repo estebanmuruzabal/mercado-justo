@@ -16,7 +16,6 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Switch } from '@/shared/ui/switch'
-import { cn } from '@/shared/utils/utils'
 
 import type { SaveStatus } from '../messaging/MessagingSettingsCard'
 

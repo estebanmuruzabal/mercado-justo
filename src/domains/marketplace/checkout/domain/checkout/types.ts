@@ -1,6 +1,6 @@
 import type { FulfillmentMethodCode } from '@/domains/logistics/domain/types'
 import type { CheckoutVendorFulfillmentSelectionDto } from '@/domains/logistics/application/dto/checkout-fulfillment.dto'
-import type { LocationMode, LocationSelection } from '@/shared/maps/location/location-types'
+import type { LocationMode } from '@/shared/maps/location/location-types'
 
 /** Alias: homepage/header receive mode (`useLocationStore.mode`). */
 export type DeliveryMethod = LocationMode

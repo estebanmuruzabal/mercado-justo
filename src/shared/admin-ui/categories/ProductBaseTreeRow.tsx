@@ -35,7 +35,7 @@ export function ProductBaseTreeRow({
   isLoading = false,
 }: ProductBaseTreeRowProps) {
   return (
-    <div role='treeitem'>
+    <div role='treeitem' aria-selected={false}>
       <button
         type='button'
         style={{ paddingLeft: `${depth * INDENT_PX + 8}px` }}

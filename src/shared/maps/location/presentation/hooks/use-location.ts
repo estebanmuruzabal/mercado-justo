@@ -36,6 +36,7 @@ export function useLocation() {
 
   // Mismatch: si el usuario editó el address manualmente, lo vemos comparando contra el último reverse geocode.
   const isAddressMismatch = useMemo(() => {
+    void reverseAddressVersion
     const drafted = normalizeAddress(draft.address)
     const reversed = normalizeAddress(reverseAddressRef.current)
     if (!reversed) return false

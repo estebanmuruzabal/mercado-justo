@@ -3,7 +3,6 @@
 import Link from 'next/link'
 
 import type { ConversationListItemDto } from '@/domains/community/chat/application/dto/conversation.dto'
-import { messageConversationPath } from '@/shared/routing/routes'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { cn } from '@/shared/utils/utils'
 

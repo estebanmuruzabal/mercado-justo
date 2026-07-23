@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import {
   formatCartSectionSummary,
@@ -16,7 +16,7 @@ import {
   isDeliverySectionValid,
   isPaymentSectionValid,
 } from '@/domains/marketplace/checkout/domain/checkout/validation'
-import type { CheckoutSectionId, CheckoutSectionVisualState } from '@/domains/marketplace/checkout/domain/checkout/types'
+import type { CheckoutSectionId } from '@/domains/marketplace/checkout/domain/checkout/types'
 import type { CheckoutVendorFulfillmentDto } from '@/domains/logistics/application/dto/checkout-fulfillment.dto'
 import { useCheckoutStore } from '@/domains/marketplace/checkout/presentation/stores/checkout.store'
 import { useLocationStore } from '@/shared/maps/location/presentation/stores/location.store'
@@ -49,12 +49,15 @@ export function useCheckoutFlow({
   const setSectionErrors = useCheckoutStore((s) => s.setSectionErrors)
   const setInitialized = useCheckoutStore((s) => s.setInitialized)
 
-  const deliveryInput = {
-    vendorIds: storeIds,
-    selections: vendorFulfillment,
-    deliveryAddress: locationAddress,
-    vendors,
-  }
+  const deliveryInput = useMemo(
+    () => ({
+      vendorIds: storeIds,
+      selections: vendorFulfillment,
+      deliveryAddress: locationAddress,
+      vendors,
+    }),
+    [storeIds, vendorFulfillment, locationAddress, vendors],
+  )
 
   const cartValid = isCartSectionValid({ itemCount, storeIds }).length === 0
   const deliveryValid = isDeliverySectionValid(deliveryInput).length === 0

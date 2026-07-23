@@ -1,4 +1,3 @@
-import type { ListingType } from '@/domains/marketplace/listings/domain/listing'
 import type { AdminCategoryRow } from '@/domains/marketplace/categories/application/queries/admin-categories.queries'
 import type { ProductBaseSummaryDto } from '@/domains/marketplace/product-base/application/dto/product-base.dto'
 import type {

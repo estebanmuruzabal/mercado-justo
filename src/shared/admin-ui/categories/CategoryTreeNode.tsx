@@ -108,7 +108,7 @@ export function CategoryTreeNode({
     : undefined
 
   return (
-    <div role='treeitem' aria-expanded={isExpandable ? isExpanded : undefined}>
+    <div role='treeitem' aria-selected={false} aria-expanded={isExpandable ? isExpanded : undefined}>
       <div
         ref={(element) => {
           setDragRef(element)

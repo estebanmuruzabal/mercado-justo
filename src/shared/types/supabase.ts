@@ -2720,15 +2720,15 @@ export type Database = {
       create_product_base_with_attributes: {
         Args: {
           p_attributes: Json
-          p_base_image_url: string
+          p_base_image_url: string | null
           p_category_id: string
-          p_description: string
+          p_description: string | null
           p_image_strategy: string
           p_name: string
           p_product_base_id: string
           p_slug: string
           p_status: string
-          p_subcategory_id: string
+          p_subcategory_id: string | null
           p_type: string
         }
         Returns: undefined

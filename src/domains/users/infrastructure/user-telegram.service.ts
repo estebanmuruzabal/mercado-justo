@@ -78,11 +78,13 @@ export async function createUserTelegramConnectLink(
 ): Promise<UserTelegramConnectLink> {
   const supabase = await createClient()
 
-  const { data: existing, error: readError } = await supabase
+  const { data, error: readError } = await supabase
     .from('user_telegram')
     .select('chat_id')
     .eq('user_id', userId)
     .maybeSingle()
+
+  const existing = data as Pick<UserTelegramRow, 'chat_id'> | null
 
   if (readError) throw readError
   if (existing?.chat_id) {

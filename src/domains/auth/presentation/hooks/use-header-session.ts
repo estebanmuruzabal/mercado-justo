@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 import { createClient } from '@/shared/database/supabase/client'
 import { AUTH_SESSION_SYNC_EVENT } from '@/domains/auth/domain/auth/session-sync'
-import { isSuperAdmin, type Role } from '@/domains/users/domain/roles'
+import { isRole, isSuperAdmin, type Role } from '@/domains/users/domain/roles'
 
 export type HeaderSession = {
   isAuthenticated: boolean
@@ -44,16 +44,25 @@ export function useHeaderSession(): HeaderSession {
 
       setIsAuthenticated(true)
 
-      const [{ data: storeRow, error: storeError }, { data: userRow, error: userError }] =
-        await Promise.all([
-          supabase.from('store').select('id').eq('id', user.id).maybeSingle(),
-          supabase.from('user').select('role').eq('id', user.id).maybeSingle(),
-        ])
+      const [storeResult, userRoleResult] = await Promise.all([
+        supabase.from('store').select('id').eq('id', user.id).maybeSingle(),
+        supabase
+          .from('user' as never)
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle(),
+      ])
+
+      const { data: storeRow, error: storeError } = storeResult
+      const { data: userRow, error: userError } = userRoleResult as {
+        data: { role: string } | null
+        error: { message: string } | null
+      }
+      const role: Role | null =
+        userRow?.role && isRole(userRow.role) ? userRow.role : null
 
       setIsSeller(Boolean(storeRow) && !storeError)
-      setIsSuperAdminUser(
-        !userError && isSuperAdmin((userRow?.role as Role | undefined) ?? null),
-      )
+      setIsSuperAdminUser(!userError && isSuperAdmin(role))
     } catch {
       setIsAuthenticated(false)
       setIsSeller(false)

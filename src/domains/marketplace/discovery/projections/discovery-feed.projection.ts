@@ -161,9 +161,9 @@ export async function buildDiscoveryFeed(
     fetchCategoryNames(categoryIds),
   ])
 
-  // const commercialSnapshots = await overlayDittoBotInventoryStock(rows, )
+  const commercialSnapshots = await overlayDittoBotInventoryStock(rows, commercialSnapshotsRaw)
 
-  const variantsByListingId = buildVariantsByListingId(rows, commercialSnapshotsRaw)
+  const variantsByListingId = buildVariantsByListingId(rows, commercialSnapshots)
   logDiscoveryFeed.debug('discovery feed projection built', {
     publicationCount: rows.length,
     listingCount: variantsByListingId.size,

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Minus, Plus, ShoppingCart } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -160,10 +161,13 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
                           {items.map((item) => (
                             <div key={item.id} className='rounded-2xl border bg-background p-3'>
                               <div className='flex gap-3'>
-                                <img
+                                <Image
                                   src={item.image}
                                   alt={item.title}
+                                  width={56}
+                                  height={56}
                                   className='h-14 w-14 rounded-xl object-cover'
+                                  unoptimized
                                 />
 
                                 <div className='min-w-0 flex-1'>
