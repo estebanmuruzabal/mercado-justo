@@ -6,6 +6,7 @@ import { Security } from './tabs/security'
 import { SellerSettings } from './tabs/seller-settings'
 import { ListingManager } from '@/domains/marketplace/listings/presentation/components/ListingManager'
 import { DittoBots } from './tabs/ditto-bots'
+import type { UserContactSettingsDto } from '@/domains/users/application/dto/user-contact.dto'
 import type { UserLocationSettingsDto } from '@/domains/users/application/dto/user-location.dto'
 import type { UserMessagingSettingsDto } from '@/domains/users/application/dto/user-messaging.dto'
 import type { Store } from '@/domains/vendors/domain/store'
@@ -21,6 +22,7 @@ export function ProfileContent({
   onStoreCreated,
   initialLocationSettings,
   initialMessagingSettings,
+  initialContactSettings,
 }: {
   tab: TabId
   user: { email?: string }
@@ -28,6 +30,7 @@ export function ProfileContent({
   onStoreCreated: (store: Store) => void
   initialLocationSettings: UserLocationSettingsDto
   initialMessagingSettings: UserMessagingSettingsDto
+  initialContactSettings: UserContactSettingsDto
 }) {
   switch (tab) {
     case 'personal':
@@ -36,6 +39,7 @@ export function ProfileContent({
           user={user}
           initialLocationSettings={initialLocationSettings}
           initialMessagingSettings={initialMessagingSettings}
+          initialContactSettings={initialContactSettings}
         />
       )
 

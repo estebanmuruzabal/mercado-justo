@@ -2303,6 +2303,10 @@ export type Database = {
       user: {
         Row: {
           allow_direct_messages: boolean
+          allow_email_contact: boolean
+          allow_phone_calls: boolean
+          allow_telegram_messages: boolean
+          allow_whatsapp_messages: boolean
           avatar_url: string | null
           created_at: string
           email: string | null
@@ -2318,15 +2322,23 @@ export type Database = {
           location_radius_meters: number | null
           location_region: string | null
           location_visibility: boolean
+          phone_number: string | null
+          preferred_contact_hours: string | null
           role: string
           status: string
           suspended_at: string | null
           suspension_reason: string | null
+          telegram_username: string | null
           updated_at: string
           username: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           allow_direct_messages?: boolean
+          allow_email_contact?: boolean
+          allow_phone_calls?: boolean
+          allow_telegram_messages?: boolean
+          allow_whatsapp_messages?: boolean
           avatar_url?: string | null
           created_at?: string
           email?: string | null
@@ -2342,15 +2354,23 @@ export type Database = {
           location_radius_meters?: number | null
           location_region?: string | null
           location_visibility?: boolean
+          phone_number?: string | null
+          preferred_contact_hours?: string | null
           role?: string
           status?: string
           suspended_at?: string | null
           suspension_reason?: string | null
+          telegram_username?: string | null
           updated_at?: string
           username?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           allow_direct_messages?: boolean
+          allow_email_contact?: boolean
+          allow_phone_calls?: boolean
+          allow_telegram_messages?: boolean
+          allow_whatsapp_messages?: boolean
           avatar_url?: string | null
           created_at?: string
           email?: string | null
@@ -2366,14 +2386,69 @@ export type Database = {
           location_radius_meters?: number | null
           location_region?: string | null
           location_visibility?: boolean
+          phone_number?: string | null
+          preferred_contact_hours?: string | null
           role?: string
           status?: string
           suspended_at?: string | null
           suspension_reason?: string | null
+          telegram_username?: string | null
           updated_at?: string
           username?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
+      }
+      user_telegram: {
+        Row: {
+          chat_id: string | null
+          connected_at: string | null
+          created_at: string
+          link_token: string | null
+          link_token_expires_at: string | null
+          telegram_user_id: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          chat_id?: string | null
+          connected_at?: string | null
+          created_at?: string
+          link_token?: string | null
+          link_token_expires_at?: string | null
+          telegram_user_id?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          chat_id?: string | null
+          connected_at?: string | null
+          created_at?: string
+          link_token?: string | null
+          link_token_expires_at?: string | null
+          telegram_user_id?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_telegram_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_telegram_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_contact_profile"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       vendor_follower: {
         Row: {
@@ -2608,6 +2683,25 @@ export type Database = {
           payment_status?: string | null
           status?: string | null
           transaction_id?: string | null
+        }
+        Relationships: []
+      }
+      user_contact_profile: {
+        Row: {
+          allow_email_contact: boolean | null
+          allow_phone_calls: boolean | null
+          allow_telegram_messages: boolean | null
+          allow_whatsapp_messages: boolean | null
+          email: string | null
+          phone_number: string | null
+          preferred_contact_hours: string | null
+          telegram_chat_id: string | null
+          telegram_connected: boolean | null
+          telegram_connected_at: string | null
+          telegram_user_id: string | null
+          telegram_username: string | null
+          user_id: string | null
+          whatsapp_number: string | null
         }
         Relationships: []
       }

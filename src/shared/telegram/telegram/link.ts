@@ -1,18 +1,12 @@
 import { randomBytes } from 'node:crypto'
 
-import { getTelegramBotUsername, TELEGRAM_START_PAYLOAD_PREFIX } from './config'
+import { getTelegramBotUsername } from './config'
+import {
+  TELEGRAM_LINK_TOKEN_TTL_MS,
+  TELEGRAM_START_PAYLOAD_PREFIX,
+} from './constants'
 
-/**
- * Deep-link + connect-token helpers.
- *
- * The connection flow uses a one-time, short-lived token instead of the raw
- * store id so a malicious actor cannot link their Telegram to someone else's
- * store by guessing ids. The Telegram `start` payload is limited to 64 chars
- * matching `[A-Za-z0-9_-]`, which our `vendor_<hex>` payload respects.
- */
-
-/** Lifetime of a connect token before it must be regenerated. */
-export const TELEGRAM_LINK_TOKEN_TTL_MS = 15 * 60 * 1000 // 15 minutes
+export { TELEGRAM_LINK_TOKEN_TTL_MS } from './constants'
 
 /** Generate a cryptographically-random connect token (url-safe). */
 export function generateLinkToken(): string {

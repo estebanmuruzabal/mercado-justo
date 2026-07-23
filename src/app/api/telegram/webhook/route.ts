@@ -19,6 +19,14 @@ export const dynamic = 'force-dynamic'
 const SECRET_HEADER = 'x-telegram-bot-api-secret-token'
 
 export async function POST(request: Request) {
+  // TEMP diagnostic: confirm whether Telegram (or anything) hits this route at all.
+  console.info('[telegram-webhook-route] POST received', {
+    at: new Date().toISOString(),
+    url: request.url,
+    method: request.method,
+    hasSecretHeader: Boolean(request.headers.get(SECRET_HEADER)),
+  })
+
   if (!isTelegramConfigured()) {
     return NextResponse.json({ ok: false, error: 'telegram_not_configured' }, { status: 503 })
   }

@@ -1,8 +1,10 @@
 'use client'
 
+import type { UserContactSettingsDto } from '@/domains/users/application/dto/user-contact.dto'
 import type { UserMessagingSettingsDto } from '@/domains/users/application/dto/user-messaging.dto'
 import type { UserLocationSettingsDto } from '@/domains/users/application/dto/user-location.dto'
 
+import { UserContactSettingsSection } from '../contact/UserContactSettingsSection'
 import { LocationSettingsCard } from '../location/LocationSettingsCard'
 import { MessagingSettingsCard } from '../messaging/MessagingSettingsCard'
 
@@ -12,10 +14,12 @@ export function PersonalData({
   user,
   initialLocationSettings,
   initialMessagingSettings,
+  initialContactSettings,
 }: {
   user: ProfileUser
   initialLocationSettings: UserLocationSettingsDto
   initialMessagingSettings: UserMessagingSettingsDto
+  initialContactSettings: UserContactSettingsDto
 }) {
   return (
     <div className='space-y-8'>
@@ -31,6 +35,7 @@ export function PersonalData({
         </div>
       </div>
 
+      <UserContactSettingsSection initialSettings={initialContactSettings} />
       <LocationSettingsCard initialSettings={initialLocationSettings} />
       <MessagingSettingsCard initialSettings={initialMessagingSettings} />
     </div>

@@ -26,6 +26,7 @@ import {
 } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/utils/utils'
+import type { UserContactSettingsDto } from '@/domains/users/application/dto/user-contact.dto'
 import type { UserLocationSettingsDto } from '@/domains/users/application/dto/user-location.dto'
 import type { UserMessagingSettingsDto } from '@/domains/users/application/dto/user-messaging.dto'
 import type { Role } from '@/domains/users/domain/roles'
@@ -78,12 +79,14 @@ export function ProfilePageClient({
   initialStore,
   initialLocationSettings,
   initialMessagingSettings,
+  initialContactSettings,
 }: {
   userEmail: string
   initialStore: StoreModel | null
   initialRole: Role | null
   initialLocationSettings: UserLocationSettingsDto
   initialMessagingSettings: UserMessagingSettingsDto
+  initialContactSettings: UserContactSettingsDto
 }) {
   const router = useRouter()
   const [tab, setTab] = useState<TabId>('personal')
@@ -200,6 +203,7 @@ export function ProfilePageClient({
                   onStoreCreated={setStore}
                   initialLocationSettings={initialLocationSettings}
                   initialMessagingSettings={initialMessagingSettings}
+                  initialContactSettings={initialContactSettings}
                 />
               </CardContent>
             </Card>
