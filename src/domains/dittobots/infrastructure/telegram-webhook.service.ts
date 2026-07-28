@@ -48,7 +48,7 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
       return
     }
   } catch (err) {
-    console.error('[telegram] webhook handler error:', err instanceof Error ? err.message : err)
+    console.error('[Telegram Webhook] webhook handler error:', err instanceof Error ? err.message : err)
   }
 }
 

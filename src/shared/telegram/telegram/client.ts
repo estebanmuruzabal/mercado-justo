@@ -4,6 +4,7 @@ import type {
   SendMessageParams,
   TelegramApiResponse,
   TelegramMessage,
+  TelegramWebhookInfo,
 } from './types'
 
 /**
@@ -100,4 +101,9 @@ export async function setWebhook(url: string, secretToken?: string): Promise<boo
 /** Remove the registered webhook. */
 export async function deleteWebhook(): Promise<boolean> {
   return callTelegram<boolean>('deleteWebhook', { drop_pending_updates: false })
+}
+
+/** Inspect the currently configured webhook. */
+export async function getWebhookInfo(): Promise<TelegramWebhookInfo> {
+  return callTelegram<TelegramWebhookInfo>('getWebhookInfo', {})
 }

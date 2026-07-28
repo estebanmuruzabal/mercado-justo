@@ -75,6 +75,19 @@ export interface TelegramApiResponse<T> {
   description?: string
 }
 
+/** Minimal subset of `getWebhookInfo` we use for diagnostics. */
+export interface TelegramWebhookInfo {
+  url: string
+  has_custom_certificate: boolean
+  pending_update_count: number
+  ip_address?: string
+  last_error_date?: number
+  last_error_message?: string
+  last_synchronization_error_date?: number
+  max_connections?: number
+  allowed_updates?: string[]
+}
+
 /** Normalized outbound message produced by message/event builders. */
 export interface OutboundTelegramMessage {
   text: string

@@ -1,9 +1,11 @@
+import type { TelegramUpdate } from './types'
+import { summarizeTelegramUpdate } from './webhook-observability'
+
 /**
- * TEMPORARY diagnostic logging for the end-user Telegram connect flow.
- * Remove once linking is verified in production/staging.
+ * Diagnostic logging for the end-user Telegram connect flow.
  */
 
-const PREFIX = '[telegram-connect-debug]'
+const PREFIX = '[Telegram Webhook]'
 
 type DebugPayload = Record<string, unknown>
 
@@ -11,8 +13,8 @@ function emit(step: string, payload: DebugPayload = {}): void {
   console.info(`${PREFIX} ${step}`, payload)
 }
 
-export function logTelegramWebhookUpdate(update: unknown): void {
-  emit('webhook.update.received', { update })
+export function logTelegramWebhookUpdate(update: TelegramUpdate): void {
+  emit('webhook.update.received', summarizeTelegramUpdate(update))
 }
 
 export function logTelegramStartMessage(input: {
