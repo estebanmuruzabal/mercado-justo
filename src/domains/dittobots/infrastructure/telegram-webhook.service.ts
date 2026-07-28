@@ -43,6 +43,12 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
   const chatId = message.chat.id
   const username = message.from?.username ?? message.chat.username ?? null
 
+  console.info('[Telegram Webhook] message.text', {
+    chatId,
+    username,
+    text,
+  })
+
   if (text.startsWith('/start')) {
     const payload = text.slice('/start'.length).trim()
     await handleStart(chatId, username, payload)
