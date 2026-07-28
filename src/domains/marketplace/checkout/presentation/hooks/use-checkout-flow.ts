@@ -16,7 +16,7 @@ import {
   isDeliverySectionValid,
   isPaymentSectionValid,
 } from '@/domains/marketplace/checkout/domain/checkout/validation'
-import type { CheckoutSectionId, CheckoutSectionVisualState } from '@/domains/marketplace/checkout/domain/checkout/types'
+import type { CheckoutSectionId } from '@/domains/marketplace/checkout/domain/checkout/types'
 import { useCheckoutStore } from '@/domains/marketplace/checkout/presentation/stores/checkout.store'
 import { useLocationStore } from '@/shared/maps/location/presentation/stores/location.store'
 

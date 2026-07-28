@@ -15,7 +15,6 @@ import { createClient } from '@/shared/database/supabase/client'
 import { cn } from '@/shared/utils/utils'
 import {
   createProductBaseDraftListingAction,
-  createDraftListingAction,
   deleteListingAction,
   getListingsManagerDataAction,
   getListingVariantsAction,

@@ -535,12 +535,14 @@ export async function listUnitsForVendor(
     createdAt: row.created_at,
   }))
 
-  return filterUnitsForVendorStore(mapped as VendorStockUnit[], vendorStoreId).map(
-    ({ assignedVendorId, sellerVendorId, createdAt, ...unit }) => ({
-      ...unit,
-      createdAt: createdAt ?? '',
-    }),
-  )
+  return filterUnitsForVendorStore(mapped as VendorStockUnit[], vendorStoreId).map((unit) => ({
+    id: unit.id,
+    serialNumber: unit.serialNumber,
+    status: unit.status,
+    productId: unit.productId,
+    productTitle: unit.productTitle,
+    createdAt: unit.createdAt ?? '',
+  }))
 }
 
 export type { VendorStockAggregate }

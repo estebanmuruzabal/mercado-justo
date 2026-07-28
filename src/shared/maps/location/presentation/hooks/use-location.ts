@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { reverseGeocodeToAddress } from '@/shared/maps/geocoding/reverse-geocode.actions'
 import { useLocationStore } from '@/shared/maps/location/presentation/stores/location.store'
@@ -29,18 +29,17 @@ export function useLocation() {
   const [step, setStep] = useState<LocationFlowStep>('mode')
   const [showOnboardingPopover, setShowOnboardingPopover] = useState(false)
 
-  const reverseAddressRef = useRef<string | null>(null)
-  const [reverseAddressVersion, setReverseAddressVersion] = useState(0)
+  const [reverseAddress, setReverseAddress] = useState<string | null>(null)
 
   const { requestLocation, error: geoError, status: geoStatus } = useBrowserGeolocation()
 
   // Mismatch: si el usuario editó el address manualmente, lo vemos comparando contra el último reverse geocode.
   const isAddressMismatch = useMemo(() => {
     const drafted = normalizeAddress(draft.address)
-    const reversed = normalizeAddress(reverseAddressRef.current)
+    const reversed = normalizeAddress(reverseAddress)
     if (!reversed) return false
     return drafted !== reversed
-  }, [draft.address, reverseAddressVersion])
+  }, [draft.address, reverseAddress])
 
   const close = useCallback(() => {
     setIsOpen(false)
@@ -82,8 +81,7 @@ export function useLocation() {
       }
 
       // delivery
-      reverseAddressRef.current = null
-      setReverseAddressVersion((v) => v + 1)
+      setReverseAddress(null)
       updateAddressDraft({
         address: null,
         latitude: null,
@@ -97,18 +95,20 @@ export function useLocation() {
     [close, selectPickup, updateAddressDraft],
   )
 
-  const setDraftFromReverse = useCallback((selection: LocationSelection) => {
-    reverseAddressRef.current = selection.address
-    updateAddressDraft({
-      address: selection.address,
-      latitude: selection.latitude,
-      longitude: selection.longitude,
-      city: selection.city,
-      province: selection.province,
-      isInResistencia: true,
-    })
-    setReverseAddressVersion((v) => v + 1)
-  }, [updateAddressDraft])
+  const setDraftFromReverse = useCallback(
+    (selection: LocationSelection) => {
+      setReverseAddress(selection.address)
+      updateAddressDraft({
+        address: selection.address,
+        latitude: selection.latitude,
+        longitude: selection.longitude,
+        city: selection.city,
+        province: selection.province,
+        isInResistencia: true,
+      })
+    },
+    [updateAddressDraft],
+  )
 
   const setDraftFromLatLng = useCallback(
     async (latLng: LatLng) => {
@@ -136,8 +136,7 @@ export function useLocation() {
     if (draft.latitude == null || draft.longitude == null) return
     if (!draft.isInResistencia) return
     // Si el address del draft ya fue set desde la selección, asumimos que coincide.
-    reverseAddressRef.current = draft.address
-    setReverseAddressVersion((v) => v + 1)
+    setReverseAddress(draft.address)
     setStep('confirm')
   }, [draft.latitude, draft.longitude, draft.isInResistencia, draft.address])
 
@@ -193,7 +192,7 @@ export function useLocation() {
   useEffect(() => {
     if (!isOpen) {
       setShowOnboardingPopover(false)
-      reverseAddressRef.current = null
+      setReverseAddress(null)
     }
   }, [isOpen])
 
@@ -228,4 +227,3 @@ export function useLocation() {
     setDraftFromReverse,
   }
 }
-

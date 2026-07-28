@@ -35,7 +35,7 @@ export function ListingSection({
   return (
     <details
       className='rounded-xl border bg-background'
-      defaultOpen={defaultOpen}
+      {...(defaultOpen ? { open: true } : {})}
     >
       <summary className='flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3'>
         <div className='min-w-0'>

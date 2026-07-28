@@ -36,13 +36,16 @@ export default async function ListingDetailPage({
 
   const listingSelect = 'id,title,store_id,status,characteristics,latitude,longitude,listing_type,store(name)'
 
-  let { data: listingRow, error: listingError } = await supabase
+  const listingResult = await supabase
     .from('listing')
     .select(listingSelect)
     .eq('id', id)
     .eq('listing_type', listingType)
     .eq('status', 'published')
     .maybeSingle()
+
+  let listingRow = listingResult.data
+  const listingError = listingResult.error
 
   if (listingError) throw listingError
 
