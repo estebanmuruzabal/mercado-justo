@@ -11,7 +11,10 @@ import pg from 'pg'
 const { Client } = pg
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
-const DB_URL = process.env.SUPABASE_LOCAL_DB_URL || 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+const DB_URL =
+  process.env.SUPABASE_DB_URL ||
+  process.env.SUPABASE_LOCAL_DB_URL ||
+  'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 
 function loadTaxonomy() {
   const path = join(REPO_ROOT, 'supabase/seeds/data/taxonomy-alimentos.json')

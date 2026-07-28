@@ -137,8 +137,10 @@ Pull them locally if needed: `vercel env pull .env.local`.
 
 ### Supabase per environment
 
-- **Staging**: a separate Supabase project. Apply migrations with `supabase db push` against it.
-- **Production**: the real Supabase project. Migrations are the only way to change schema (see `CLAUDE.md`).
+- **Staging**: a separate Supabase project. Apply migrations with `npm run db:push:staging` (needs `SUPABASE_STAGING_DB_URL` in `.env.staging.local`). Bootstrap demo data with `npm run db:seed:staging` (manual; idempotent shared + staging demo).
+- **Production**: the real Supabase project. Apply migrations with `npm run db:push:production`. Bootstrap a full E2E scenario with `npm run db:seed:production` (idempotent: taxonomy + admin/vendor/buyer + store + ~15 published products). Override credentials with `BOOTSTRAP_PASSWORD`, `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_VENDOR_EMAIL`, `BOOTSTRAP_BUYER_EMAIL`. Defaults match local `seed.dev-users.sql` (`admin@test.com` / `vendor1@test.com` / `buyer1@test.com`, password `123456`).
+- Avoid bare `npm run db:push` unless `SUPABASE_DB_PASSWORD` is exported in your shell and the CLI is linked to the intended project.
+- **Seeds are not part of deploy.** There is no GitHub Actions / Vercel migration+seed pipeline in this repo; push and seed are intentional manual ops commands so demo fixtures never land in production on every deploy.
 
 Never point staging/production at the local stack, and never share service-role keys across environments.
 

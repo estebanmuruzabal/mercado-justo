@@ -97,7 +97,12 @@ npm run db:start        # Start local Supabase
 npm run db:stop         # Stop local Supabase
 npm run db:reset        # Reset database
 npm run db:types        # Generate TypeScript types
-npm run db:push         # Push migrations to remote
+npm run db:push              # Push to linked remote (needs SUPABASE_DB_PASSWORD in shell)
+npm run db:push:staging      # Push migrations to staging
+npm run db:push:production   # Push migrations to production (.env.production)
+npm run db:seed              # Seed local (shared + demo users + taxonomy + demo)
+npm run db:seed:staging      # Seed staging (shared + staging demo; manual)
+npm run db:seed:production   # Bootstrap production E2E (users + store + catalog)
 
 # Testing
 npm run test            # Run tests in watch mode
