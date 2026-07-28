@@ -8,7 +8,7 @@ import { env } from '@/shared/config/env'
  * configured; callers that actually need a value get a clear, actionable error.
  */
 
-export const TELEGRAM_START_PAYLOAD_PREFIX = 'vendor_'
+export const TELEGRAM_START_PAYLOAD_PREFIX = 'connect_'
 
 /** Server-only bot token from @BotFather. Throws if not configured. */
 export function getTelegramBotToken(): string {
