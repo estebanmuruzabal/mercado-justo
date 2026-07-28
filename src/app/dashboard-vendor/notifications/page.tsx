@@ -7,7 +7,7 @@ import { NotificationsPageClient } from '@/domains/community/notifications/prese
 import { TelegramNotificationsCard } from '@/domains/vendors/presentation/dashboard/telegram/telegram-notifications-card'
 import { BECOME_VENDOR_PATH, SIGN_IN_PATH } from '@/shared/routing/routes'
 import { getStoreByUserId } from '@/domains/vendors/infrastructure/store.service'
-import { getVendorTelegramSettings } from '@/domains/dittobots/application/queries/telegram.queries'
+import { getUserTelegramSettings } from '@/domains/dittobots/application/queries/telegram.queries'
 import { isTelegramConfigured } from '@/shared/telegram/telegram/config'
 
 export default async function VendorNotificationsPage() {
@@ -19,7 +19,7 @@ export default async function VendorNotificationsPage() {
   if (!user) redirect(SIGN_IN_PATH)
 
   const store = await getStoreByUserId(user.id)
-  const telegramSettings = store ? await getVendorTelegramSettings(supabase, user.id) : null
+  const telegramSettings = store ? await getUserTelegramSettings(supabase, user.id) : null
 
   return (
     <main className='min-h-screen px-6 py-10'>

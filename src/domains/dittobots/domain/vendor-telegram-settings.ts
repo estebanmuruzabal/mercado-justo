@@ -1,9 +1,10 @@
 /**
- * Domain types for the vendor Telegram notifications integration.
+ * Domain types for Telegram account linking + vendor notification prefs.
  *
- * These are camelCase app-level types mapped from the snake_case
- * `vendor_telegram` table rows (see server/queries/telegram.queries.ts).
+ * Mapped from snake_case `vendor_telegram` rows (user-scoped; historically store-scoped).
  */
+
+export type TelegramConnectionStatus = 'pending' | 'connected' | 'expired'
 
 /** Per-event opt-in flags. Keys must stay in sync with {@link TELEGRAM_EVENT_PREF_KEYS}. */
 export interface TelegramNotificationPreferences {
@@ -13,13 +14,20 @@ export interface TelegramNotificationPreferences {
   notifyLowStock: boolean
 }
 
-/** Full integration state for a single vendor, as consumed by the UI. */
-export interface VendorTelegramSettings extends TelegramNotificationPreferences {
+/** Full integration state for a single user, as consumed by the UI. */
+export interface UserTelegramSettings extends TelegramNotificationPreferences {
+  userId: string
+  /** @deprecated Alias of userId for vendor UI compatibility (store.id === user.id). */
   storeId: string
   /** Telegram chat id the bot delivers messages to. Null until connected. */
   chatId: string | null
+  /** Telegram platform user id. */
+  telegramUserId: string | null
   /** Public Telegram @username of the connected account (without "@"). */
   username: string | null
+  firstName: string | null
+  /** Connect-token lifecycle status. */
+  status: TelegramConnectionStatus
   /** Master switch. When false, no Telegram messages are sent. */
   enabled: boolean
   /** Derived: a chat is linked. */
@@ -28,12 +36,19 @@ export interface VendorTelegramSettings extends TelegramNotificationPreferences 
   connectedAt: string | null
 }
 
-/** Default settings for a vendor that has never opened the Telegram section. */
-export function defaultVendorTelegramSettings(storeId: string): VendorTelegramSettings {
+/** @deprecated Prefer {@link UserTelegramSettings}. */
+export type VendorTelegramSettings = UserTelegramSettings
+
+/** Default settings for a user that has never opened the Telegram section. */
+export function defaultUserTelegramSettings(userId: string): UserTelegramSettings {
   return {
-    storeId,
+    userId,
+    storeId: userId,
     chatId: null,
+    telegramUserId: null,
     username: null,
+    firstName: null,
+    status: 'expired',
     enabled: false,
     connected: false,
     connectedAt: null,
@@ -42,4 +57,9 @@ export function defaultVendorTelegramSettings(storeId: string): VendorTelegramSe
     notifyNewFollowers: true,
     notifyLowStock: true,
   }
+}
+
+/** @deprecated Prefer {@link defaultUserTelegramSettings}. */
+export function defaultVendorTelegramSettings(storeId: string): UserTelegramSettings {
+  return defaultUserTelegramSettings(storeId)
 }

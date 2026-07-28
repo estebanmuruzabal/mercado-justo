@@ -165,10 +165,13 @@ export function TelegramNotificationsCard({
       applySettings({
         ...settings,
         chatId: null,
+        telegramUserId: null,
         username: null,
+        firstName: null,
         connected: false,
         enabled: false,
         connectedAt: null,
+        status: 'expired',
       })
       toast({ title: 'Telegram desconectado', description: 'Ya no vas a recibir notificaciones.' })
     })

@@ -34,7 +34,7 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
       return
     }
   } catch (err) {
-    console.error('[telegram] webhook handler error:', err instanceof Error ? err.message : err)
+    console.error('[Telegram Webhook] webhook handler error:', err instanceof Error ? err.message : err)
   }
 }
 
@@ -51,7 +51,7 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
 
   if (text.startsWith('/start')) {
     const payload = text.slice('/start'.length).trim()
-    await handleStart(chatId, username, payload)
+    await handleStart(message, payload)
     return
   }
 
@@ -60,63 +60,101 @@ async function handleMessage(message: TelegramMessage): Promise<void> {
     return
   }
 
-  // Unknown input: gently point the user to the help command.
   await reply(
     chatId,
     lines('No reconozco ese mensaje. 🤔', 'Usá /help para ver qué puedo hacer.'),
   )
 }
 
-async function handleStart(
-  chatId: number,
-  username: string | null,
-  payload: string,
-): Promise<void> {
+async function handleStart(message: TelegramMessage, payload: string): Promise<void> {
+  const chatId = message.chat.id
+  const username = message.from?.username ?? message.chat.username ?? null
+  const telegramUserId = message.from?.id != null ? String(message.from.id) : null
+  const firstName = message.from?.first_name ?? null
   const token = parseStartPayload(payload)
 
-  // Plain /start with no (valid) connect token: show onboarding instructions.
+  console.info('[Telegram Webhook] comando recibido', {
+    command: '/start',
+    hasToken: Boolean(token),
+    chatId,
+    telegramUserId,
+  })
+
   if (!token) {
     await reply(
       chatId,
       lines(
         '👋 ' + bold('Bienvenido a Mercado Justo'),
         '',
-        'Para conectar tu tienda y recibir notificaciones, abrí la sección',
-        '“Notificaciones” en tu panel de vendedor y tocá “Conectar Telegram”.',
+        'Para vincular tu cuenta, abrí tu perfil en la app,',
+        'sección “Datos personales”, y tocá “Conectar Telegram”.',
+        '',
+        'Si sos vendedor, también podés hacerlo desde',
+        'Notificaciones en el panel de vendedor.',
       ),
     )
     return
   }
 
-  const settings = await connectByToken(token, chatId, username)
+  const result = await connectByToken(token, chatId, username, telegramUserId, firstName)
 
-  if (!settings) {
+  if (result.status === 'connected' || result.status === 'already_connected') {
+    console.info('[Telegram Webhook] usuario encontrado', {
+      userId: result.settings.userId,
+      status: result.status,
+    })
     await reply(
       chatId,
       lines(
-        '⚠️ ' + bold('El enlace expiró o no es válido'),
+        '✅ ' + bold('Tu cuenta de Mercado Justo fue conectada correctamente.'),
         '',
-        'Volvé al panel de vendedor y generá un nuevo enlace desde',
-        'la sección “Notificaciones”.',
+        'Vas a poder recibir avisos acá.',
+        'Podés revisar el estado desde tu perfil.',
       ),
     )
     return
   }
 
+  if (result.status === 'expired_token') {
+    console.info('[Telegram Webhook] errores', { reason: 'expired_token' })
+    await reply(
+      chatId,
+      lines(
+        '⚠️ ' + bold('El enlace expiró'),
+        '',
+        'Volvé a tu perfil en Mercado Justo y generá un nuevo enlace',
+        'desde “Conectar Telegram”.',
+      ),
+    )
+    return
+  }
+
+  if (result.status === 'chat_taken') {
+    console.info('[Telegram Webhook] errores', { reason: 'chat_taken' })
+    await reply(
+      chatId,
+      lines(
+        '⚠️ ' + bold('Esta cuenta de Telegram ya está vinculada'),
+        '',
+        'Está asociada a otro usuario de Mercado Justo.',
+        'Desconectala desde ese perfil antes de vincularla de nuevo.',
+      ),
+    )
+    return
+  }
+
+  console.info('[Telegram Webhook] errores', { reason: 'invalid_token' })
   await reply(
     chatId,
     lines(
-      '✅ ' + bold('¡Tienda conectada!'),
+      '⚠️ ' + bold('El enlace no es válido o ya fue utilizado'),
       '',
-      'Vas a recibir acá tus alertas de ventas y novedades.',
-      'Podés ajustar tus preferencias desde el panel de vendedor.',
+      'Volvé a tu perfil y generá un nuevo enlace con “Conectar Telegram”.',
     ),
   )
 }
 
 async function handleCallbackQuery(query: TelegramCallbackQuery): Promise<void> {
-  // Placeholder for future inline-button actions (order state changes, etc.).
-  // Acknowledge so the client stops showing a loading state.
   await answerCallbackQuery(query.id)
 }
 
@@ -124,7 +162,7 @@ function helpText(): string {
   return lines(
     bold('Comandos disponibles'),
     '',
-    '/start — conectar tu tienda o ver instrucciones',
+    '/start — conectar tu cuenta o ver instrucciones',
     '/help — mostrar esta ayuda',
   )
 }

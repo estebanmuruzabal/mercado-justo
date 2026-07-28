@@ -1,12 +1,17 @@
-// components/profile/profile-content.tsx
+// Legacy lightweight profile switcher — keep types aligned with PersonalData.
 import { PersonalData } from './tabs/personal-data'
 import { Security } from './tabs/security'
 import { SellerSettings } from './tabs/seller-settings'
 import { ListingManager } from '@/domains/marketplace/listings/presentation/components/ListingManager'
 import { DittoBots } from './tabs/ditto-bots'
+import type { UserTelegramSettings } from '@/domains/dittobots/domain/vendor-telegram-settings'
 
 type TabId = 'personal' | 'security' | 'seller' | 'products' | 'ditto'
-type ProfileUser = { email?: string }
+type ProfileUser = {
+  email?: string
+  telegramSettings: UserTelegramSettings
+  telegramConfigured: boolean
+}
 
 export function ProfileContent({
   tab,
@@ -26,8 +31,6 @@ export function ProfileContent({
       return <Security />
 
     case 'seller':
-      // This file is a lightweight route switch; keep it type-safe even if seller data
-      // is provided elsewhere in the real profile flow.
       return <SellerSettings store={null} onStoreCreated={() => {}} />
 
     case 'products':

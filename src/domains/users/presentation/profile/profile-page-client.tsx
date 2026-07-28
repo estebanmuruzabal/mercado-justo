@@ -28,6 +28,7 @@ import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/utils/utils'
 import type { Role } from '@/domains/users/domain/roles'
 import type { Store as StoreModel } from '@/domains/vendors/domain/store'
+import type { UserTelegramSettings } from '@/domains/dittobots/domain/vendor-telegram-settings'
 
 type TabId = 'personal' | 'security' | 'seller' | 'products' | 'purchases' | 'sales' | 'ditto'
 
@@ -74,10 +75,14 @@ function TabNavButton({
 export function ProfilePageClient({
   userEmail,
   initialStore,
+  initialTelegramSettings,
+  telegramConfigured,
 }: {
   userEmail: string
   initialStore: StoreModel | null
   initialRole: Role | null
+  initialTelegramSettings: UserTelegramSettings
+  telegramConfigured: boolean
 }) {
   const router = useRouter()
   const [tab, setTab] = useState<TabId>('personal')
@@ -189,7 +194,11 @@ export function ProfilePageClient({
               <CardContent className='pt-6 pb-6'>
                 <ProfileContent
                   tab={tab}
-                  user={{ email: userEmail }}
+                  user={{
+                    email: userEmail,
+                    telegramSettings: initialTelegramSettings,
+                    telegramConfigured,
+                  }}
                   store={store}
                   onStoreCreated={setStore}
                 />

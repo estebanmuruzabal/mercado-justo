@@ -9,6 +9,7 @@ import { DittoBots } from './tabs/ditto-bots'
 import type { Store } from '@/domains/vendors/domain/store'
 import { PurchasesTab } from './tabs/purchases'
 import { SalesTab } from './tabs/sales'
+import type { UserTelegramSettings } from '@/domains/dittobots/domain/vendor-telegram-settings'
 
 type TabId = 'personal' | 'security' | 'seller' | 'products' | 'purchases' | 'sales' | 'ditto'
 
@@ -19,7 +20,11 @@ export function ProfileContent({
   onStoreCreated,
 }: {
   tab: TabId
-  user: { email?: string }
+  user: {
+    email?: string
+    telegramSettings: UserTelegramSettings
+    telegramConfigured: boolean
+  }
   store: Store | null
   onStoreCreated: (store: Store) => void
 }) {

@@ -1,14 +1,14 @@
 import { getSiteUrl, isHttpsSiteUrl } from '@/shared/config/environment'
 import { env } from '@/shared/config/env'
 
+export { TELEGRAM_START_PAYLOAD_PREFIX } from './constants'
+
 /**
  * Centralized access to Telegram-related configuration.
  *
  * Everything is resolved lazily so the app can build and run without Telegram
  * configured; callers that actually need a value get a clear, actionable error.
  */
-
-export const TELEGRAM_START_PAYLOAD_PREFIX = 'connect_'
 
 /** Server-only bot token from @BotFather. Throws if not configured. */
 export function getTelegramBotToken(): string {

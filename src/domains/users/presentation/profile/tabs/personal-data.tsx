@@ -1,24 +1,37 @@
-// components/profile/tabs/personal-data.tsx
 'use client'
 
-type ProfileUser = { email?: string }
+import { ProfileTelegramSection } from './profile-telegram-section'
+import type { UserTelegramSettings } from '@/domains/dittobots/domain/vendor-telegram-settings'
+
+type ProfileUser = {
+  email?: string
+  telegramSettings: UserTelegramSettings
+  telegramConfigured: boolean
+}
 
 export function PersonalData({ user }: { user: ProfileUser }) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold">Datos personales</h2>
-  
-        <input className="border p-2 w-full" defaultValue={user.email} />
-        <input className="border p-2 w-full" placeholder="Nombre" />
-  
+  return (
+    <div className='space-y-6'>
+      <div className='space-y-4'>
+        <h2 className='text-xl font-bold'>Datos personales</h2>
+
+        <input className='w-full border p-2' defaultValue={user.email} />
+        <input className='w-full border p-2' placeholder='Nombre' />
+
         <div>
           <label>Foto</label>
-          <input type="file" />
+          <input type='file' />
         </div>
-  
-        <button className="bg-black text-white px-4 py-2 rounded">
+
+        <button type='button' className='rounded bg-black px-4 py-2 text-white'>
           Guardar
         </button>
       </div>
-    )
-  }
+
+      <ProfileTelegramSection
+        initialSettings={user.telegramSettings}
+        configured={user.telegramConfigured}
+      />
+    </div>
+  )
+}

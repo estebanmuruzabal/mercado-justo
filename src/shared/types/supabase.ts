@@ -2326,14 +2326,17 @@ export type Database = {
           connected_at: string | null
           created_at: string
           enabled: boolean
+          first_name: string | null
           link_token: string | null
           link_token_expires_at: string | null
           notify_low_stock: boolean
           notify_new_followers: boolean
           notify_new_orders: boolean
           notify_new_reviews: boolean
-          store_id: string
+          status: string
+          telegram_user_id: string | null
           updated_at: string
+          user_id: string
           username: string | null
         }
         Insert: {
@@ -2341,14 +2344,17 @@ export type Database = {
           connected_at?: string | null
           created_at?: string
           enabled?: boolean
+          first_name?: string | null
           link_token?: string | null
           link_token_expires_at?: string | null
           notify_low_stock?: boolean
           notify_new_followers?: boolean
           notify_new_orders?: boolean
           notify_new_reviews?: boolean
-          store_id: string
+          status?: string
+          telegram_user_id?: string | null
           updated_at?: string
+          user_id: string
           username?: string | null
         }
         Update: {
@@ -2356,22 +2362,25 @@ export type Database = {
           connected_at?: string | null
           created_at?: string
           enabled?: boolean
+          first_name?: string | null
           link_token?: string | null
           link_token_expires_at?: string | null
           notify_low_stock?: boolean
           notify_new_followers?: boolean
           notify_new_orders?: boolean
           notify_new_reviews?: boolean
-          store_id?: string
+          status?: string
+          telegram_user_id?: string | null
           updated_at?: string
+          user_id?: string
           username?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "vendor_telegram_store_id_fkey"
-            columns: ["store_id"]
+            foreignKeyName: "vendor_telegram_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "store"
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
