@@ -44,7 +44,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.TRANSACTABLE, cap.HOURLY, cap.GEOLOCATED, cap.REVIEWABLE],
     defaultOfferModel: 'hourly',
     isPersistable: true,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   property: {
@@ -54,7 +54,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.TRANSACTABLE, cap.GEOLOCATED, cap.REVIEWABLE],
     defaultOfferModel: 'negotiable',
     isPersistable: true,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   experience: {
@@ -64,7 +64,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.TRANSACTABLE, cap.BOOKING, cap.GEOLOCATED, cap.REVIEWABLE, cap.DATETIME],
     defaultOfferModel: 'fixed',
     isPersistable: true,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   event: {
@@ -74,7 +74,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.TRANSACTABLE, cap.BOOKING, cap.DATETIME, cap.GEOLOCATED, cap.REVIEWABLE],
     defaultOfferModel: 'fixed',
     isPersistable: true,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   recipe: {
@@ -85,7 +85,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.REVIEWABLE, cap.COMPOSABLE, cap.FOLLOWABLE],
     defaultOfferModel: 'none',
     isPersistable: true,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   job: {
@@ -95,7 +95,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.APPLICATION_FLOW, cap.GEOLOCATED],
     defaultOfferModel: 'none',
     isPersistable: false,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   project: {
@@ -105,7 +105,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.FOLLOWABLE, cap.COMPOSABLE, cap.REVIEWABLE],
     defaultOfferModel: 'negotiable',
     isPersistable: true,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   channel: {
@@ -115,7 +115,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.FOLLOWABLE],
     defaultOfferModel: 'none',
     isPersistable: false,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   dittobot: {
@@ -125,7 +125,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.FOLLOWABLE],
     defaultOfferModel: 'subscription',
     isPersistable: false,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   resource: {
@@ -135,7 +135,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.DOWNLOADABLE, cap.REVIEWABLE],
     defaultOfferModel: 'free',
     isPersistable: false,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
   alliance: {
@@ -145,7 +145,7 @@ export const PUBLICATION_TYPE_REGISTRY = {
     capabilities: [cap.FOLLOWABLE],
     defaultOfferModel: 'none',
     isPersistable: false,
-    isActive: true,
+    isActive: false,
     schemaVersion: 1,
   },
 } as const satisfies Record<string, PublicationTypeDefinition>

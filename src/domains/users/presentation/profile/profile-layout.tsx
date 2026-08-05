@@ -8,7 +8,10 @@ import type { UserTelegramSettings } from '@/domains/dittobots/domain/vendor-tel
 
 type TabId = 'personal' | 'security' | 'seller' | 'products' | 'ditto'
 type ProfileUser = {
+  id: string
   email?: string
+  fullName: string | null
+  avatarUrl: string | null
   telegramSettings: UserTelegramSettings
   telegramConfigured: boolean
 }

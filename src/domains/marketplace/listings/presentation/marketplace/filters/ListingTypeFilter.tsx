@@ -1,13 +1,27 @@
 'use client'
 
+import { useEffect } from 'react'
+
 import { useRequireReceiveMode } from '@/shared/maps/location/presentation/hooks/use-require-receive-mode'
-import { DB_LISTING_TYPES, LISTING_TYPE_LABELS } from '@/domains/marketplace/listings/domain/listing'
+import { DB_LISTING_TYPES, LISTING_TYPES, LISTING_TYPE_LABELS } from '@/domains/marketplace/listings/domain/listing'
 import { useMarketplaceFiltersStore } from '@/domains/marketplace/listings/presentation/stores/useMarketplaceFiltersStore'
 
 export function ListingTypeFilter({ compact = false }: { compact?: boolean }) {
   const selected = useMarketplaceFiltersStore((s) => s.listingType)
+  const setListingTypes = useMarketplaceFiltersStore((s) => s.setListingTypes)
   const toggleListingType = useMarketplaceFiltersStore((s) => s.toggleListingType)
   const { guardReceiveMode } = useRequireReceiveMode()
+  const singleListingType = LISTING_TYPES.length === 1 ? LISTING_TYPES[0] : null
+
+  useEffect(() => {
+    if (!singleListingType) return
+    if (selected.length === 1 && selected[0] === singleListingType) return
+    setListingTypes([singleListingType])
+  }, [selected, setListingTypes, singleListingType])
+
+  if (singleListingType) {
+    return null
+  }
 
   return (
     <div className={compact ? 'min-w-0' : 'w-full'}>

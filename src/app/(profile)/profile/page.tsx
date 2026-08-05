@@ -4,7 +4,10 @@ import { redirect } from 'next/navigation'
 
 import { ProfilePageClient } from '@/domains/users/presentation/profile/profile-page-client'
 import { getStoreByUserId } from '@/domains/vendors/infrastructure/store.service'
-import { getUserRoleByUserId } from '@/domains/users/application/queries/user.queries'
+import {
+  getUserProfileSummaryByUserId,
+  getUserRoleByUserId,
+} from '@/domains/users/application/queries/user.queries'
 import { getUserTelegramSettings } from '@/domains/dittobots/application/queries/telegram.queries'
 import { isTelegramConfigured } from '@/shared/telegram/telegram/config'
 
@@ -16,15 +19,19 @@ export default async function ProfilePage() {
     redirect(SIGN_IN_PATH)
   }
 
-  const [store, role, telegramSettings] = await Promise.all([
+  const [store, role, telegramSettings, profile] = await Promise.all([
     getStoreByUserId(user.id),
     getUserRoleByUserId(user.id),
     getUserTelegramSettings(supabase, user.id),
+    getUserProfileSummaryByUserId(user.id),
   ])
 
   return (
     <ProfilePageClient
-      userEmail={user?.email ?? ''}
+      userId={user.id}
+      userEmail={profile?.email ?? user?.email ?? ''}
+      userFullName={profile?.fullName ?? null}
+      userAvatarUrl={profile?.avatarUrl ?? null}
       initialStore={store}
       initialRole={role}
       initialTelegramSettings={telegramSettings}

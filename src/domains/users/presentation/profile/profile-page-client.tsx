@@ -73,12 +73,18 @@ function TabNavButton({
 }
 
 export function ProfilePageClient({
+  userId,
   userEmail,
+  userFullName,
+  userAvatarUrl,
   initialStore,
   initialTelegramSettings,
   telegramConfigured,
 }: {
+  userId: string
   userEmail: string
+  userFullName: string | null
+  userAvatarUrl: string | null
   initialStore: StoreModel | null
   initialRole: Role | null
   initialTelegramSettings: UserTelegramSettings
@@ -195,7 +201,10 @@ export function ProfilePageClient({
                 <ProfileContent
                   tab={tab}
                   user={{
+                    id: userId,
                     email: userEmail,
+                    fullName: userFullName,
+                    avatarUrl: userAvatarUrl,
                     telegramSettings: initialTelegramSettings,
                     telegramConfigured,
                   }}

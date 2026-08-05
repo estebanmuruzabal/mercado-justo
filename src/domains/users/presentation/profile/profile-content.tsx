@@ -21,7 +21,10 @@ export function ProfileContent({
 }: {
   tab: TabId
   user: {
+    id: string
     email?: string
+    fullName: string | null
+    avatarUrl: string | null
     telegramSettings: UserTelegramSettings
     telegramConfigured: boolean
   }
